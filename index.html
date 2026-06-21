@@ -1,0 +1,418 @@
+<!--
+================================================================================
+HomeHub Application Suite - index.html
+================================================================================
+
+TITLE: Index
+PURPOSE: HomeHub application component
+LAST UPDATED: 2026-05-16
+
+This HTML file is part of the HomeHub platform - a comprehensive property
+management system for homeowners. Single-page application with vanilla JS,
+responsive design, and dark mode support.
+
+================================================================================
+STRUCTURE: <style> CSS | <body> HTML | <script> JavaScript
+================================================================================
+
+CSS VARIABLES: --blue, --green, --orange, --gold (+ light/dark variants)
+RESPONSIVE: Mobile (<768px) | Tablet (768px) | Desktop (1024px+)
+DARK MODE: [data-theme="dark"] selector overrides CSS variables
+
+Key Components:
+  • Sidebar/Navigation (fixed 280px, collapsible on mobile)
+  • Responsive grid/flexbox layouts
+  • Card-based UI components
+  • Modal overlays for forms
+  • Dynamic JavaScript interactions
+
+================================================================================
+QUICK REFERENCE
+================================================================================
+
+CSS Customization:
+  1. Update color variables in :root and [data-theme="dark"]
+  2. Modify font-size and padding for spacing
+  3. Adjust media queries for different breakpoints
+
+JavaScript Patterns:
+  • DOM selection: querySelector, querySelectorAll
+  • Events: addEventListener, event delegation
+  • Storage: localStorage for persistent settings
+  • DOM updates: innerHTML, classList, setAttribute
+
+Testing:
+  ✓ Responsive design (test all breakpoints)
+  ✓ Dark mode toggle
+  ✓ Keyboard navigation
+  ✓ Button/form interactions
+  ✓ Cross-browser compatibility
+
+================================================================================
+For detailed documentation, see sections marked with === throughout the file
+================================================================================
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HomeHub — Demo Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #F0F4F8;
+    min-height: 100vh;
+    padding: 40px 20px 60px;
+    color: #1E293B;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .logo-icon {
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, #1F3A5F, #27A570);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; color: white;
+  }
+  .logo-text { font-size: 32px; font-weight: 800; color: #1F3A5F; }
+  .header p { font-size: 15px; color: #64748B; max-width: 500px; margin: 0 auto; line-height: 1.6; }
+  .badge {
+    display: inline-block;
+    background: #E0F0EA; color: #1F3A5F;
+    font-size: 11px; font-weight: 700;
+    padding: 4px 10px; border-radius: 20px;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .section-label {
+    font-size: 11px; font-weight: 700; color: #94A3B8;
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 16px; margin-top: 40px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  .card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    border: 1.5px solid #E2EEF4;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: transform 0.15s, box-shadow 0.15s;
+    cursor: pointer;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.10); }
+  .card-top { display: flex; align-items: center; gap: 14px; }
+  .card-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .card-name { font-size: 15px; font-weight: 700; color: #1E293B; }
+  .card-desc { font-size: 12px; color: #64748B; line-height: 1.5; }
+  .card-links { display: flex; gap: 8px; flex-wrap: wrap; }
+  .link-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 12px; font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+  .link-btn:hover { opacity: 0.85; }
+  .btn-mobile { background: #1F3A5F; color: white; }
+  .btn-web { background: #E0F0EA; color: #1F3A5F; }
+  .btn-only { background: #1F3A5F; color: white; }
+
+  .divider {
+    max-width: 960px; margin: 0 auto;
+    border: none; border-top: 1px solid #E2EEF4;
+    margin-top: 40px;
+  }
+  footer {
+    text-align: center; margin-top: 48px;
+    font-size: 12px; color: #94A3B8;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon"><i class="fas fa-house"></i></div>
+    <span class="logo-text">HomeHub</span>
+  </div>
+  <div class="badge">Demo Portal</div>
+  <p>Interactive mockups for all user roles. Click any view below to explore the platform.</p>
+</div>
+
+<div style="max-width:960px; margin:0 auto;">
+
+  <div class="section-label">Core User Experiences</div>
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-icon" style="background:#E0F0EA; color:#1F3A5F;"><i class="fas fa-house-user"></i></div>
+        <div>
+          <div class="card-name">Homeowner</div>
+          <div style="font-size:11px; color:#94A3B8; margin-top:2px;">Primary user experience</div>
+        </div>
+      </div>
+      <div class="card-desc">Dashboard, projects, system tracking, PriceMatch, documents, contractors, and more.</div>
+      <div class="card-links">
+        <a href="homehub-homeowner-mobile.html" class="link-btn btn-mobile"><i class="fas fa-mobile-alt"></i> Mobile</a>
+        <a href="homehub-homeowner-web.html" class="link-btn btn-web"><i class="fas fa-desktop"></i> Web</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-icon" style="background:#FEF3C7; color:#B45309;"><i class="fas fa-helmet-safety"></i></div>
+        <div>
+          <div class="card-name">Contractor</div>
+          <div style="font-size:11px; color:#94A3B8; margin-top:2px;">Field & office views</div>
+        </div>
+      </div>
+      <div class="card-desc">Job management, QR code access, project updates, invoicing, and homeowner messaging.</div>
+      <div class="card-links">
+        <a href="homehub-contractor-mobile.html" class="link-btn btn-mobile"><i class="fas fa-mobile-alt"></i> Mobile</a>
+        <a href="homehub-contractor-web.html" class="link-btn btn-web"><i class="fas fa-desktop"></i> Web</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-icon" style="background:#EDE9FE; color:#7C3AED;"><i class="fas fa-clipboard-check"></i></div>
+        <div>
+          <div class="card-name">Inspector</div>
+          <div style="font-size:11px; color:#94A3B8; margin-top:2px;">Setup assist workflow</div>
+        </div>
+      </div>
+      <div class="card-desc">14-section property inspection workflow, QR scanning, system data entry, and property summary.</div>
+      <div class="card-links">
+        <a href="homehub-inspector-mobile.html" class="link-btn btn-mobile"><i class="fas fa-mobile-alt"></i> Mobile</a>
+        <a href="homehub-inspector-web.html" class="link-btn btn-web"><i class="fas fa-desktop"></i> Web</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-icon" style="background:#FEE2E2; color:#DC2626;"><i class="fas fa-shield-halved"></i></div>
+        <div>
+          <div class="card-name">Agent</div>
+          <div style="font-size:11px; color:#94A3B8; margin-top:2px;">Real estate agent view</div>
+        </div>
+      </div>
+      <div class="card-desc">Property portfolio, buyer invite flow, transaction summaries, and resale dossier access.</div>
+      <div class="card-links">
+        <a href="homehub-agent-web.html" class="link-btn btn-only"><i class="fas fa-desktop"></i> Web</a>
+        <a href="homehub-buyer-invite-flow.html" class="link-btn btn-web"><i class="fas fa-user-plus"></i> Buyer Flow</a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="section-label">Specialized Modules</div>
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-icon" style="background:#FFF7ED; color:#EA580C;"><i class="fas fa-fire"></i></div>
+        <div>
+          <div class="card-name">Wildfire Compliance</div>
+          <div style="font-size:11px; color:#94A3B8; margin-top:2px;">Risk & resilience</div>
+        </div>
+      </div>
+      <div class="card-desc">Wildfire risk scoring, compliance checklists, defensible space, and insurance readiness.</div>
+      <div class="card-links">
+        <a href="homehub-wildfire-mobile.html" class="link-btn btn-mobile"><i class="fas fa-mobile-alt"></i> Mobile</a>
+        <a href="homehub-wildfire-web.html" class="link-btn btn-web"><i class="fas fa-desktop"></i> Web</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-icon" style="background:#ECFDF5; color:#059669;"><i class="fas fa-file-contract"></i></div>
+        <div>
+          <div class="card-name">Compliance</div>
+          <div style="font-size:11px; color:#94A3B8; margin-top:2px;">Permits & regulations</div>
+        </div>
+      </div>
+      <div class="card-desc">Permit tracking, regulatory compliance, inspection history, and documentation management.</div>
+      <div class="card-links">
+        <a href="homehub-compliance-mobile.html" class="link-btn btn-mobile"><i class="fas fa-mobile-alt"></i> Mobile</a>
+        <a href="homehub-compliance-web.html" class="link-btn btn-web"><i class="fas fa-desktop"></i> Web</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-icon" style="background:#EFF6FF; color:#2563EB;"><i class="fas fa-people-group"></i></div>
+        <div>
+          <div class="card-name">Community Hub</div>
+          <div style="font-size:11px; color:#94A3B8; margin-top:2px;">Neighborhood network</div>
+        </div>
+      </div>
+      <div class="card-desc">Neighborhood contractor ratings, shared project data, community alerts, and local insights.</div>
+      <div class="card-links">
+        <a href="homehub-community-mobile.html" class="link-btn btn-mobile"><i class="fas fa-mobile-alt"></i> Mobile</a>
+        <a href="homehub-community-web.html" class="link-btn btn-web"><i class="fas fa-desktop"></i> Web</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-icon" style="background:#FDF4FF; color:#9333EA;"><i class="fas fa-umbrella"></i></div>
+        <div>
+          <div class="card-name">Insurance (Homeowner)</div>
+          <div style="font-size:11px; color:#94A3B8; margin-top:2px;">Coverage & claims</div>
+        </div>
+      </div>
+      <div class="card-desc">Insurance policy tracking, claims management, home health score for premium reduction.</div>
+      <div class="card-links">
+        <a href="homehub-insurance-mobile.html" class="link-btn btn-only"><i class="fas fa-mobile-alt"></i> Mobile</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-icon" style="background:#E0F5EC; color:#1F3A5F;"><i class="fas fa-shield-halved"></i></div>
+        <div>
+          <div class="card-name">Insurance Agent Portal</div>
+          <div style="font-size:11px; color:#94A3B8; margin-top:2px;">Preparedness & home continuity</div>
+        </div>
+      </div>
+      <div class="card-desc">Insurance Preparedness & Home Continuity platform. Gift accounts, document requests, annual reviews, catastrophe prep, and transition watch.</div>
+      <div class="card-links">
+        <a href="homehub-insuranceagent-web.html" class="link-btn btn-web"><i class="fas fa-desktop"></i> Web</a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="section-label">Admin & Operations</div>
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-icon" style="background:#F1F5F9; color:#475569;"><i class="fas fa-gauge-high"></i></div>
+        <div>
+          <div class="card-name">Admin Backoffice</div>
+          <div style="font-size:11px; color:#94A3B8; margin-top:2px;">Platform management · v2 — Multi-role</div>
+        </div>
+      </div>
+      <div class="card-desc">User management, platform analytics, contractor approvals, revenue dashboard, audit log, and 9-role access control. Login as SuperAdmin, Finance, AE, Support, and more.</div>
+      <div class="card-links">
+        <a href="homehub-admin-mobile.html" class="link-btn btn-mobile"><i class="fas fa-mobile-alt"></i> Mobile</a>
+        <a href="homehub-admin-web.html" class="link-btn btn-web"><i class="fas fa-desktop"></i> Web</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-icon" style="background:#FEF3C7; color:#B45309;"><i class="fas fa-building"></i></div>
+        <div>
+          <div class="card-name">Agency Portal</div>
+          <div style="font-size:11px; color:#94A3B8; margin-top:2px;">Brokerage control layer</div>
+        </div>
+      </div>
+      <div class="card-desc">Agent management, property listings, performance metrics, billing, and premium agency features.</div>
+      <div class="card-links">
+        <a href="homehub-agency-web.html" class="link-btn btn-only"><i class="fas fa-desktop"></i> Web</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-icon" style="background:#E8F5E9; color:#27A570;"><i class="fas fa-hand-holding-heart"></i></div>
+        <div>
+          <div class="card-name">NP Partner Dashboard</div>
+          <div style="font-size:11px; color:#94A3B8; margin-top:2px;">Nonprofit impact view</div>
+        </div>
+      </div>
+      <div class="card-desc">NP giveback tracking, impact metrics, homeowner assistance programs, and community outreach tools.</div>
+      <div class="card-links">
+        <a href="homehub-NPDashboard-web.html" class="link-btn btn-only"><i class="fas fa-desktop"></i> Web</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-icon" style="background:#E0F0EA; color:#1F3A5F;"><i class="fas fa-mobile-screen"></i></div>
+        <div>
+          <div class="card-name">General Mobile</div>
+          <div style="font-size:11px; color:#94A3B8; margin-top:2px;">Base mobile shell</div>
+        </div>
+      </div>
+      <div class="card-desc">Core mobile app shell with onboarding, login, and base navigation structure.</div>
+      <div class="card-links">
+        <a href="homehub-mobile.html" class="link-btn btn-only"><i class="fas fa-mobile-alt"></i> Mobile</a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="section-label">Architecture & Security</div>
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-icon" style="background:#FFF1F2; color:#BE123C;"><i class="fas fa-shield-halved"></i></div>
+        <div>
+          <div class="card-name">Security Architecture</div>
+          <div style="font-size:11px; color:#94A3B8; margin-top:2px;">SOC2-ready design</div>
+        </div>
+      </div>
+      <div class="card-desc">13-role permissions matrix, auth patterns (JWT + refresh tokens), audit log design, QR token model, multi-tenant isolation, secrets management, and Cloudflare WAF readiness.</div>
+      <div class="card-links">
+        <a href="../SECURITY_ARCHITECTURE.md" class="link-btn btn-only"><i class="fas fa-file-lines"></i> View Doc</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-icon" style="background:#EFF6FF; color:#2563EB;"><i class="fas fa-vial"></i></div>
+        <div>
+          <div class="card-name">Testing Strategy</div>
+          <div style="font-size:11px; color:#94A3B8; margin-top:2px;">Now vs. later test plan</div>
+        </div>
+      </div>
+      <div class="card-desc">Manual smoke tests, unit test stubs for permissions and revenue logic, integration test blueprints for RBAC and audit completeness, SOC2 pentest checklist.</div>
+      <div class="card-links">
+        <a href="../TESTING_STRATEGY.md" class="link-btn btn-only"><i class="fas fa-file-lines"></i> View Doc</a>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<hr class="divider">
+<footer>HomeHub · Demo build · For internal testing and presentation purposes only</footer>
+
+</body>
+</html>

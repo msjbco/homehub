@@ -1,0 +1,1475 @@
+<!--
+================================================================================
+HomeHub Application Suite - homehub-wildfire-mobile.html
+================================================================================
+
+TITLE: Homehub Wildfire Mobile
+PURPOSE: Wildfire risk assessment, monitoring, and resilience planning
+LAST UPDATED: 2026-05-16
+
+This HTML file is part of the HomeHub platform - a comprehensive property
+management system for homeowners. Single-page application with vanilla JS,
+responsive design, and dark mode support.
+
+================================================================================
+STRUCTURE: <style> CSS | <body> HTML | <script> JavaScript
+================================================================================
+
+CSS VARIABLES: --blue, --green, --orange, --gold (+ light/dark variants)
+RESPONSIVE: Mobile (<768px) | Tablet (768px) | Desktop (1024px+)
+DARK MODE: [data-theme="dark"] selector overrides CSS variables
+
+Key Components:
+  • Sidebar/Navigation (fixed 280px, collapsible on mobile)
+  • Responsive grid/flexbox layouts
+  • Card-based UI components
+  • Modal overlays for forms
+  • Dynamic JavaScript interactions
+
+================================================================================
+QUICK REFERENCE
+================================================================================
+
+CSS Customization:
+  1. Update color variables in :root and [data-theme="dark"]
+  2. Modify font-size and padding for spacing
+  3. Adjust media queries for different breakpoints
+
+JavaScript Patterns:
+  • DOM selection: querySelector, querySelectorAll
+  • Events: addEventListener, event delegation
+  • Storage: localStorage for persistent settings
+  • DOM updates: innerHTML, classList, setAttribute
+
+Testing:
+  ✓ Responsive design (test all breakpoints)
+  ✓ Dark mode toggle
+  ✓ Keyboard navigation
+  ✓ Button/form interactions
+  ✓ Cross-browser compatibility
+
+================================================================================
+For detailed documentation, see sections marked with === throughout the file
+================================================================================
+-->
+
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wildfire Compliance - HomeHub Mobile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #1F3A5F;
+            --primary-blue-light: #E0F0EA;
+            --green: #27A570;
+            --gold: #D4A574;
+            --rust: #C86F1A;
+            --border: #B8D4CC;
+            --bg-light: #F5F9F8;
+            --bg-card: #FFFFFF;
+            --text-primary: #1E293B;
+            --text-secondary: #64748B;
+            --gray-light: #F0F0F0;
+            --gray-dark: #374151;
+        }
+
+        html[data-theme="dark"] {
+            --bg-card: #1E293B;
+            --text-primary: #F1F5F9;
+            --text-secondary: #CBD5E1;
+            --border: #374151;
+            --bg-light: #0F172A;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.6;
+            max-width: 390px;
+            margin: 0 auto;
+            border: 1px solid #999;
+        }
+
+        .phone-frame {
+            background-color: #333;
+            border-radius: 40px;
+            padding: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .phone-content {
+            background-color: var(--bg-light);
+            border-radius: 35px;
+            height: 844px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-bar {
+            background-color: var(--primary-blue);
+            color: white;
+            padding: 8px 16px;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 35px 35px 0 0;
+        }
+
+        .app-header {
+            background-color: var(--primary-blue);
+            color: white;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .app-header-back {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .app-header-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .app-header-action {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .section-padding {
+            padding: 16px;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            margin-bottom: 12px;
+        }
+
+        .hero-card {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #2D5080 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: none;
+        }
+
+        .hero-label {
+            font-size: 11px;
+            opacity: 0.85;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .hero-status {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hero-icon {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .hero-meta {
+            font-size: 12px;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card {
+            background-color: var(--bg-card);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--primary-blue);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .quick-action-btn {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 11px;
+            color: var(--text-primary);
+            text-align: center;
+        }
+
+        .quick-action-btn:active {
+            background-color: var(--primary-blue-light);
+            border-color: var(--primary-blue);
+        }
+
+        .quick-action-icon {
+            font-size: 20px;
+            color: var(--primary-blue);
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .reminder-banner {
+            background-color: #FEE2E2;
+            border-left: 4px solid #EF4444;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .reminder-title {
+            font-weight: 700;
+            font-size: 12px;
+            color: var(--text-primary);
+        }
+
+        .reminder-subtitle {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .reminder-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-primary:active {
+            background-color: #162D4A;
+        }
+
+        .btn-secondary {
+            background-color: var(--gray-light);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:active {
+            background-color: #E5E7EB;
+        }
+
+        .btn-small {
+            padding: 6px 10px;
+            font-size: 11px;
+        }
+
+        .checklist-item {
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .checklist-checkbox {
+            width: 18px;
+            height: 18px;
+            margin-top: 2px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .checklist-content {
+            flex: 1;
+        }
+
+        .checklist-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .checklist-due {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .checklist-status {
+            font-size: 11px;
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        .document-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .document-icon {
+            font-size: 20px;
+            color: var(--rust);
+            width: 32px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .document-info {
+            flex: 1;
+        }
+
+        .document-name {
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .document-meta {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .document-actions {
+            display: flex;
+            gap: 4px;
+            font-size: 14px;
+        }
+
+        .document-actions button {
+            background: none;
+            border: none;
+            color: var(--primary-blue);
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .insurance-card {
+            background: linear-gradient(135deg, #E0F0EA 0%, #F5F9F8 100%);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .insurance-carrier {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--primary-blue);
+            margin-bottom: 8px;
+        }
+
+        .insurance-renewal {
+            background-color: rgba(31, 58, 95, 0.1);
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+
+        .insurance-renewal-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .insurance-renewal-date {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary-blue);
+        }
+
+        .insurance-detail {
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .insurance-detail-label {
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 600;
+            font-size: 10px;
+        }
+
+        .insurance-detail-value {
+            color: var(--text-primary);
+        }
+
+        .insurance-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .insurance-actions .btn {
+            flex: 1;
+            justify-content: center;
+            padding: 8px;
+            font-size: 11px;
+        }
+
+        .contractor-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .contractor-name {
+            font-weight: 700;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .contractor-meta {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .contractor-badges {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .contractor-badge {
+            font-size: 9px;
+            padding: 3px 6px;
+            background-color: var(--primary-blue-light);
+            color: var(--primary-blue);
+            border-radius: 3px;
+        }
+
+        .contractor-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .contractor-actions .btn {
+            flex: 1;
+            padding: 6px;
+            font-size: 10px;
+            justify-content: center;
+        }
+
+        .tab-bar {
+            position: sticky;
+            bottom: 0;
+            background-color: var(--bg-card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            border-radius: 0 0 35px 35px;
+        }
+
+        .tab-bar-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px;
+            color: var(--text-secondary);
+            flex: 1;
+            font-size: 10px;
+            background: none;
+            border: none;
+        }
+
+        .tab-bar-item.active {
+            color: var(--primary-blue);
+        }
+
+        .tab-bar-icon {
+            font-size: 18px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            align-items: flex-end;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-sheet {
+            background-color: var(--bg-card);
+            width: 100%;
+            border-radius: 20px 20px 0 0;
+            padding: 24px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .modal-handle {
+            width: 40px;
+            height: 4px;
+            background-color: var(--border);
+            border-radius: 2px;
+            margin: 0 auto 16px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(31, 58, 95, 0.1);
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background-color: var(--bg-light);
+        }
+
+        .upload-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .upload-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 12px;
+            padding-bottom: 16px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+
+        .timeline-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary-blue-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-blue);
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--text-primary);
+        }
+
+        .timeline-time {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* Insurance card styles */
+        .insurance-card {
+            background: linear-gradient(135deg, #E0F0EA 0%, #F5F9F8 100%);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .insurance-carrier {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--primary-blue);
+            margin-bottom: 8px;
+        }
+
+        .insurance-renewal {
+            background-color: rgba(31, 58, 95, 0.1);
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+
+        .insurance-renewal-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .insurance-renewal-date {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary-blue);
+        }
+
+        .insurance-detail {
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .insurance-detail-label {
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 600;
+            font-size: 10px;
+        }
+
+        .insurance-detail-value {
+            color: var(--text-primary);
+        }
+
+        .insurance-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .insurance-actions .btn {
+            flex: 1;
+            justify-content: center;
+            padding: 8px;
+            font-size: 11px;
+        }
+
+        @media (max-width: 390px) {
+            .phone-frame {
+                border: none;
+                border-radius: 0;
+            }
+
+            .phone-content {
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="phone-content">
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <span>9:41</span>
+                <span>📶 📡 🔋</span>
+            </div>
+
+            <!-- DASHBOARD SCREEN -->
+            <div id="screen-dashboard" class="screen active">
+                <div class="app-header">
+                    <button class="app-header-back" onclick="window.location.href='homehub-homeowner-mobile.html'" title="Back to HomeHub">
+                        <i class="fas fa-home"></i>
+                    </button>
+                    <div class="app-header-title">Wildfire Compliance</div>
+                    <button class="app-header-action" onclick="toggleTheme()">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+
+                <div class="app-content">
+                    <div class="section-padding">
+                        <!-- Reminder banner -->
+                        <div class="reminder-banner">
+                            <div class="reminder-title">⏰ Renewal expires in 45 days</div>
+                            <div class="reminder-subtitle">June 8, 2026</div>
+                            <div class="reminder-actions">
+                                <button class="btn btn-primary btn-small" onclick="openModal('requestInspectionModal')">Request Inspection</button>
+                            </div>
+                        </div>
+
+                        <!-- Hero card -->
+                        <div class="hero-card">
+                            <div class="hero-label">Current Status</div>
+                            <div class="hero-status">
+                                <div class="hero-icon">⚠️</div>
+                                <span>Needs Update</span>
+                            </div>
+                            <div class="hero-meta">
+                                Last inspection: May 23, 2023<br>
+                                Next renewal: June 8, 2026 (45 days)
+                            </div>
+                        </div>
+
+                        <!-- Quick stats -->
+                        <div class="quick-stats">
+                            <div class="stat-card">
+                                <div class="stat-value">45</div>
+                                <div class="stat-label">Days Left</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">5</div>
+                                <div class="stat-label">Documents</div>
+                            </div>
+                        </div>
+
+                        <!-- Quick actions -->
+                        <div class="quick-actions">
+                            <button class="quick-action-btn" onclick="openModal('uploadModal')">
+                                <div class="quick-action-icon">📄</div>
+                                <span>Upload</span>
+                            </button>
+                            <button class="quick-action-btn" onclick="goToScreen('share')">
+                                <div class="quick-action-icon">📤</div>
+                                <span>Share</span>
+                            </button>
+                            <button class="quick-action-btn" onclick="goToScreen('contractors')">
+                                <div class="quick-action-icon">🔧</div>
+                                <span>Contractor</span>
+                            </button>
+                            <button class="quick-action-btn" onclick="goToScreen('insurance')">
+                                <div class="quick-action-icon">📞</div>
+                                <span>Agent</span>
+                            </button>
+                        </div>
+
+                        <!-- Recent activity -->
+                        <div class="card">
+                            <div class="card-title">Recent Activity</div>
+                            <div class="timeline-item">
+                                <div class="timeline-icon"><i class="fas fa-file-pdf"></i></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Document uploaded</div>
+                                    <div class="timeline-time">Apr 23, 10:45 AM</div>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-icon"><i class="fas fa-share-alt"></i></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Packet shared with agent</div>
+                                    <div class="timeline-time">Apr 22, 2:30 PM</div>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-icon"><i class="fas fa-check-circle"></i></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Task completed</div>
+                                    <div class="timeline-time">Apr 20, 3:15 PM</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DOCUMENTS SCREEN -->
+            <div id="screen-documents" class="screen">
+                <div class="app-header">
+                    <button class="app-header-back" onclick="goToScreen('dashboard')">‹</button>
+                    <div class="app-header-title">Documents</div>
+                    <button class="app-header-action" onclick="openModal('uploadModal')">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+
+                <div class="app-content">
+                    <div class="section-padding">
+                        <div class="document-card">
+                            <div class="document-icon">📄</div>
+                            <div class="document-info">
+                                <div class="document-name">Roof Inspection Report</div>
+                                <div class="document-meta">PDF • Apr 23, 2026</div>
+                                <div class="document-meta">✓ Valid until Apr 2027</div>
+                            </div>
+                            <div class="document-actions">
+                                <button>↓</button>
+                                <button>↗</button>
+                            </div>
+                        </div>
+
+                        <div class="document-card">
+                            <div class="document-icon">🖼️</div>
+                            <div class="document-info">
+                                <div class="document-name">Before/After Photos</div>
+                                <div class="document-meta">Images • Apr 20, 2026</div>
+                                <div class="document-meta">✓ Current</div>
+                            </div>
+                            <div class="document-actions">
+                                <button>↓</button>
+                                <button>↗</button>
+                            </div>
+                        </div>
+
+                        <div class="document-card">
+                            <div class="document-icon">📄</div>
+                            <div class="document-info">
+                                <div class="document-name">Vent Installation Receipt</div>
+                                <div class="document-meta">PDF • Apr 18, 2026</div>
+                                <div class="document-meta">✓ Current</div>
+                            </div>
+                            <div class="document-actions">
+                                <button>↓</button>
+                                <button>↗</button>
+                            </div>
+                        </div>
+
+                        <div class="document-card">
+                            <div class="document-icon">📄</div>
+                            <div class="document-info">
+                                <div class="document-name">Previous Inspection 2025</div>
+                                <div class="document-meta">PDF • May 1, 2025</div>
+                                <div class="document-meta">✗ Expired May 1, 2026</div>
+                            </div>
+                            <div class="document-actions">
+                                <button>↓</button>
+                                <button>↗</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHECKLIST SCREEN -->
+            <div id="screen-checklist" class="screen">
+                <div class="app-header">
+                    <button class="app-header-back" onclick="goToScreen('dashboard')">‹</button>
+                    <div class="app-header-title">Checklist</div>
+                </div>
+
+                <div class="app-content">
+                    <div class="section-padding">
+                        <div style="margin-bottom: 16px;">
+                            <div style="font-size: 12px; font-weight: 700; margin-bottom: 6px;">3 of 7 Complete (43%)</div>
+                            <div style="background-color: var(--border); height: 6px; border-radius: 3px;">
+                                <div style="background-color: var(--green); height: 100%; width: 43%; border-radius: 3px;"></div>
+                            </div>
+                        </div>
+
+                        <div class="checklist-item">
+                            <input type="checkbox" class="checklist-checkbox" checked>
+                            <div class="checklist-content">
+                                <div class="checklist-title">Schedule and complete inspection</div>
+                                <div class="checklist-due">Due: May 15 (22 days)</div>
+                                <div class="checklist-status">✓ Done</div>
+                            </div>
+                        </div>
+
+                        <div class="checklist-item">
+                            <input type="checkbox" class="checklist-checkbox">
+                            <div class="checklist-content">
+                                <div class="checklist-title">Clear brush 30ft from home</div>
+                                <div class="checklist-due">Due: May 10 (17 days)</div>
+                            </div>
+                        </div>
+
+                        <div class="checklist-item">
+                            <input type="checkbox" class="checklist-checkbox">
+                            <div class="checklist-content">
+                                <div class="checklist-title">Trim tree branches 6-10ft</div>
+                                <div class="checklist-due">Due: May 10 (17 days)</div>
+                            </div>
+                        </div>
+
+                        <div class="checklist-item">
+                            <input type="checkbox" class="checklist-checkbox">
+                            <div class="checklist-content">
+                                <div class="checklist-title">Clean gutters & roof debris</div>
+                                <div class="checklist-due">Due: May 5 (12 days)</div>
+                            </div>
+                        </div>
+
+                        <div class="checklist-item">
+                            <input type="checkbox" class="checklist-checkbox">
+                            <div class="checklist-content">
+                                <div class="checklist-title">Verify ember-resistant vents</div>
+                                <div class="checklist-due">Due: May 1 (8 days)</div>
+                            </div>
+                        </div>
+
+                        <div class="checklist-item">
+                            <input type="checkbox" class="checklist-checkbox">
+                            <div class="checklist-content">
+                                <div class="checklist-title">Upload inspection report</div>
+                                <div class="checklist-due">Due: May 31 (38 days)</div>
+                            </div>
+                        </div>
+
+                        <div class="checklist-item">
+                            <input type="checkbox" class="checklist-checkbox" checked>
+                            <div class="checklist-content">
+                                <div class="checklist-title">Share packet with agent</div>
+                                <div class="checklist-due">Due: Jun 1 (39 days)</div>
+                                <div class="checklist-status">✓ Done</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INSURANCE SCREEN -->
+            <div id="screen-insurance" class="screen">
+                <div class="app-header">
+                    <button class="app-header-back" onclick="goToScreen('dashboard')">‹</button>
+                    <div class="app-header-title">Insurance</div>
+                </div>
+
+                <div class="app-content">
+                    <div class="section-padding">
+                        <div class="insurance-card">
+                            <div class="insurance-carrier">State Farm Insurance</div>
+                            <div class="insurance-renewal">
+                                <div class="insurance-renewal-label">Renewal In</div>
+                                <div class="insurance-renewal-date">156 Days</div>
+                            </div>
+
+                            <div class="insurance-detail">
+                                <div class="insurance-detail-label">Policy #</div>
+                                <div class="insurance-detail-value">POL-2024-556891</div>
+                            </div>
+                            <div class="insurance-detail">
+                                <div class="insurance-detail-label">Agent</div>
+                                <div class="insurance-detail-value">Sarah Johnson</div>
+                            </div>
+                            <div class="insurance-detail">
+                                <div class="insurance-detail-label">Phone</div>
+                                <div class="insurance-detail-value">(555) 123-4567</div>
+                            </div>
+                            <div class="insurance-detail">
+                                <div class="insurance-detail-label">Email</div>
+                                <div class="insurance-detail-value">sarah@statefarm.com</div>
+                            </div>
+
+                            <div class="insurance-actions">
+                                <button class="btn btn-secondary">
+                                    <i class="fas fa-phone"></i>
+                                </button>
+                                <button class="btn btn-secondary">
+                                    <i class="fas fa-envelope"></i>
+                                </button>
+                                <button class="btn btn-primary" onclick="goToScreen('share')">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTRACTORS SCREEN -->
+            <div id="screen-contractors" class="screen">
+                <div class="app-header">
+                    <button class="app-header-back" onclick="goToScreen('dashboard')">‹</button>
+                    <div class="app-header-title">Contractors</div>
+                </div>
+
+                <div class="app-content">
+                    <div class="section-padding">
+                        <div class="contractor-card">
+                            <div class="contractor-name">ProFire Solutions</div>
+                            <div class="contractor-meta">⭐ 4.9 (47) • 2 mi</div>
+                            <div class="contractor-badges">
+                                <div class="contractor-badge">✓ Verified</div>
+                                <div class="contractor-badge">✓ Licensed</div>
+                            </div>
+                            <div class="contractor-actions">
+                                <button class="btn btn-secondary btn-small" style="flex: 1;">
+                                    <i class="fas fa-phone"></i>
+                                </button>
+                                <button class="btn btn-primary btn-small" style="flex: 1;" onclick="alert('Inspection requested!')">
+                                    Request
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="contractor-card">
+                            <div class="contractor-name">FireGuard Mitigation</div>
+                            <div class="contractor-meta">⭐ 4.7 (28) • 3.5 mi</div>
+                            <div class="contractor-badges">
+                                <div class="contractor-badge">✓ Verified</div>
+                            </div>
+                            <div class="contractor-actions">
+                                <button class="btn btn-secondary btn-small" style="flex: 1;">
+                                    <i class="fas fa-phone"></i>
+                                </button>
+                                <button class="btn btn-primary btn-small" style="flex: 1;">
+                                    Request
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="contractor-card">
+                            <div class="contractor-name">Total Home Hardening</div>
+                            <div class="contractor-meta">⭐ 4.6 (15) • 5 mi</div>
+                            <div class="contractor-badges">
+                                <div class="contractor-badge">✓ Verified</div>
+                            </div>
+                            <div class="contractor-actions">
+                                <button class="btn btn-secondary btn-small" style="flex: 1;">
+                                    <i class="fas fa-phone"></i>
+                                </button>
+                                <button class="btn btn-primary btn-small" style="flex: 1;">
+                                    Request
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INSURANCE SCREEN (accessible via tab) -->
+            <div id="screen-insurance" class="screen" style="display: none;">
+                <div class="app-header">
+                    <button class="app-header-back" onclick="goToScreen('dashboard')">‹</button>
+                    <div class="app-header-title">Insurance</div>
+                </div>
+
+                <div class="app-content">
+                    <div class="section-padding">
+                        <div class="insurance-card">
+                            <div class="insurance-carrier">State Farm Insurance</div>
+                            <div class="insurance-renewal">
+                                <div class="insurance-renewal-label">Renewal In</div>
+                                <div class="insurance-renewal-date">156 Days</div>
+                            </div>
+
+                            <div class="insurance-detail">
+                                <div class="insurance-detail-label">Policy #</div>
+                                <div class="insurance-detail-value">POL-2024-556891</div>
+                            </div>
+                            <div class="insurance-detail">
+                                <div class="insurance-detail-label">Agent</div>
+                                <div class="insurance-detail-value">Sarah Johnson</div>
+                            </div>
+                            <div class="insurance-detail">
+                                <div class="insurance-detail-label">Phone</div>
+                                <div class="insurance-detail-value">(555) 123-4567</div>
+                            </div>
+                            <div class="insurance-detail">
+                                <div class="insurance-detail-label">Email</div>
+                                <div class="insurance-detail-value">sarah@statefarm.com</div>
+                            </div>
+
+                            <div class="insurance-actions">
+                                <button class="btn btn-secondary">
+                                    <i class="fas fa-phone"></i>
+                                </button>
+                                <button class="btn btn-secondary">
+                                    <i class="fas fa-envelope"></i>
+                                </button>
+                                <button class="btn btn-primary" onclick="goToScreen('share')">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HISTORY SCREEN -->
+            <div id="screen-history" class="screen" style="display: none;">
+                <div class="app-header">
+                    <button class="app-header-back" onclick="goToScreen('dashboard')">‹</button>
+                    <div class="app-header-title">History</div>
+                </div>
+
+                <div class="app-content">
+                    <div class="section-padding">
+                        <div class="card">
+                            <div class="timeline-item">
+                                <div class="timeline-icon"><i class="fas fa-file-pdf"></i></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Document uploaded</div>
+                                    <div class="timeline-time">Apr 23, 10:45 AM</div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-icon"><i class="fas fa-share-alt"></i></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Packet shared with agent</div>
+                                    <div class="timeline-time">Apr 22, 2:30 PM</div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-icon"><i class="fas fa-check-circle"></i></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Task completed</div>
+                                    <div class="timeline-time">Apr 20, 3:15 PM</div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-icon"><i class="fas fa-phone"></i></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Inspection requested</div>
+                                    <div class="timeline-time">Apr 18, 11:20 AM</div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-icon"><i class="fas fa-pencil"></i></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Insurance updated</div>
+                                    <div class="timeline-time">Apr 10, 9:30 AM</div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-icon"><i class="fas fa-bell"></i></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Yearly reminder sent</div>
+                                    <div class="timeline-time">Apr 10, 9:00 AM</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SHARE SCREEN -->
+            <div id="screen-share" class="screen">
+                <div class="app-header">
+                    <button class="app-header-back" onclick="goToScreen('dashboard')">‹</button>
+                    <div class="app-header-title">Share</div>
+                </div>
+
+                <div class="app-content">
+                    <div class="section-padding">
+                        <div class="card">
+                            <div class="card-title">Who to share with?</div>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 8px; font-weight: 400;">
+                                <input type="radio" name="recipient" checked> Insurance agent
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 8px; font-weight: 400;">
+                                <input type="radio" name="recipient"> Inspector
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 8px; font-weight: 400;">
+                                <input type="radio" name="recipient"> Contractor
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 400;">
+                                <input type="radio" name="recipient"> Other
+                            </label>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-title">What to include?</div>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 8px; font-weight: 400;">
+                                <input type="checkbox" checked> Reports & photos
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 8px; font-weight: 400;">
+                                <input type="checkbox" checked> Status summary
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 400;">
+                                <input type="checkbox"> Insurance info
+                            </label>
+                        </div>
+
+                        <button class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 16px;" onclick="alert('Compliance packet sent!')">
+                            <i class="fas fa-paper-plane"></i> Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab bar -->
+            <div class="tab-bar">
+                <button class="tab-bar-item active" onclick="goToScreen('dashboard')">
+                    <div class="tab-bar-icon">📊</div>
+                    <span>Overview</span>
+                </button>
+                <button class="tab-bar-item" onclick="goToScreen('checklist')">
+                    <div class="tab-bar-icon">✓</div>
+                    <span>Checklist</span>
+                </button>
+                <button class="tab-bar-item" onclick="goToScreen('documents')">
+                    <div class="tab-bar-icon">📄</div>
+                    <span>Documents</span>
+                </button>
+                <button class="tab-bar-item" onclick="goToScreen('insurance')">
+                    <div class="tab-bar-icon">🏢</div>
+                    <span>Insurance</span>
+                </button>
+                <button class="tab-bar-item" onclick="goToScreen('contractors')">
+                    <div class="tab-bar-icon">👷</div>
+                    <span>Contractors</span>
+                </button>
+                <button class="tab-bar-item" onclick="goToScreen('history')">
+                    <div class="tab-bar-icon">📋</div>
+                    <span>History</span>
+                </button>
+            </div>
+
+            <!-- MODALS -->
+
+            <!-- Upload Document Modal -->
+            <div id="uploadModal" class="modal-overlay">
+                <div class="modal-sheet">
+                    <div class="modal-handle"></div>
+                    <div class="modal-title">Upload Document</div>
+
+                    <div class="upload-zone">
+                        <div class="upload-icon">📱</div>
+                        <div class="upload-text">Tap to select or take photo</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Document Type</label>
+                        <select>
+                            <option>Inspection Report</option>
+                            <option>Photos</option>
+                            <option>Certificate</option>
+                            <option>Invoice</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Expiration Date (Optional)</label>
+                        <input type="date">
+                    </div>
+
+                    <button class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 8px;" onclick="alert('Document uploaded!'); closeModal('uploadModal')">Upload</button>
+                    <button class="btn btn-secondary" style="width: 100%; justify-content: center;" onclick="closeModal('uploadModal')">Cancel</button>
+                </div>
+            </div>
+
+            <!-- Request Inspection Modal -->
+            <div id="requestInspectionModal" class="modal-overlay">
+                <div class="modal-sheet">
+                    <div class="modal-handle"></div>
+                    <div class="modal-title">Request Inspection</div>
+
+                    <div class="card" style="margin-bottom: 12px;">
+                        <div style="font-weight: 600; margin-bottom: 8px;">ProFire Solutions</div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">⭐ 4.9 (47 reviews) • 2 miles</div>
+                        <button class="btn btn-primary" style="width: 100%; justify-content: center;">
+                            <i class="fas fa-phone"></i> Call to schedule
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <div style="font-weight: 600; margin-bottom: 8px;">FireGuard Mitigation</div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">⭐ 4.7 (28 reviews) • 3.5 miles</div>
+                        <button class="btn btn-primary" style="width: 100%; justify-content: center;">
+                            <i class="fas fa-phone"></i> Call to schedule
+                        </button>
+                    </div>
+
+                    <button class="btn btn-secondary" style="width: 100%; justify-content: center; margin-top: 16px;" onclick="closeModal('requestInspectionModal')">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function goToScreen(screenName) {
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => screen.classList.remove('active'));
+
+            const targetScreen = document.getElementById('screen-' + screenName);
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+            }
+
+            // Update tab bar - mark the correct tab as active
+            const tabItems = document.querySelectorAll('.tab-bar-item');
+            tabItems.forEach((item, index) => {
+                item.classList.remove('active');
+                // Find which button was clicked and set it as active
+                if (event && event.target) {
+                    const clickedTab = event.target.closest('.tab-bar-item');
+                    if (clickedTab) {
+                        clickedTab.classList.add('active');
+                    }
+                }
+            });
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('wildfire-mobile-theme', newTheme);
+        }
+
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('wildfire-mobile-theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+        });
+
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1653 @@
+<!--
+================================================================================
+HomeHub Application Suite - homehub-compliance-mobile.html
+================================================================================
+
+TITLE: Homehub Compliance Mobile
+PURPOSE: Compliance and regulatory management interface
+LAST UPDATED: 2026-05-16
+
+This HTML file is part of the HomeHub platform - a comprehensive property
+management system for homeowners. Single-page application with vanilla JS,
+responsive design, and dark mode support.
+
+================================================================================
+STRUCTURE: <style> CSS | <body> HTML | <script> JavaScript
+================================================================================
+
+CSS VARIABLES: --blue, --green, --orange, --gold (+ light/dark variants)
+RESPONSIVE: Mobile (<768px) | Tablet (768px) | Desktop (1024px+)
+DARK MODE: [data-theme="dark"] selector overrides CSS variables
+
+Key Components:
+  • Sidebar/Navigation (fixed 280px, collapsible on mobile)
+  • Responsive grid/flexbox layouts
+  • Card-based UI components
+  • Modal overlays for forms
+  • Dynamic JavaScript interactions
+
+================================================================================
+QUICK REFERENCE
+================================================================================
+
+CSS Customization:
+  1. Update color variables in :root and [data-theme="dark"]
+  2. Modify font-size and padding for spacing
+  3. Adjust media queries for different breakpoints
+
+JavaScript Patterns:
+  • DOM selection: querySelector, querySelectorAll
+  • Events: addEventListener, event delegation
+  • Storage: localStorage for persistent settings
+  • DOM updates: innerHTML, classList, setAttribute
+
+Testing:
+  ✓ Responsive design (test all breakpoints)
+  ✓ Dark mode toggle
+  ✓ Keyboard navigation
+  ✓ Button/form interactions
+  ✓ Cross-browser compatibility
+
+================================================================================
+For detailed documentation, see sections marked with === throughout the file
+================================================================================
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compliance Hub - HomeHub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-dark: #1F3A5F;
+            --primary-blue: #2D5080;
+            --accent-orange: #FF8C42;
+            --accent-green: #27A570;
+            --accent-yellow: #FDB913;
+            --bg-light: #F8F9FA;
+            --bg-white: #FFFFFF;
+            --text-primary: #000000;
+            --text-secondary: #666666;
+            --border-light: #E8E8E8;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+        }
+
+        .phone-frame {
+            max-width: 390px;
+            margin: 0 auto;
+            background: var(--bg-white);
+            border-radius: 40px;
+            border: 12px solid #000;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            min-height: 844px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-bar {
+            background-color: var(--bg-white);
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-header {
+            background-color: var(--bg-white);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .nav-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .nav-header-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        .nav-icon-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .back-button {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .content-area::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .content-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .content-area::-webkit-scrollbar-thumb {
+            background: var(--border-light);
+            border-radius: 2px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Resilience Score Card with Dial */
+        .resilience-card {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-blue) 100%);
+            color: white;
+            padding: 20px 16px;
+            margin: 12px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .resilience-card::before {
+            content: '';
+            position: absolute;
+            right: -40px;
+            bottom: -40px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        .resilience-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .resilience-dial {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: conic-gradient(
+                var(--accent-green) 0deg,
+                var(--accent-green) 313.2deg,
+                rgba(255,255,255,0.2) 313.2deg
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .resilience-dial::after {
+            content: '';
+            position: absolute;
+            width: 92px;
+            height: 92px;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-blue) 100%);
+            border-radius: 50%;
+        }
+
+        .resilience-dial-center {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        .resilience-dial-number {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .resilience-dial-label {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        .resilience-text {
+            flex: 1;
+        }
+
+        .resilience-header {
+            margin-bottom: 8px;
+        }
+
+        .resilience-title {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .resilience-detail {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 8px;
+        }
+
+        .resilience-breakdown {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .resilience-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 8px;
+            border-radius: 4px;
+        }
+
+        .resilience-item-label {
+            font-size: 9px;
+            opacity: 0.7;
+        }
+
+        .resilience-item-score {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 16px 16px 8px;
+            margin: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title-right {
+            display: flex;
+            gap: 8px;
+        }
+
+        .section-action-btn {
+            background: none;
+            border: none;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 0;
+        }
+
+        /* Compliance Sectors Grid */
+        .sectors-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            padding: 12px 16px;
+        }
+
+        .sector-card {
+            background: var(--bg-white);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .sector-card:active {
+            border-color: var(--primary-dark);
+            background: var(--bg-light);
+        }
+
+        .sector-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .sector-left {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            flex: 1;
+        }
+
+        .sector-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .sector-info {
+            flex: 1;
+        }
+
+        .sector-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 3px;
+        }
+
+        .sector-status {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .sector-status.compliant {
+            background: #E8F5E9;
+            color: var(--accent-green);
+        }
+
+        .sector-status.not-compliant {
+            background: #FFEBEE;
+            color: #D32F2F;
+        }
+
+        .sector-status.partial {
+            background: #FFF3E0;
+            color: var(--accent-orange);
+        }
+
+        .sector-actions {
+            display: flex;
+            gap: 6px;
+            margin-left: auto;
+        }
+
+        .sector-action-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-light);
+            border: 1px solid var(--border-light);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .sector-action-icon:active {
+            background: var(--primary-dark);
+            color: white;
+            border-color: var(--primary-dark);
+        }
+
+        .sector-overview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .sector-overview-item {
+            background: var(--bg-light);
+            padding: 6px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .sector-overview-label {
+            font-size: 9px;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+            line-height: 1.1;
+        }
+
+        .sector-overview-value {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Sector Detail Card */
+        .detail-hero-card {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-blue) 100%);
+            color: white;
+            padding: 16px;
+            margin: 12px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .detail-hero-card::before {
+            content: '';
+            position: absolute;
+            right: -40px;
+            bottom: -40px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        .detail-hero-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .detail-hero-left {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .detail-hero-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .detail-hero-text h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .detail-hero-text p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .detail-status-badge {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .detail-hero-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .detail-hero-stat {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .detail-hero-stat-label {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-bottom: 3px;
+        }
+
+        .detail-hero-stat-value {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--bg-white);
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid var(--border-light);
+            margin: 12px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 12px;
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .detail-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .detail-list-item {
+            display: flex;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .detail-list-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-list-item:active {
+            background: var(--bg-light);
+        }
+
+        .detail-list-icon {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .detail-list-content {
+            flex: 1;
+        }
+
+        .detail-list-title {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .detail-list-subtitle {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            background: var(--bg-white);
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            padding-bottom: 20px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            flex: 1;
+        }
+
+        .nav-item.active {
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        .nav-item-icon {
+            font-size: 20px;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .modal-section {
+            margin-bottom: 16px;
+        }
+
+        .modal-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .modal-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-item:active {
+            background: #E0E0E0;
+        }
+
+        .modal-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .modal-item-label {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 0 12px 12px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-dark);
+            color: white;
+        }
+
+        .btn-primary:active {
+            background-color: var(--primary-blue);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            border: 1px solid var(--border-light);
+        }
+
+        .btn-secondary:active {
+            background-color: #F5F5F5;
+        }
+
+        .btn-full-width {
+            width: calc(100% - 24px);
+        }
+    </style>
+</head>
+<body>
+    <!-- SCREEN 1: COMPLIANCE DASHBOARD -->
+    <div id="screen-dashboard" class="screen active">
+        <div class="phone-frame">
+            <div class="status-bar">
+                <div class="status-left">9:41</div>
+                <div class="status-right"><span>📶</span><span>📡</span><span>🔋</span></div>
+            </div>
+
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <div class="nav-header-title">Compliance</div>
+                </div>
+                <div class="nav-header-right">
+                    <button class="nav-icon-btn" onclick="openNotifications()">🔔</button>
+                    <button class="nav-icon-btn" onclick="openMenu()">⋯</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- Resilience Score Card with Dial -->
+                <div class="resilience-card">
+                    <div class="resilience-content">
+                        <div class="resilience-dial">
+                            <div class="resilience-dial-center">
+                                <div class="resilience-dial-number">87</div>
+                                <div class="resilience-dial-label">/ 100</div>
+                            </div>
+                        </div>
+                        <div class="resilience-text">
+                            <div class="resilience-header">
+                                <div class="resilience-title">RESILIENCE SCORE™</div>
+                            </div>
+                            <div class="resilience-breakdown">
+                                <div class="resilience-item">
+                                    <div class="resilience-item-label">Foundation</div>
+                                    <div class="resilience-item-score">92</div>
+                                </div>
+                                <div class="resilience-item">
+                                    <div class="resilience-item-label">Roof</div>
+                                    <div class="resilience-item-score">88</div>
+                                </div>
+                                <div class="resilience-item">
+                                    <div class="resilience-item-label">Flood</div>
+                                    <div class="resilience-item-score">81</div>
+                                </div>
+                                <div class="resilience-item">
+                                    <div class="resilience-item-label">Wind</div>
+                                    <div class="resilience-item-score">86</div>
+                                </div>
+                                <div class="resilience-item">
+                                    <div class="resilience-item-label">Freeze</div>
+                                    <div class="resilience-item-score">84</div>
+                                </div>
+                                <div class="resilience-item">
+                                    <div class="resilience-item-label">Seismic</div>
+                                    <div class="resilience-item-score">79</div>
+                                </div>
+                            </div>
+                            <div class="resilience-detail">Your home's comprehensive risk profile</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compliance Sectors -->
+                <h4 class="section-title">
+                    Compliance Sectors
+                    <div class="section-title-right">
+                        <button class="section-action-btn" onclick="openManageSectorsModal()">Manage</button>
+                    </div>
+                </h4>
+
+                <div class="sectors-grid" id="sectors-grid">
+                    <!-- Sectors will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <button class="nav-item active" onclick="goToScreen('dashboard')">
+                    <div class="nav-item-icon">🏠</div>
+                    <div>Dashboard</div>
+                </button>
+                <button class="nav-item" onclick="alert('My Home')">
+                    <div class="nav-item-icon">🏡</div>
+                    <div>My Home</div>
+                </button>
+                <button class="nav-item" onclick="alert('Projects')">
+                    <div class="nav-item-icon">📁</div>
+                    <div>Projects</div>
+                </button>
+                <button class="nav-item" onclick="alert('Contractors')">
+                    <div class="nav-item-icon">👷</div>
+                    <div>Contractors</div>
+                </button>
+                <button class="nav-item" onclick="alert('Scan')">
+                    <div class="nav-item-icon">🔍</div>
+                    <div>Scan</div>
+                </button>
+                <button class="nav-item" onclick="alert('Profile')">
+                    <div class="nav-item-icon">👤</div>
+                    <div>Profile</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTRACTOR PHONE BOOK -->
+    <div id="screen-contractor-detail" class="screen">
+        <div class="phone-frame">
+            <div class="status-bar">
+                <div class="status-left">9:41</div>
+                <div class="status-right"><span>📶</span><span>📡</span><span>🔋</span></div>
+            </div>
+
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <button class="back-button" onclick="goToScreen('sector-detail')">←</button>
+                    <div class="nav-header-title" id="contractor-title">Contractor</div>
+                </div>
+                <div class="nav-header-right">
+                    <button class="nav-icon-btn" onclick="openNotifications()">🔔</button>
+                    <button class="nav-icon-btn" onclick="openMenu()">⋯</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- Contractor Card -->
+                <div class="detail-hero-card">
+                    <div class="detail-hero-header">
+                        <div class="detail-hero-left">
+                            <div class="detail-hero-icon">👷</div>
+                            <div class="detail-hero-text">
+                                <h3 id="contractor-name">Contractor Name</h3>
+                                <p id="contractor-specialty">Specialty</p>
+                            </div>
+                        </div>
+                        <div class="detail-status-badge" id="contractor-status">✓ Verified</div>
+                    </div>
+
+                    <div class="detail-hero-body">
+                        <div class="detail-hero-stat">
+                            <div class="detail-hero-stat-label">Rating</div>
+                            <div class="detail-hero-stat-value" id="contractor-rating">4.8★</div>
+                        </div>
+                        <div class="detail-hero-stat">
+                            <div class="detail-hero-stat-label">Jobs Completed</div>
+                            <div class="detail-hero-stat-value" id="contractor-jobs">42</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="card">
+                    <div class="card-title">Contact Information</div>
+                    <div class="detail-grid">
+                        <div class="detail-item" onclick="callContractor()">
+                            <span class="detail-label" style="cursor: pointer; color: var(--primary-dark);">📞 Phone</span>
+                            <span class="detail-value" id="contractor-phone" style="cursor: pointer; color: var(--primary-dark); text-decoration: underline;">(555) 123-4567</span>
+                        </div>
+                        <div class="detail-item" onclick="textContractor()">
+                            <span class="detail-label" style="cursor: pointer; color: var(--primary-dark);">💬 Text</span>
+                            <span class="detail-value" id="contractor-text" style="cursor: pointer; color: var(--primary-dark); text-decoration: underline;">Send Message</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">📧 Email</span>
+                            <span class="detail-value" id="contractor-email">contact@example.com</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">🌐 Website</span>
+                            <span class="detail-value" id="contractor-website">www.example.com</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service Areas -->
+                <div class="card">
+                    <div class="card-title">Services</div>
+                    <div class="detail-list" id="contractor-services">
+                        <!-- Will be populated -->
+                    </div>
+                </div>
+
+                <!-- Recent Work -->
+                <div class="card">
+                    <div class="card-title">Recent Work</div>
+                    <div class="detail-list" id="contractor-work">
+                        <!-- Will be populated -->
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="alert('Booking appointment with contractor...')">📅 Book Appointment</button>
+            </div>
+
+            <div class="bottom-nav">
+                <button class="nav-item" onclick="goToScreen('dashboard')">
+                    <div class="nav-item-icon">🏠</div>
+                    <div>Dashboard</div>
+                </button>
+                <button class="nav-item" onclick="alert('My Home')">
+                    <div class="nav-item-icon">🏡</div>
+                    <div>My Home</div>
+                </button>
+                <button class="nav-item" onclick="alert('Projects')">
+                    <div class="nav-item-icon">📁</div>
+                    <div>Projects</div>
+                </button>
+                <button class="nav-item" onclick="alert('Contractors')">
+                    <div class="nav-item-icon">👷</div>
+                    <div>Contractors</div>
+                </button>
+                <button class="nav-item" onclick="alert('Scan')">
+                    <div class="nav-item-icon">🔍</div>
+                    <div>Scan</div>
+                </button>
+                <button class="nav-item" onclick="alert('Profile')">
+                    <div class="nav-item-icon">👤</div>
+                    <div>Profile</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DETAIL PAGES FOR EACH SECTOR -->
+    <div id="screen-sector-detail" class="screen">
+        <div class="phone-frame">
+            <div class="status-bar">
+                <div class="status-left">9:41</div>
+                <div class="status-right"><span>📶</span><span>📡</span><span>🔋</span></div>
+            </div>
+
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <button class="back-button" onclick="goToScreen('dashboard')">←</button>
+                    <div class="nav-header-title" id="detail-title">Wildfire</div>
+                </div>
+                <div class="nav-header-right">
+                    <button class="nav-icon-btn" onclick="openNotifications()">🔔</button>
+                    <button class="nav-icon-btn" onclick="openMenu()">⋯</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- Hero Card -->
+                <div class="detail-hero-card">
+                    <div class="detail-hero-header">
+                        <div class="detail-hero-left">
+                            <div class="detail-hero-icon" id="detail-icon">🔥</div>
+                            <div class="detail-hero-text">
+                                <h3 id="detail-hero-name">Wildfire Compliance</h3>
+                                <p id="detail-hero-desc">All requirements met</p>
+                            </div>
+                        </div>
+                        <div class="detail-status-badge" id="detail-badge">✓ Compliant</div>
+                    </div>
+
+                    <div class="detail-hero-body">
+                        <div class="detail-hero-stat">
+                            <div class="detail-hero-stat-label">Status</div>
+                            <div class="detail-hero-stat-value" id="detail-stat1">Compliant</div>
+                        </div>
+                        <div class="detail-hero-stat">
+                            <div class="detail-hero-stat-label">Last Inspection</div>
+                            <div class="detail-hero-stat-value" id="detail-stat2">Jan 15, 2024</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compliance Overview -->
+                <div class="card">
+                    <div class="card-title">Compliance Overview</div>
+                    <div class="detail-list" id="detail-overview">
+                        <!-- Will be populated -->
+                    </div>
+                </div>
+
+                <!-- Recent Inspection -->
+                <div class="card">
+                    <div class="card-title">Recent Inspection</div>
+                    <div class="detail-grid" id="detail-inspection">
+                        <!-- Will be populated -->
+                    </div>
+                </div>
+
+                <!-- Documents -->
+                <div class="card">
+                    <div class="card-title">Documents</div>
+                    <div class="detail-list" id="detail-documents">
+                        <!-- Will be populated -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <button class="nav-item active" onclick="goToScreen('dashboard')">
+                    <div class="nav-item-icon">🏠</div>
+                    <div>Dashboard</div>
+                </button>
+                <button class="nav-item" onclick="alert('My Home')">
+                    <div class="nav-item-icon">🏡</div>
+                    <div>My Home</div>
+                </button>
+                <button class="nav-item" onclick="alert('Projects')">
+                    <div class="nav-item-icon">📁</div>
+                    <div>Projects</div>
+                </button>
+                <button class="nav-item" onclick="alert('Contractors')">
+                    <div class="nav-item-icon">👷</div>
+                    <div>Contractors</div>
+                </button>
+                <button class="nav-item" onclick="alert('Scan')">
+                    <div class="nav-item-icon">🔍</div>
+                    <div>Scan</div>
+                </button>
+                <button class="nav-item" onclick="alert('Profile')">
+                    <div class="nav-item-icon">👤</div>
+                    <div>Profile</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <!-- Manage Sectors Modal -->
+    <div id="manageSectorsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Manage Compliance Sectors</h2>
+                <button class="modal-close" onclick="closeModal('manageSectorsModal')">×</button>
+            </div>
+
+            <div class="modal-section">
+                <div class="modal-section-title">Active Sectors</div>
+                <div id="active-sectors-list">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="modal-section">
+                <div class="modal-section-title">Hidden Sectors</div>
+                <div id="hidden-sectors-list">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-light);">
+                <div class="modal-section-title">Add New Sector</div>
+                <select id="add-sector-select" style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 13px; margin-bottom: 12px;">
+                    <option value="">Select a sector to add...</option>
+                </select>
+                <button class="btn btn-primary btn-full-width" onclick="addNewSector()">+ Add Sector</button>
+            </div>
+
+            <button class="btn btn-secondary btn-full-width" onclick="closeModal('manageSectorsModal')">Done</button>
+        </div>
+    </div>
+
+    <!-- NOTIFICATIONS MENU -->
+    <div id="notificationsMenu" style="display: none; position: fixed; top: 0; right: 0; width: 300px; height: 100vh; background: white; box-shadow: -2px 0 10px rgba(0,0,0,0.1); z-index: 999; padding: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 16px; font-weight: 700;">Notifications</h3>
+            <button onclick="document.getElementById('notificationsMenu').style.display='none'" style="background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
+        </div>
+        <div style="font-size: 13px; line-height: 1.6; color: #333;">
+            <div style="padding: 12px; background: #FFF3E0; border-radius: 6px; margin-bottom: 12px;">
+                <div style="font-weight: 600; margin-bottom: 4px;">Wildfire compliance incomplete</div>
+                <div style="font-size: 12px; color: #666;">Defensible space inspection needed</div>
+            </div>
+            <div style="padding: 12px; background: #E8F5E9; border-radius: 6px;">
+                <div style="font-weight: 600; margin-bottom: 4px;">Seismic reinforcement updated</div>
+                <div style="font-size: 12px; color: #666;">Foundation brace installation complete</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MENU OPTIONS -->
+    <div id="menuOptions" style="display: none; position: fixed; top: 40px; right: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 999; min-width: 200px;">
+        <button style="display: block; width: 100%; padding: 12px; text-align: left; border: none; background: none; cursor: pointer; font-size: 13px; border-bottom: 1px solid #eee;" onclick="alert('Settings'); document.getElementById('menuOptions').style.display='none';">⚙️ Settings</button>
+        <button style="display: block; width: 100%; padding: 12px; text-align: left; border: none; background: none; cursor: pointer; font-size: 13px; border-bottom: 1px solid #eee;" onclick="alert('Help & Support'); document.getElementById('menuOptions').style.display='none';">❓ Help & Support</button>
+        <button style="display: block; width: 100%; padding: 12px; text-align: left; border: none; background: none; cursor: pointer; font-size: 13px;" onclick="alert('Signed out'); document.getElementById('menuOptions').style.display='none';">🚪 Sign Out</button>
+    </div>
+
+    <script>
+        // Contractor database
+        const contractors = {
+            'FireSafe Austin': {
+                name: 'FireSafe Austin',
+                specialty: 'Wildfire Compliance Specialist',
+                phone: '(512) 555-0123',
+                email: 'info@firesafeaustin.com',
+                website: 'www.firesafeaustin.com',
+                rating: '4.9',
+                jobs: 87,
+                services: ['Defensible Space Audit', 'Vegetation Management', 'Home Hardening', 'Certification'],
+                work: ['153 Oak Ridge Drive - Completed', '892 Pinewood Lane - Completed', '456 Cedar Court - Completed']
+            },
+            'Flood Risk Solutions': {
+                name: 'Flood Risk Solutions',
+                specialty: 'Flood Mitigation Specialist',
+                phone: '(512) 555-0124',
+                email: 'help@floodrisk.com',
+                website: 'www.floodrisk.com',
+                rating: '4.7',
+                jobs: 63,
+                services: ['Elevation Assessment', 'Flood Barriers', 'Drainage Solutions', 'Insurance Coordination'],
+                work: ['220 Riverside Avenue - Completed', '789 Lakeside Road - Completed', '512 Water Street - In Progress']
+            },
+            'Storm Shield Inc': {
+                name: 'Storm Shield Inc',
+                specialty: 'Wind Mitigation Expert',
+                phone: '(512) 555-0125',
+                email: 'contact@stormshield.com',
+                website: 'www.stormshield.com',
+                rating: '4.8',
+                jobs: 54,
+                services: ['Roof Inspection', 'Impact-Resistant Materials', 'Tie-Down Installation', 'Reinforcement'],
+                work: ['342 Windy Hill - Completed', '678 Breezy Lane - Completed', '901 Storm Street - Completed']
+            },
+            'Winterize Pro': {
+                name: 'Winterize Pro',
+                specialty: 'Freeze & Water Damage Prevention',
+                phone: '(512) 555-0126',
+                email: 'service@winterizepro.com',
+                website: 'www.winterizepro.com',
+                rating: '4.6',
+                jobs: 38,
+                services: ['Pipe Insulation', 'Sump Pump Installation', 'Heat Tape Setup', 'Winterization'],
+                work: ['234 Frost Lane - Completed', '567 Ice Court - Completed', '890 Snow Avenue - Scheduled']
+            },
+            'Earthquake Safe': {
+                name: 'Earthquake Safe',
+                specialty: 'Seismic Reinforcement Specialist',
+                phone: '(512) 555-0127',
+                email: 'secure@earthquakesafe.com',
+                website: 'www.earthquakesafe.com',
+                rating: '4.9',
+                jobs: 71,
+                services: ['Foundation Bolting', 'Cripple Wall Bracing', 'Chimney Reinforcement', 'Engineering'],
+                work: ['445 Solid Rock Lane - Completed', '776 Stable Street - Completed', '123 Strong Hold - Completed']
+            },
+            'Safety First': {
+                name: 'Safety First',
+                specialty: 'Home Safety & Emergency Prep',
+                phone: '(512) 555-0128',
+                email: 'team@safetyfirst.com',
+                website: 'www.safetyfirst.com',
+                rating: '4.8',
+                jobs: 92,
+                services: ['Smoke Detector Installation', 'Fire Extinguishers', 'Emergency Kit Setup', 'Safety Audit'],
+                work: ['567 Protection Plaza - Completed', '234 Guardian Lane - Completed', '890 Secure Street - Completed']
+            }
+        };
+
+        let currentContractor = null;
+
+        function goToContractorDetail(contractorName) {
+            currentContractor = contractors[contractorName];
+            if (!currentContractor) return;
+
+            document.getElementById('contractor-title').textContent = currentContractor.name;
+            document.getElementById('contractor-name').textContent = currentContractor.name;
+            document.getElementById('contractor-specialty').textContent = currentContractor.specialty;
+            document.getElementById('contractor-phone').textContent = currentContractor.phone;
+            document.getElementById('contractor-email').textContent = currentContractor.email;
+            document.getElementById('contractor-website').textContent = currentContractor.website;
+            document.getElementById('contractor-rating').textContent = currentContractor.rating + '★';
+            document.getElementById('contractor-jobs').textContent = currentContractor.jobs;
+
+            // Services
+            const services = document.getElementById('contractor-services');
+            services.innerHTML = currentContractor.services.map(service => `
+                <div class="detail-list-item" onclick="alert('${service}')">
+                    <div class="detail-list-icon">✓</div>
+                    <div class="detail-list-content">
+                        <div class="detail-list-title">${service}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Recent Work
+            const work = document.getElementById('contractor-work');
+            work.innerHTML = currentContractor.work.map(job => `
+                <div class="detail-list-item" onclick="alert('${job}')">
+                    <div class="detail-list-icon">📋</div>
+                    <div class="detail-list-content">
+                        <div class="detail-list-title">${job}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            goToScreen('contractor-detail');
+        }
+
+        function callContractor() {
+            if (currentContractor) {
+                alert(`Calling ${currentContractor.name}...\n${currentContractor.phone}`);
+            }
+        }
+
+        function textContractor() {
+            if (currentContractor) {
+                alert(`Texting ${currentContractor.name}...\n${currentContractor.phone}`);
+            }
+        }
+
+        // Sector definitions with detailed info
+        const allSectors = [
+            {
+                id: 'wildfire',
+                name: 'Wildfire',
+                icon: '🔥',
+                status: 'compliant',
+                desc: 'All requirements met',
+                items: ['Defensible Space', 'Home Hardening', 'Embers & Vents', 'Documentation'],
+                completion: [95, 92, 88, 100],
+                inspection: { date: 'Jan 15, 2024', inspector: 'FireSafe Austin', status: 'Passed' },
+                documents: ['Compliance Certificate', 'Inspection Report', 'Property Survey']
+            },
+            {
+                id: 'flood',
+                name: 'Flood',
+                icon: '💧',
+                status: 'partial',
+                desc: '2 of 3 requirements met',
+                items: ['Elevation Certificate', 'Flood Insurance', 'Drainage Assessment', 'Sandbags/Barriers'],
+                completion: [100, 85, 75, 60],
+                inspection: { date: 'Nov 22, 2023', inspector: 'Flood Risk Solutions', status: 'In Progress' },
+                documents: ['Elevation Report', 'Insurance Policy', 'Drainage Study']
+            },
+            {
+                id: 'wind',
+                name: 'Wind/Hurricane',
+                icon: '🌪️',
+                status: 'compliant',
+                desc: 'All requirements met',
+                items: ['Roof Tie-Downs', 'Roof Straps', 'Window Protection', 'Door Reinforcement'],
+                completion: [90, 92, 88, 95],
+                inspection: { date: 'Dec 3, 2023', inspector: 'Storm Shield Inc', status: 'Passed' },
+                documents: ['Installation Certificate', 'Material Specs', 'Warranty Info']
+            },
+            {
+                id: 'freeze',
+                name: 'Freeze/Water',
+                icon: '❄️',
+                status: 'not-compliant',
+                desc: '1 of 3 requirements met',
+                items: ['Pipe Insulation', 'Sump Pump', 'Water Shut-Off', 'Heat Tape Installation'],
+                completion: [100, 40, 50, 35],
+                inspection: { date: 'Sep 10, 2023', inspector: 'Winterize Pro', status: 'Failed' },
+                documents: ['Inspection Report', 'Pipe Inventory']
+            },
+            {
+                id: 'seismic',
+                name: 'Seismic',
+                icon: '📍',
+                status: 'compliant',
+                desc: 'All requirements met',
+                items: ['Foundation Bolting', 'Cripple Wall Bracing', 'Water Heater Strapping', 'Chimney Bracing'],
+                completion: [100, 98, 100, 95],
+                inspection: { date: 'Oct 5, 2023', inspector: 'Earthquake Safe', status: 'Passed' },
+                documents: ['Engineering Report', 'Installation Cert', 'Material Receipts']
+            },
+            {
+                id: 'safety',
+                name: 'Safety',
+                icon: '🛡️',
+                status: 'compliant',
+                desc: 'All requirements met',
+                items: ['Smoke Detectors', 'CO Detectors', 'Fire Extinguishers', 'Emergency Kit'],
+                completion: [100, 100, 90, 85],
+                inspection: { date: 'Feb 1, 2024', inspector: 'Safety First', status: 'Passed' },
+                documents: ['Safety Certificate', 'Detector Records', 'Maintenance Log']
+            }
+        ];
+
+        let activeSectors = ['wildfire', 'flood', 'wind', 'freeze', 'seismic', 'safety'];
+        let hiddenSectors = [];
+
+        function renderSectors() {
+            const grid = document.getElementById('sectors-grid');
+            grid.innerHTML = '';
+
+            activeSectors.forEach(sectorId => {
+                const sector = allSectors.find(s => s.id === sectorId);
+                if (!sector) return;
+
+                const card = document.createElement('div');
+                card.className = 'sector-card';
+                card.onclick = () => goToSectorDetail(sectorId);
+
+                card.innerHTML = `
+                    <div class="sector-card-header">
+                        <div class="sector-left">
+                            <div class="sector-icon" style="background: ${getIconBg(sector.status)};">
+                                ${sector.icon}
+                            </div>
+                            <div class="sector-info">
+                                <div class="sector-name">${sector.name}</div>
+                                <span class="sector-status ${sector.status}">${formatStatus(sector.status)}</span>
+                            </div>
+                        </div>
+                        <div class="sector-actions">
+                            <div class="sector-action-icon" onclick="event.stopPropagation(); goToSectorDetail('${sectorId}')">📋</div>
+                            <div class="sector-action-icon" onclick="event.stopPropagation(); toggleHideSector('${sectorId}')">Hide</div>
+                        </div>
+                    </div>
+                    <div class="sector-overview">
+                        <div class="sector-overview-item">
+                            <div class="sector-overview-label">${sector.items[0]}</div>
+                            <div class="sector-overview-value">${sector.completion[0]}%</div>
+                        </div>
+                        <div class="sector-overview-item">
+                            <div class="sector-overview-label">${sector.items[1]}</div>
+                            <div class="sector-overview-value">${sector.completion[1]}%</div>
+                        </div>
+                        <div class="sector-overview-item">
+                            <div class="sector-overview-label">Inspection</div>
+                            <div class="sector-overview-value">${sector.inspection.status}</div>
+                        </div>
+                        <div class="sector-overview-item">
+                            <div class="sector-overview-label">Documents</div>
+                            <div class="sector-overview-value">${sector.documents.length}</div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function getIconBg(status) {
+            switch(status) {
+                case 'compliant': return '#E8F5E9';
+                case 'not-compliant': return '#FFEBEE';
+                case 'partial': return '#FFF3E0';
+                default: return '#F5F5F5';
+            }
+        }
+
+        function formatStatus(status) {
+            switch(status) {
+                case 'compliant': return '✓ Compliant';
+                case 'not-compliant': return '✗ Not Compliant';
+                case 'partial': return '⚠ Partial';
+                default: return status;
+            }
+        }
+
+        function goToSectorDetail(sectorId) {
+            const sector = allSectors.find(s => s.id === sectorId);
+            if (!sector) return;
+
+            // Update detail page content
+            document.getElementById('detail-title').textContent = sector.name;
+            document.getElementById('detail-icon').textContent = sector.icon;
+            document.getElementById('detail-hero-name').textContent = sector.name + ' Compliance';
+            document.getElementById('detail-hero-desc').textContent = sector.desc;
+            document.getElementById('detail-badge').textContent = formatStatus(sector.status);
+            document.getElementById('detail-stat1').textContent = formatStatus(sector.status);
+            document.getElementById('detail-stat2').textContent = sector.inspection.date;
+
+            // Overview items
+            const overview = document.getElementById('detail-overview');
+            overview.innerHTML = sector.items.map((item, idx) => `
+                <div class="detail-list-item" onclick="alert('${item}: ${sector.completion[idx]}% complete')">
+                    <div class="detail-list-icon">✓</div>
+                    <div class="detail-list-content">
+                        <div class="detail-list-title">${item}</div>
+                        <div class="detail-list-subtitle">${sector.completion[idx]}% Complete</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Inspection details
+            const inspection = document.getElementById('detail-inspection');
+            inspection.innerHTML = `
+                <div class="detail-item">
+                    <span class="detail-label">Inspector</span>
+                    <span class="detail-value" style="cursor: pointer; color: var(--primary-dark); text-decoration: underline;" onclick="goToContractorDetail('${sector.inspection.inspector}')">${sector.inspection.inspector}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Date</span>
+                    <span class="detail-value">${sector.inspection.date}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Result</span>
+                    <span class="detail-value">${sector.inspection.status}</span>
+                </div>
+            `;
+
+            // Documents
+            const docs = document.getElementById('detail-documents');
+            docs.innerHTML = sector.documents.map(doc => `
+                <div class="detail-list-item" onclick="alert('View/Download: ${doc}')">
+                    <div class="detail-list-icon">📄</div>
+                    <div class="detail-list-content">
+                        <div class="detail-list-title">${doc}</div>
+                        <div class="detail-list-subtitle">View • Download • Share</div>
+                    </div>
+                </div>
+            `).join('');
+
+            goToScreen('sector-detail');
+        }
+
+        function toggleHideSector(sectorId) {
+            const idx = activeSectors.indexOf(sectorId);
+            if (idx > -1) {
+                activeSectors.splice(idx, 1);
+                hiddenSectors.push(sectorId);
+            }
+            renderSectors();
+            updateManageSectorsModal();
+        }
+
+        function toggleShowSector(sectorId) {
+            const idx = hiddenSectors.indexOf(sectorId);
+            if (idx > -1) {
+                hiddenSectors.splice(idx, 1);
+                activeSectors.push(sectorId);
+            }
+            renderSectors();
+            updateManageSectorsModal();
+        }
+
+        function updateManageSectorsModal() {
+            const activeList = document.getElementById('active-sectors-list');
+            const hiddenList = document.getElementById('hidden-sectors-list');
+
+            activeList.innerHTML = activeSectors.map(id => {
+                const sector = allSectors.find(s => s.id === id);
+                return `
+                    <div class="modal-item">
+                        <input type="checkbox" checked onchange="if(!this.checked) toggleHideSector('${id}')">
+                        <div class="modal-item-label">${sector.name}</div>
+                    </div>
+                `;
+            }).join('');
+
+            hiddenList.innerHTML = hiddenSectors.length === 0 ? '<div style="font-size: 12px; color: var(--text-secondary); padding: 12px;">No hidden sectors</div>' :
+                hiddenSectors.map(id => {
+                    const sector = allSectors.find(s => s.id === id);
+                    return `
+                        <div class="modal-item">
+                            <input type="checkbox" onchange="if(this.checked) toggleShowSector('${id}')">
+                            <div class="modal-item-label">${sector.name}</div>
+                        </div>
+                    `;
+                }).join('');
+
+            // Update add sector dropdown
+            const select = document.getElementById('add-sector-select');
+            const availableIds = allSectors
+                .filter(s => !activeSectors.includes(s.id) && !hiddenSectors.includes(s.id))
+                .map(s => s.id);
+
+            select.innerHTML = '<option value="">Select a sector to add...</option>' +
+                availableIds.map(id => {
+                    const sector = allSectors.find(s => s.id === id);
+                    return `<option value="${id}">${sector.name}</option>`;
+                }).join('');
+        }
+
+        function addNewSector() {
+            const select = document.getElementById('add-sector-select');
+            const sectorId = select.value;
+            if (sectorId && !activeSectors.includes(sectorId)) {
+                activeSectors.push(sectorId);
+                const hiddenIdx = hiddenSectors.indexOf(sectorId);
+                if (hiddenIdx > -1) {
+                    hiddenSectors.splice(hiddenIdx, 1);
+                }
+                renderSectors();
+                updateManageSectorsModal();
+                select.value = '';
+            }
+        }
+
+        function goToScreen(screenName) {
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => screen.classList.remove('active'));
+            const targetScreen = document.getElementById('screen-' + screenName);
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function openManageSectorsModal() {
+            updateManageSectorsModal();
+            document.getElementById('manageSectorsModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function openNotifications() {
+            const menu = document.getElementById('notificationsMenu');
+            const options = document.getElementById('menuOptions');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            options.style.display = 'none';
+        }
+
+        function openMenu() {
+            const menu = document.getElementById('menuOptions');
+            const notifications = document.getElementById('notificationsMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            notifications.style.display = 'none';
+        }
+
+        document.addEventListener('click', function(e) {
+            const notifications = document.getElementById('notificationsMenu');
+            const menu = document.getElementById('menuOptions');
+
+            if (!e.target.closest('.nav-icon-btn') && !e.target.closest('#notificationsMenu') && !e.target.closest('#menuOptions')) {
+                notifications.style.display = 'none';
+                menu.style.display = 'none';
+            }
+        });
+
+        // Close modals when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+
+        // Initialize
+        renderSectors();
+    </script>
+</body>
+</html>

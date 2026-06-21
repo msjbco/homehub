@@ -1,0 +1,2649 @@
+<!--
+================================================================================
+HomeHub Application Suite - homehub-admin-mobile.html
+================================================================================
+
+TITLE: Homehub Admin Mobile
+PURPOSE: Administrative control panel — mobile phone mockup
+LAST UPDATED: 2026-05-20
+
+================================================================================
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HomeHub – Admin Mobile</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #1a1a2e;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 30px 20px;
+}
+
+/* ── Phone Frame ── */
+.phone {
+  width: 390px;
+  min-height: 844px;
+  height: 844px;
+  background: #F8FAFC;
+  border-radius: 44px;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.5), 0 0 0 10px #111, 0 0 0 12px #333;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Status Bar ── */
+.status-bar {
+  background: #0F172A;
+  padding: 14px 24px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  flex-shrink: 0;
+  z-index: 100;
+  position: relative;
+}
+.status-bar .notch {
+  width: 100px; height: 26px;
+  background: #000;
+  border-radius: 0 0 18px 18px;
+  position: absolute; top: 0; left: 50%;
+  transform: translateX(-50%);
+}
+.status-icons { display: flex; gap: 6px; align-items: center; }
+
+/* ── Screen Container ── */
+.screen-container {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+.screen {
+  position: absolute; inset: 0;
+  overflow-y: auto; overflow-x: hidden;
+  display: none; flex-direction: column;
+  background: #F1F5F9;
+  scrollbar-width: none;
+}
+.screen::-webkit-scrollbar { display: none; }
+.screen.active { display: flex; }
+
+/* ── Bottom Nav ── */
+.bottom-nav {
+  background: #0F172A;
+  border-top: 1px solid #1E293B;
+  display: flex;
+  padding: 8px 0 20px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+.nav-item {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 3px;
+  cursor: pointer; padding: 4px 0;
+  transition: all 0.2s; position: relative;
+}
+.nav-item i { font-size: 17px; color: #475569; transition: all 0.2s; }
+.nav-item span { font-size: 9px; color: #475569; font-weight: 500; transition: all 0.2s; }
+.nav-item.active i, .nav-item.active span { color: #C4A747; }
+.nav-item:hover i, .nav-item:hover span { color: #94A3B8; }
+.nav-badge-dot {
+  position: absolute; top: 0; right: 12px;
+  background: #ef4444; color: white;
+  border-radius: 10px; padding: 1px 5px;
+  font-size: 8px; font-weight: 700;
+}
+
+/* ── Design Tokens ── */
+:root {
+  --gold: #C4A747;
+  --gold-light: rgba(196,167,71,0.12);
+  --navy: #0F172A;
+  --blue: #1a73e8;
+  --blue-light: #EFF6FF;
+  --success: #22c55e;
+  --success-bg: #DCFCE7;
+  --warning: #f59e0b;
+  --warning-bg: #FEF3C7;
+  --alert: #ef4444;
+  --alert-bg: #FEE2E2;
+  --text: #1E293B;
+  --text-secondary: #64748B;
+  --border: #E2E8F0;
+  --card: #FFFFFF;
+  --bg: #F1F5F9;
+}
+
+/* ── Shared Components ── */
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+  overflow: hidden;
+}
+
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 8px; border-radius: 4px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
+}
+.badge-success { background: var(--success-bg); color: #065F46; }
+.badge-warning { background: var(--warning-bg); color: #92400E; }
+.badge-alert   { background: var(--alert-bg);   color: #7F1D1D; }
+.badge-info    { background: #DBEAFE; color: #1E40AF; }
+.badge-gold    { background: var(--gold-light); color: var(--gold); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 16px; border-radius: 10px;
+  font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; transition: all 0.2s;
+}
+.btn-primary  { background: var(--gold); color: #1a1a1a; }
+.btn-primary:hover { background: #b8941f; }
+.btn-secondary { background: #F1F5F9; color: var(--text); border: 1px solid var(--border); }
+.btn-danger   { background: var(--alert-bg); color: var(--alert); }
+.btn-sm { padding: 6px 12px; font-size: 11px; border-radius: 8px; }
+.btn-full { width: 100%; }
+
+/* ── Screen Header ── */
+.screen-header {
+  background: var(--navy);
+  padding: 16px;
+  display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0;
+}
+.screen-header .back-btn {
+  width: 32px; height: 32px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px; border: none;
+  color: white; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+}
+.screen-header h2 {
+  font-size: 16px; font-weight: 700; color: white; flex: 1;
+}
+.screen-header .header-action {
+  background: var(--gold); color: #1a1a1a;
+  border: none; border-radius: 8px;
+  padding: 6px 12px; font-size: 11px; font-weight: 700;
+  cursor: pointer; white-space: nowrap;
+}
+
+.screen-body { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+/* ── Login Screen ── */
+#screen-login {
+  background: linear-gradient(160deg, #0F172A 0%, #1E293B 100%);
+}
+.login-logo {
+  width: 56px; height: 56px;
+  background: var(--gold); border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 800; color: #1a1a1a;
+  margin: 0 auto 12px;
+}
+.login-title { font-size: 22px; font-weight: 800; color: white; text-align: center; }
+.login-sub { font-size: 13px; color: #94A3B8; text-align: center; margin-bottom: 24px; }
+.form-field { margin-bottom: 14px; }
+.form-label { font-size: 11px; font-weight: 600; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
+.form-input {
+  width: 100%; padding: 12px 14px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px; font-size: 14px; color: white;
+  font-family: 'Inter', sans-serif;
+}
+.form-input::placeholder { color: #475569; }
+.form-input:focus { outline: none; border-color: var(--gold); }
+.demo-divider { text-align: center; color: #475569; font-size: 11px; margin: 14px 0; }
+.demo-btn {
+  width: 100%; padding: 11px;
+  background: rgba(196,167,71,0.1);
+  border: 1px solid rgba(196,167,71,0.3);
+  border-radius: 10px; font-size: 13px; font-weight: 600;
+  color: var(--gold); cursor: pointer; margin-bottom: 8px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── Dashboard ── */
+.dashboard-topbar {
+  background: var(--navy);
+  padding: 16px;
+  flex-shrink: 0;
+}
+.dash-greeting { font-size: 11px; color: #94A3B8; }
+.dash-title { font-size: 18px; font-weight: 800; color: white; margin-top: 2px; }
+.dash-subtitle { font-size: 11px; color: #64748B; margin-top: 2px; }
+
+.alert-strip {
+  background: var(--alert-bg);
+  border-left: 3px solid var(--alert);
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px; color: #7F1D1D;
+  cursor: pointer;
+}
+
+/* Metric Cards */
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.metric-card {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.metric-label { font-size: 10px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+.metric-value { font-size: 24px; font-weight: 800; color: var(--text); margin: 4px 0; }
+.metric-sub { font-size: 10px; font-weight: 600; }
+.metric-sub.up { color: var(--success); }
+.metric-sub.down { color: var(--alert); }
+.metric-sub.neutral { color: var(--text-secondary); }
+
+/* Section header */
+.section-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.6px; color: var(--text-secondary); margin-bottom: 8px;
+  padding: 0 2px;
+}
+
+/* Pending Actions */
+.pending-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+}
+.pending-item:last-child { border-bottom: none; }
+.pending-item-label { font-size: 13px; color: var(--text); }
+.pending-count { font-size: 16px; font-weight: 800; }
+
+/* Health bars */
+.health-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+}
+.health-row:last-child { border-bottom: none; }
+.health-label { font-size: 11px; font-weight: 600; flex: 0 0 70px; }
+.health-bar-wrap { flex: 1; height: 8px; background: #E2E8F0; border-radius: 4px; overflow: hidden; }
+.health-bar-fill { height: 100%; border-radius: 4px; }
+.health-pct { font-size: 11px; font-weight: 700; flex: 0 0 28px; text-align: right; }
+
+/* Quick stats */
+.quick-stat-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #F8FAFC; border-radius: 10px; padding: 12px 14px;
+}
+.qs-val { font-size: 20px; font-weight: 800; color: var(--text); }
+.qs-label { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+/* ── List Items ── */
+.list-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background 0.15s;
+}
+.list-item:hover { background: #F8FAFC; }
+.list-item:last-child { border-bottom: none; }
+
+.avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: white;
+  flex-shrink: 0;
+}
+.avatar-sq {
+  width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+  background: var(--gold-light);
+}
+
+.list-item-main { flex: 1; min-width: 0; }
+.list-item-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.list-item-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.list-item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+
+/* ── Detail Panels ── */
+.detail-section { margin-bottom: 16px; }
+.detail-section-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.6px; color: var(--text-secondary);
+  padding: 0 16px; margin-bottom: 4px;
+}
+.detail-row {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 10px 16px; border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-label { color: var(--text-secondary); flex: 0 0 110px; }
+.detail-value { font-weight: 500; text-align: right; flex: 1; }
+
+/* Action sheet buttons */
+.action-sheet {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 16px;
+}
+.action-btn {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px; border-radius: 12px;
+  background: #F8FAFC; border: 1px solid var(--border);
+  cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text);
+  font-family: 'Inter', sans-serif;
+}
+.action-btn i { width: 20px; text-align: center; color: var(--text-secondary); }
+.action-btn.danger { color: var(--alert); background: var(--alert-bg); border-color: #FCA5A5; }
+.action-btn.danger i { color: var(--alert); }
+
+/* ── Filter Bar ── */
+.filter-bar {
+  display: flex; gap: 8px; overflow-x: auto;
+  padding: 12px 16px; background: var(--card);
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+  scrollbar-width: none;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+.filter-chip {
+  white-space: nowrap; padding: 6px 12px;
+  border-radius: 20px; border: 1px solid var(--border);
+  background: var(--bg); font-size: 11px; font-weight: 600;
+  color: var(--text-secondary); cursor: pointer;
+  font-family: 'Inter', sans-serif; transition: all 0.2s;
+}
+.filter-chip.active { background: var(--navy); color: white; border-color: var(--navy); }
+
+/* ── Search Bar ── */
+.search-wrap {
+  padding: 10px 16px; background: var(--card);
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.search-input {
+  width: 100%; padding: 9px 12px 9px 34px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 10px; font-size: 13px; color: var(--text);
+  font-family: 'Inter', sans-serif; position: relative;
+}
+.search-wrap { position: relative; }
+.search-wrap i {
+  position: absolute; left: 26px; top: 50%;
+  transform: translateY(-50%); color: var(--text-secondary); font-size: 12px;
+}
+
+/* ── Modal overlay ── */
+.modal-overlay {
+  display: none; position: absolute; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 500; align-items: flex-end;
+}
+.modal-overlay.active { display: flex; }
+.modal-sheet {
+  background: white; border-radius: 20px 20px 0 0;
+  width: 100%; padding: 20px; max-height: 85%;
+  overflow-y: auto;
+}
+.modal-handle {
+  width: 36px; height: 4px; background: #CBD5E1;
+  border-radius: 2px; margin: 0 auto 16px;
+}
+.modal-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.modal-sub { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
+
+/* ── Support Ticket ── */
+.ticket-item {
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.ticket-item:hover { background: #F8FAFC; }
+.ticket-item:last-child { border-bottom: none; }
+.ticket-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.ticket-title { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; padding-right: 8px; }
+.ticket-body { font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; line-height: 1.4; }
+.ticket-footer { display: flex; justify-content: space-between; align-items: center; }
+.ticket-meta { font-size: 10px; color: var(--text-secondary); }
+
+/* ── Activity Log ── */
+.activity-section-header {
+  background: #F1F5F9; padding: 8px 16px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.6px; color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+}
+.activity-item {
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  display: flex; gap: 10px;
+}
+.activity-time { font-size: 10px; color: var(--text-secondary); flex: 0 0 55px; line-height: 1.4; }
+.activity-body { flex: 1; }
+.activity-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.activity-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
+.activity-badge { flex-shrink: 0; margin-top: 2px; }
+
+/* ── Analytics ── */
+.analytics-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.analytics-bar-label { font-size: 11px; color: var(--text-secondary); flex: 0 0 60px; }
+.analytics-bar-wrap { flex: 1; height: 20px; background: #F1F5F9; border-radius: 6px; overflow: hidden; }
+.analytics-bar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding-left: 8px; font-size: 10px; font-weight: 700; color: white; }
+.analytics-bar-val { font-size: 11px; font-weight: 700; flex: 0 0 36px; text-align: right; }
+
+/* ── Pagination ── */
+.pagination {
+  display: flex; align-items: center; justify-content: center;
+  gap: 12px; padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text-secondary);
+}
+.page-btn {
+  padding: 6px 12px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg);
+  font-size: 11px; font-weight: 600; color: var(--text);
+  cursor: pointer; font-family: 'Inter', sans-serif;
+}
+
+/* ── Hamburger Menu Drawer ── */
+.drawer-overlay {
+  display: none; position: absolute; inset: 0;
+  background: rgba(0,0,0,0.6); z-index: 800;
+}
+.drawer-overlay.active { display: block; }
+.drawer {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 280px; background: var(--navy);
+  z-index: 900; display: flex; flex-direction: column;
+  transform: translateX(-100%); transition: transform 0.3s ease;
+}
+.drawer.open { transform: translateX(0); }
+.drawer-header {
+  padding: 20px 16px; border-bottom: 1px solid #1E293B;
+  display: flex; align-items: center; gap: 10px;
+}
+.drawer-logo {
+  width: 36px; height: 36px; background: var(--gold);
+  border-radius: 8px; display: flex; align-items: center;
+  justify-content: center; font-size: 14px; font-weight: 800; color: #1a1a1a;
+}
+.drawer-logo-text { font-size: 14px; font-weight: 800; color: white; }
+.drawer-logo-sub { font-size: 10px; color: #64748B; }
+.drawer-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
+.drawer-section-title {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; color: #475569; padding: 12px 16px 6px;
+}
+.drawer-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 16px; cursor: pointer; transition: background 0.15s;
+  font-size: 13px; font-weight: 500; color: #94A3B8;
+  position: relative;
+}
+.drawer-item:hover { background: rgba(255,255,255,0.06); color: white; }
+.drawer-item.active { background: rgba(196,167,71,0.12); color: var(--gold); }
+.drawer-item i { width: 18px; text-align: center; font-size: 14px; }
+.drawer-item-badge {
+  margin-left: auto; background: #ef4444; color: white;
+  border-radius: 10px; padding: 1px 6px; font-size: 9px; font-weight: 700;
+}
+.drawer-footer {
+  padding: 16px; border-top: 1px solid #1E293B;
+  display: flex; align-items: center; gap: 10px;
+}
+.drawer-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: white;
+}
+.drawer-user-name { font-size: 13px; font-weight: 600; color: white; }
+.drawer-user-role { font-size: 10px; color: #64748B; }
+.drawer-logout {
+  margin-left: auto; background: none; border: 1px solid #374151;
+  border-radius: 6px; padding: 6px 8px; color: #94A3B8;
+  cursor: pointer; font-size: 12px;
+}
+
+/* ── Role Switcher in Drawer ── */
+.role-switcher-wrap { padding: 8px; }
+.role-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 8px; cursor: pointer;
+  font-size: 12px; font-weight: 500; color: #94A3B8;
+  transition: background 0.15s;
+}
+.role-btn:hover { background: rgba(255,255,255,0.06); color: white; }
+.role-btn.current { background: rgba(196,167,71,0.15); color: var(--gold); }
+.role-btn i { width: 16px; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span>9:41</span>
+    <div class="notch"></div>
+    <div class="status-icons">
+      <i class="fas fa-signal" style="font-size:10px;"></i>
+      <i class="fas fa-wifi" style="font-size:10px;"></i>
+      <i class="fas fa-battery-three-quarters" style="font-size:10px;"></i>
+    </div>
+  </div>
+
+  <!-- SCREEN CONTAINER -->
+  <div class="screen-container">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: LOGIN -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-login" class="screen active" style="background: linear-gradient(160deg,#0F172A 0%,#1E293B 100%); padding: 32px 24px;">
+      <div style="margin-bottom: 32px; text-align: center;">
+        <div class="login-logo">HH</div>
+        <div class="login-title">Admin Sign In</div>
+        <div class="login-sub">Access the HomeHub admin dashboard</div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Email Address</label>
+        <input class="form-input" type="email" placeholder="admin@example.com">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary btn-full" style="margin-top: 8px; padding: 14px;" onclick="goToScreen('dashboard')">
+        Sign In
+      </button>
+      <!-- ARCH: Demo login section — prototype only.
+           Production: SSO (OAuth2/OIDC), MFA enforcement, IP-allowlist for admin routes.
+           SOC2 CC6.1: Logical access controls enforced at server side. -->
+      <div class="demo-divider">— Demo Access —</div>
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#64748B;margin-bottom:6px;">Customer Roles</div>
+      <button class="demo-btn" onclick="adminDemoLogin('admin','Admin User','admin@homehub.com')">
+        ⚙️ Platform Admin
+      </button>
+      <button class="demo-btn" onclick="adminDemoLogin('community-manager','Sarah Park','community@demo.com')">
+        🏘️ Community Manager
+      </button>
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#64748B;margin-top:10px;margin-bottom:6px;">HomeHub Internal</div>
+      <button class="demo-btn" style="background:linear-gradient(135deg,#C4A747,#a08935);color:#1a1a1a;font-weight:700;" onclick="adminDemoLogin('superadmin','Michael (SuperAdmin)','michael@homehub.com')">
+        👑 SuperAdmin — Full Access
+      </button>
+      <button class="demo-btn" onclick="adminDemoLogin('hh-platform-admin','Alex Chen (Platform Admin)','alex@homehub.com')">
+        🛡️ HH Platform Admin
+      </button>
+      <button class="demo-btn" onclick="adminDemoLogin('hh-ae','Jordan Walsh (AE)','jordan@homehub.com')">
+        💼 Account Executive
+      </button>
+      <button class="demo-btn" onclick="adminDemoLogin('hh-support','Taylor Moore (Support)','taylor@homehub.com')">
+        🎧 Customer Support
+      </button>
+      <button class="demo-btn" onclick="adminDemoLogin('hh-finance','Casey Kim (Finance)','casey@homehub.com')">
+        💰 Finance / Billing
+      </button>
+      <button class="demo-btn" onclick="adminDemoLogin('hh-sales-mgr','Dana Scott (Sales Mgr)','dana@homehub.com')">
+        📈 Sales Manager
+      </button>
+      <button class="demo-btn" onclick="adminDemoLogin('hh-ops','Riley Johnson (Ops)','riley@homehub.com')">
+        ⚡ Operations / Admin
+      </button>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: DASHBOARD -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-dashboard" class="screen">
+      <div class="dashboard-topbar">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="dash-greeting">Good morning, Michael</div>
+            <div class="dash-title">Dashboard</div>
+            <div class="dash-subtitle">System overview · Last 30 days</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button style="width:32px;height:32px;background:rgba(255,255,255,0.08);border:none;border-radius:8px;color:white;cursor:pointer;" onclick="toggleTheme()">
+              <i class="fas fa-moon" id="theme-icon" style="font-size:13px;"></i>
+            </button>
+            <button style="width:32px;height:32px;background:rgba(255,255,255,0.08);border:none;border-radius:8px;color:white;cursor:pointer;" onclick="openDrawer()">
+              <i class="fas fa-bars" style="font-size:13px;"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert-strip" onclick="goToScreen('contractors')">
+        <i class="fas fa-exclamation-triangle" style="color:var(--alert);font-size:12px;"></i>
+        <span><strong>5 pending contractor approvals</strong> — Tap to review</span>
+        <i class="fas fa-chevron-right" style="margin-left:auto;font-size:10px;color:#B91C1C;"></i>
+      </div>
+
+      <div class="screen-body">
+
+        <!-- Key Metrics -->
+        <div class="section-title">Key Metrics</div>
+        <div class="metric-grid">
+          <div class="metric-card">
+            <div class="metric-label">Active Users</div>
+            <div class="metric-value">3,847</div>
+            <div class="metric-sub up">↑ 12.5% vs last mo.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Properties</div>
+            <div class="metric-value">8,234</div>
+            <div class="metric-sub up">↑ 8.3% vs last mo.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Contractors</div>
+            <div class="metric-value">342</div>
+            <div class="metric-sub up">↑ 22 new this mo.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">MRR / ARR</div>
+            <div class="metric-value">$12.4K</div>
+            <div class="metric-sub neutral">ARR: $148.8K</div>
+          </div>
+        </div>
+
+        <!-- Pending Actions -->
+        <div class="section-title">Pending Actions</div>
+        <div class="card">
+          <div class="pending-item" onclick="goToScreen('contractors')">
+            <div class="pending-item-label">Contractor approvals</div>
+            <div class="pending-count" style="color:var(--alert);">5</div>
+          </div>
+          <div class="pending-item" onclick="goToScreen('support-tickets')">
+            <div class="pending-item-label">Support tickets (open)</div>
+            <div class="pending-count" style="color:var(--warning);">12</div>
+          </div>
+          <div class="pending-item" onclick="goToScreen('data-quality')">
+            <div class="pending-item-label">Data quality issues</div>
+            <div class="pending-count" style="color:var(--warning);">34</div>
+          </div>
+          <div class="pending-item" onclick="goToScreen('users')">
+            <div class="pending-item-label">Flagged user alerts</div>
+            <div class="pending-count" style="color:var(--alert);">12</div>
+          </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="section-title">Quick Stats</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div class="quick-stat-row">
+            <div><div class="qs-val">187</div><div class="qs-label">Projects completed (30d)</div></div>
+          </div>
+          <div class="quick-stat-row">
+            <div><div class="qs-val">23</div><div class="qs-label">Cost disputes active</div></div>
+          </div>
+          <div class="quick-stat-row">
+            <div><div class="qs-val">94.2%</div><div class="qs-label">Confirmation success rate</div></div>
+          </div>
+        </div>
+
+        <!-- Property Health -->
+        <div class="section-title">Property Health Distribution</div>
+        <div class="card" style="padding: 14px 16px;">
+          <div class="health-row">
+            <div class="health-label" style="color:var(--success);">Good (60+)</div>
+            <div class="health-bar-wrap"><div class="health-bar-fill" style="width:68%;background:var(--success);"></div></div>
+            <div class="health-pct" style="color:var(--success);">68%</div>
+          </div>
+          <div class="health-row">
+            <div class="health-label" style="color:var(--warning);">Fair (40–60)</div>
+            <div class="health-bar-wrap"><div class="health-bar-fill" style="width:24%;background:var(--warning);"></div></div>
+            <div class="health-pct" style="color:var(--warning);">24%</div>
+          </div>
+          <div class="health-row">
+            <div class="health-label" style="color:var(--alert);">Poor (&lt;40)</div>
+            <div class="health-bar-wrap"><div class="health-bar-fill" style="width:8%;background:var(--alert);"></div></div>
+            <div class="health-pct" style="color:var(--alert);">8%</div>
+          </div>
+        </div>
+
+        <!-- Signup Trend (simplified mobile bar chart) -->
+        <div class="section-title">Signup Trend (7d)</div>
+        <div class="card" style="padding: 14px 16px;">
+          <div id="mobile-chart" style="display:flex; align-items:flex-end; gap:6px; height:80px; padding-bottom:4px;"></div>
+          <div style="display:flex; gap:12px; margin-top:10px; flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:4px;font-size:10px;"><div style="width:8px;height:8px;background:#667eea;border-radius:2px;"></div>Homeowners</div>
+            <div style="display:flex;align-items:center;gap:4px;font-size:10px;"><div style="width:8px;height:8px;background:#27A570;border-radius:2px;"></div>Contractors</div>
+            <div style="display:flex;align-items:center;gap:4px;font-size:10px;"><div style="width:8px;height:8px;background:#F5A623;border-radius:2px;"></div>Landlords</div>
+          </div>
+        </div>
+
+      </div><!-- /screen-body -->
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: USERS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-users" class="screen">
+      <div class="screen-header">
+        <button class="back-btn" onclick="goToScreen('dashboard')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Users</h2>
+        <div style="background:var(--alert);color:white;border-radius:12px;padding:2px 8px;font-size:10px;font-weight:700;">12 alerts</div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-chip active" onclick="setFilter(this,'users-all')">All (3,847)</div>
+        <div class="filter-chip" onclick="setFilter(this,'users-flagged')">Flagged (12)</div>
+        <div class="filter-chip" onclick="setFilter(this,'users-homeowners')">Homeowners</div>
+        <div class="filter-chip" onclick="setFilter(this,'users-contractors')">Contractors</div>
+        <div class="filter-chip" onclick="setFilter(this,'users-landlords')">Landlords</div>
+      </div>
+
+      <div class="search-wrap">
+        <i class="fas fa-search"></i>
+        <input class="search-input" placeholder="Search name, email, phone…" style="padding-left:34px;">
+      </div>
+
+      <!-- Flagged Alert Cards (shown when Flagged filter active) -->
+      <div id="users-flagged-section" style="display:none; padding:12px; gap:10px; flex-direction:column;">
+        <div class="card" style="border-left:4px solid var(--alert);">
+          <div style="padding:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <div style="font-size:13px;font-weight:700;">Robert Chen</div>
+              <span class="badge badge-alert">CRITICAL</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">robert@example.com · Contractor</div>
+            <div style="font-size:12px;background:#FEF2F2;padding:8px;border-radius:6px;margin-bottom:10px;color:var(--text);">
+              Fraudulent activity detected — multiple high-cost disputes, 3 homeowner complaints
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-sm btn-secondary" onclick="showUserDetail('robert-chen')">Review</button>
+              <button class="btn btn-sm btn-danger" onclick="alert('Account suspended')">Suspend</button>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="border-left:4px solid var(--warning);">
+          <div style="padding:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <div style="font-size:13px;font-weight:700;">James Wilson</div>
+              <span class="badge badge-warning">WARNING</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">james@example.com · Homeowner</div>
+            <div style="font-size:12px;background:#FFFBEB;padding:8px;border-radius:6px;margin-bottom:10px;color:var(--text);">
+              Unverified email for 45 days — auto-suspension in 15 days
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-sm btn-secondary" onclick="alert('Verification email sent')">Resend Verify</button>
+              <button class="btn btn-sm btn-secondary" onclick="alert('Deadline extended')">Extend</button>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="border-left:4px solid var(--warning);">
+          <div style="padding:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <div style="font-size:13px;font-weight:700;">Lisa Chen</div>
+              <span class="badge badge-warning">WARNING</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">lisa@example.com · Landlord</div>
+            <div style="font-size:12px;background:#FFFBEB;padding:8px;border-radius:6px;margin-bottom:10px;color:var(--text);">
+              Inactive for 120 days — consider re-engagement or cleanup
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-sm btn-secondary" onclick="alert('Re-engagement campaign sent')">Re-engage</button>
+              <button class="btn btn-sm btn-secondary" onclick="alert('Account archived')">Archive</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users list -->
+      <div id="users-all-section" class="card" style="margin:12px;border-radius:14px;overflow:hidden;">
+        <div style="padding:10px 16px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border);">Showing 4 of 3,847</div>
+        <div class="list-item" onclick="goToScreen('user-detail')">
+          <div class="avatar" style="background:linear-gradient(135deg,#667eea,#764ba2);">SD</div>
+          <div class="list-item-main">
+            <div class="list-item-name">Sarah Davis</div>
+            <div class="list-item-sub">sarah@example.com · Homeowner</div>
+          </div>
+          <div class="list-item-right">
+            <span class="badge badge-success" style="font-size:9px;">Active</span>
+            <div style="font-size:10px;color:var(--text-secondary);">3 props</div>
+          </div>
+        </div>
+        <div class="list-item" onclick="goToScreen('user-detail')">
+          <div class="avatar" style="background:linear-gradient(135deg,#F093FB,#F5576C);">JM</div>
+          <div class="list-item-main">
+            <div class="list-item-name">John Martinez</div>
+            <div class="list-item-sub">john@example.com · Contractor</div>
+          </div>
+          <div class="list-item-right">
+            <span class="badge badge-success" style="font-size:9px;">Active</span>
+          </div>
+        </div>
+        <div class="list-item" onclick="goToScreen('user-detail')">
+          <div class="avatar" style="background:linear-gradient(135deg,#4facfe,#00f2fe);">EL</div>
+          <div class="list-item-main">
+            <div class="list-item-name">Emma Lee</div>
+            <div class="list-item-sub">emma@example.com · Landlord</div>
+          </div>
+          <div class="list-item-right">
+            <span class="badge badge-success" style="font-size:9px;">Active</span>
+            <div style="font-size:10px;color:var(--text-secondary);">8 props</div>
+          </div>
+        </div>
+        <div class="list-item" onclick="goToScreen('user-detail')">
+          <div class="avatar" style="background:linear-gradient(135deg,#FA8BFF,#2BD2FF);">RC</div>
+          <div class="list-item-main">
+            <div class="list-item-name">Robert Chen</div>
+            <div class="list-item-sub">robert@example.com · Contractor</div>
+          </div>
+          <div class="list-item-right">
+            <span class="badge badge-warning" style="font-size:9px;">Pending</span>
+          </div>
+        </div>
+        <div class="pagination">
+          <button class="page-btn">← Prev</button>
+          <span>1 of 77</span>
+          <button class="page-btn">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: USER DETAIL -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-user-detail" class="screen">
+      <div class="screen-header">
+        <button class="back-btn" onclick="goToScreen('users')"><i class="fas fa-arrow-left"></i></button>
+        <h2>User Detail</h2>
+        <button class="header-action" onclick="showModal('user-actions-modal')">Actions</button>
+      </div>
+
+      <div class="screen-body">
+        <div style="display:flex;align-items:center;gap:14px;padding:4px 0;">
+          <div class="avatar" style="width:56px;height:56px;font-size:18px;background:linear-gradient(135deg,#667eea,#764ba2);">SD</div>
+          <div>
+            <div style="font-size:18px;font-weight:800;color:var(--text);">Sarah Davis</div>
+            <div style="font-size:12px;color:var(--text-secondary);">sarah@example.com</div>
+            <span class="badge badge-success" style="margin-top:4px;">Active · Homeowner</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="detail-section-title" style="padding:12px 16px 4px;">Contact</div>
+          <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">sarah@example.com</span></div>
+          <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">(415) 555-0132</span></div>
+          <div class="detail-row"><span class="detail-label">Location</span><span class="detail-value">San Francisco, CA</span></div>
+          <div class="detail-row"><span class="detail-label">Signed Up</span><span class="detail-value">Jan 15, 2024</span></div>
+          <div class="detail-row"><span class="detail-label">Last Active</span><span class="detail-value">Mar 8, 2024</span></div>
+        </div>
+
+        <div class="card">
+          <div class="detail-section-title" style="padding:12px 16px 4px;">Account</div>
+          <div class="detail-row"><span class="detail-label">Role</span><span class="detail-value">Homeowner</span></div>
+          <div class="detail-row"><span class="detail-label">Properties</span><span class="detail-value">3</span></div>
+          <div class="detail-row"><span class="detail-label">Email Verified</span><span class="detail-value" style="color:var(--success);">✓ Yes</span></div>
+          <div class="detail-row"><span class="detail-label">2FA</span><span class="detail-value" style="color:var(--text-secondary);">Not enabled</span></div>
+        </div>
+
+        <div class="action-sheet" style="padding:0;">
+          <button class="action-btn" onclick="alert('Edit form opened')"><i class="fas fa-edit"></i> Edit Profile</button>
+          <button class="action-btn" onclick="alert('Email sent')"><i class="fas fa-envelope"></i> Send Email</button>
+          <button class="action-btn" onclick="alert('Reset link sent')"><i class="fas fa-key"></i> Reset Password</button>
+          <button class="action-btn danger" onclick="alert('Account suspended')"><i class="fas fa-ban"></i> Suspend Account</button>
+        </div>
+      </div>
+
+      <!-- Actions Modal -->
+      <div class="modal-overlay" id="user-actions-modal">
+        <div class="modal-sheet">
+          <div class="modal-handle"></div>
+          <div class="modal-title">User Actions</div>
+          <div class="modal-sub">Sarah Davis · Homeowner</div>
+          <button class="action-btn" style="width:100%;margin-bottom:8px;" onclick="closeModal('user-actions-modal');alert('Edit form')"><i class="fas fa-edit"></i> Edit Profile</button>
+          <button class="action-btn" style="width:100%;margin-bottom:8px;" onclick="closeModal('user-actions-modal');alert('Email sent')"><i class="fas fa-envelope"></i> Send Email</button>
+          <button class="action-btn danger" style="width:100%;margin-bottom:8px;" onclick="closeModal('user-actions-modal');alert('Suspended')"><i class="fas fa-ban"></i> Suspend Account</button>
+          <button class="action-btn" style="width:100%;" onclick="closeModal('user-actions-modal')"><i class="fas fa-times"></i> Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: PROPERTIES -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-properties" class="screen">
+      <div class="screen-header">
+        <button class="back-btn" onclick="goToScreen('dashboard')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Properties</h2>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-chip active">All (8,234)</div>
+        <div class="filter-chip">Good (60+)</div>
+        <div class="filter-chip">Fair (40–60)</div>
+        <div class="filter-chip">Poor (&lt;40)</div>
+        <div class="filter-chip">Single Family</div>
+        <div class="filter-chip">Multi-unit</div>
+      </div>
+
+      <div class="card" style="margin:12px;border-radius:14px;overflow:hidden;">
+        <div style="padding:10px 16px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border);">Showing 4 of 8,234</div>
+
+        <div class="list-item" onclick="goToScreen('property-detail')">
+          <div class="avatar-sq">🏠</div>
+          <div class="list-item-main">
+            <div class="list-item-name">123 Oak Street</div>
+            <div class="list-item-sub">San Francisco, CA · Sarah Davis</div>
+          </div>
+          <div class="list-item-right">
+            <div style="width:32px;height:32px;border-radius:50%;background:conic-gradient(var(--success) 0deg 245deg,#E2E8F0 245deg);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;">68</div>
+            <div style="font-size:9px;color:var(--success);font-weight:700;">Good</div>
+          </div>
+        </div>
+
+        <div class="list-item" onclick="goToScreen('property-detail')">
+          <div class="avatar-sq">🏢</div>
+          <div class="list-item-main">
+            <div class="list-item-name">456 Maple Avenue</div>
+            <div class="list-item-sub">Austin, TX · Sarah Davis</div>
+          </div>
+          <div class="list-item-right">
+            <div style="width:32px;height:32px;border-radius:50%;background:conic-gradient(var(--warning) 0deg 162deg,#E2E8F0 162deg);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;">45</div>
+            <div style="font-size:9px;color:var(--warning);font-weight:700;">Fair</div>
+          </div>
+        </div>
+
+        <div class="list-item" onclick="goToScreen('property-detail')">
+          <div class="avatar-sq">🏗️</div>
+          <div class="list-item-main">
+            <div class="list-item-name">789 Pine Road</div>
+            <div class="list-item-sub">Denver, CO · James Wilson</div>
+          </div>
+          <div class="list-item-right">
+            <div style="width:32px;height:32px;border-radius:50%;background:conic-gradient(var(--alert) 0deg 115deg,#E2E8F0 115deg);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;">32</div>
+            <div style="font-size:9px;color:var(--alert);font-weight:700;">Poor</div>
+          </div>
+        </div>
+
+        <div class="list-item" onclick="goToScreen('property-detail')">
+          <div class="avatar-sq">🏡</div>
+          <div class="list-item-main">
+            <div class="list-item-name">321 River View Drive</div>
+            <div class="list-item-sub">Portland, OR · Sarah Davis</div>
+          </div>
+          <div class="list-item-right">
+            <div style="width:32px;height:32px;border-radius:50%;background:conic-gradient(var(--success) 0deg 270deg,#E2E8F0 270deg);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;">75</div>
+            <div style="font-size:9px;color:var(--success);font-weight:700;">Good</div>
+          </div>
+        </div>
+
+        <div class="pagination">
+          <button class="page-btn">← Prev</button>
+          <span>1 of 165</span>
+          <button class="page-btn">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: PROPERTY DETAIL -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-property-detail" class="screen">
+      <div class="screen-header">
+        <button class="back-btn" onclick="goToScreen('properties')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Property Detail</h2>
+        <button class="header-action" onclick="alert('Property actions')">Actions</button>
+      </div>
+      <div class="screen-body">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="font-size:36px;">🏠</div>
+          <div>
+            <div style="font-size:16px;font-weight:800;">123 Oak Street</div>
+            <div style="font-size:12px;color:var(--text-secondary);">San Francisco, CA 94102</div>
+            <span class="badge badge-success" style="margin-top:4px;">★ Primary · Single Family</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="detail-section-title" style="padding:12px 16px 4px;">Details</div>
+          <div class="detail-row"><span class="detail-label">Owner</span><span class="detail-value" style="color:var(--blue);">Sarah Davis</span></div>
+          <div class="detail-row"><span class="detail-label">Health Score</span><span class="detail-value" style="color:var(--success);font-weight:700;">68 — Good</span></div>
+          <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">Single Family</span></div>
+          <div class="detail-row"><span class="detail-label">Projects</span><span class="detail-value">4</span></div>
+          <div class="detail-row"><span class="detail-label">Last Updated</span><span class="detail-value">Mar 8, 2024</span></div>
+        </div>
+        <div class="action-sheet" style="padding:0;">
+          <button class="action-btn" onclick="alert('View projects')"><i class="fas fa-clipboard-list"></i> View Projects</button>
+          <button class="action-btn" onclick="alert('View homeowner')"><i class="fas fa-user"></i> View Owner</button>
+          <button class="action-btn danger" onclick="alert('Property flagged')"><i class="fas fa-flag"></i> Flag Property</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: CONTRACTORS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-contractors" class="screen">
+      <div class="screen-header">
+        <button class="back-btn" onclick="goToScreen('dashboard')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Contractors</h2>
+        <div style="background:var(--alert);color:white;border-radius:12px;padding:2px 8px;font-size:10px;font-weight:700;">5 pending</div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-chip active">All (342)</div>
+        <div class="filter-chip">Pending Approval (5)</div>
+        <div class="filter-chip">Approved</div>
+        <div class="filter-chip">Suspended</div>
+      </div>
+
+      <div class="search-wrap">
+        <i class="fas fa-search"></i>
+        <input class="search-input" placeholder="Name, company, specialty…" style="padding-left:34px;">
+      </div>
+
+      <!-- Pending approvals highlight -->
+      <div style="padding:12px 12px 0;">
+        <div class="card" style="border-left:4px solid var(--warning);margin-bottom:10px;">
+          <div style="padding:14px;">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--warning);margin-bottom:10px;">⏳ Pending Approval</div>
+            <div class="list-item" style="padding:10px 0;border-bottom:1px solid var(--border);" onclick="goToScreen('contractor-detail')">
+              <div class="avatar" style="background:linear-gradient(135deg,#667eea,#764ba2);width:36px;height:36px;font-size:12px;">TA</div>
+              <div class="list-item-main">
+                <div class="list-item-name">Tom Anderson</div>
+                <div class="list-item-sub">Plumbing · Anderson Plumbing Co.</div>
+              </div>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-sm" style="background:var(--success-bg);color:#065F46;border:none;" onclick="event.stopPropagation();alert('Approved!')">✓</button>
+                <button class="btn btn-sm" style="background:var(--alert-bg);color:var(--alert);border:none;" onclick="event.stopPropagation();alert('Rejected')">✗</button>
+              </div>
+            </div>
+            <div class="list-item" style="padding:10px 0;" onclick="goToScreen('contractor-detail')">
+              <div class="avatar" style="background:linear-gradient(135deg,#F093FB,#F5576C);width:36px;height:36px;font-size:12px;">MR</div>
+              <div class="list-item-main">
+                <div class="list-item-name">Maria Rodriguez</div>
+                <div class="list-item-sub">Electrical · Rodriguez Electric</div>
+              </div>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-sm" style="background:var(--success-bg);color:#065F46;border:none;" onclick="event.stopPropagation();alert('Approved!')">✓</button>
+                <button class="btn btn-sm" style="background:var(--alert-bg);color:var(--alert);border:none;" onclick="event.stopPropagation();alert('Rejected')">✗</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- All contractors list -->
+      <div class="card" style="margin:0 12px 12px;border-radius:14px;overflow:hidden;">
+        <div style="padding:10px 16px;font-size:11px;color:var(--text-secondary);border-bottom:1px solid var(--border);">All contractors · 342 total</div>
+        <div class="list-item" onclick="goToScreen('contractor-detail')">
+          <div class="avatar" style="background:linear-gradient(135deg,#4facfe,#00f2fe);width:36px;height:36px;font-size:12px;">MJ</div>
+          <div class="list-item-main">
+            <div class="list-item-name">Mike Johnson</div>
+            <div class="list-item-sub">HVAC · Johnson HVAC · ★ 4.9</div>
+          </div>
+          <div class="list-item-right">
+            <span class="badge badge-success" style="font-size:9px;">Approved</span>
+            <div style="font-size:10px;color:var(--text-secondary);">47 jobs</div>
+          </div>
+        </div>
+        <div class="list-item" onclick="goToScreen('contractor-detail')">
+          <div class="avatar" style="background:linear-gradient(135deg,#FA8BFF,#2BD2FF);width:36px;height:36px;font-size:12px;">SW</div>
+          <div class="list-item-main">
+            <div class="list-item-name">Sarah Williams</div>
+            <div class="list-item-sub">Roofing · Williams Roofing · ★ 4.7</div>
+          </div>
+          <div class="list-item-right">
+            <span class="badge badge-success" style="font-size:9px;">Approved</span>
+            <div style="font-size:10px;color:var(--text-secondary);">23 jobs</div>
+          </div>
+        </div>
+        <div class="list-item" onclick="goToScreen('contractor-detail')">
+          <div class="avatar" style="background:linear-gradient(135deg,#f9d423,#f83600);width:36px;height:36px;font-size:12px;">RC</div>
+          <div class="list-item-main">
+            <div class="list-item-name">Robert Chen</div>
+            <div class="list-item-sub">General · Chen Construction</div>
+          </div>
+          <div class="list-item-right">
+            <span class="badge badge-alert" style="font-size:9px;">Suspended</span>
+          </div>
+        </div>
+        <div class="pagination">
+          <button class="page-btn">← Prev</button>
+          <span>1 of 69</span>
+          <button class="page-btn">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: CONTRACTOR DETAIL -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-contractor-detail" class="screen">
+      <div class="screen-header">
+        <button class="back-btn" onclick="goToScreen('contractors')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Contractor Detail</h2>
+        <button class="header-action" onclick="showModal('contractor-actions-modal')">Actions</button>
+      </div>
+      <div class="screen-body">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div class="avatar" style="width:56px;height:56px;font-size:18px;background:linear-gradient(135deg,#4facfe,#00f2fe);">MJ</div>
+          <div>
+            <div style="font-size:17px;font-weight:800;">Mike Johnson</div>
+            <div style="font-size:12px;color:var(--text-secondary);">Johnson HVAC Services</div>
+            <div style="display:flex;gap:6px;margin-top:4px;">
+              <span class="badge badge-success">Approved</span>
+              <span class="badge badge-info">HVAC</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="detail-section-title" style="padding:12px 16px 4px;">Info</div>
+          <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">mike@johnsonhvac.com</span></div>
+          <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">(415) 555-0199</span></div>
+          <div class="detail-row"><span class="detail-label">Rating</span><span class="detail-value" style="color:var(--gold);">★ 4.9 (142 reviews)</span></div>
+          <div class="detail-row"><span class="detail-label">Jobs Done</span><span class="detail-value">47</span></div>
+          <div class="detail-row"><span class="detail-label">License</span><span class="detail-value" style="color:var(--success);">✓ Verified</span></div>
+          <div class="detail-row"><span class="detail-label">Insurance</span><span class="detail-value" style="color:var(--success);">✓ Verified</span></div>
+          <div class="detail-row"><span class="detail-label">Background</span><span class="detail-value" style="color:var(--success);">✓ Cleared</span></div>
+          <div class="detail-row"><span class="detail-label">Joined</span><span class="detail-value">Feb 3, 2024</span></div>
+        </div>
+        <div class="action-sheet" style="padding:0;">
+          <button class="action-btn" onclick="alert('Edit form')"><i class="fas fa-edit"></i> Edit Profile</button>
+          <button class="action-btn" onclick="alert('Verification initiated')"><i class="fas fa-shield-alt"></i> Run Verification</button>
+          <button class="action-btn danger" onclick="alert('Suspended')"><i class="fas fa-ban"></i> Suspend Contractor</button>
+        </div>
+      </div>
+      <div class="modal-overlay" id="contractor-actions-modal">
+        <div class="modal-sheet">
+          <div class="modal-handle"></div>
+          <div class="modal-title">Contractor Actions</div>
+          <div class="modal-sub">Mike Johnson · Johnson HVAC</div>
+          <button class="action-btn" style="width:100%;margin-bottom:8px;" onclick="closeModal('contractor-actions-modal');alert('Edit')"><i class="fas fa-edit"></i> Edit Profile</button>
+          <button class="action-btn" style="width:100%;margin-bottom:8px;" onclick="closeModal('contractor-actions-modal');alert('Verified')"><i class="fas fa-shield-alt"></i> Verify Credentials</button>
+          <button class="action-btn danger" style="width:100%;margin-bottom:8px;" onclick="closeModal('contractor-actions-modal');alert('Suspended')"><i class="fas fa-ban"></i> Suspend</button>
+          <button class="action-btn" style="width:100%;" onclick="closeModal('contractor-actions-modal')"><i class="fas fa-times"></i> Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: SUPPORT TICKETS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-support-tickets" class="screen">
+      <div class="screen-header">
+        <button class="back-btn" onclick="goToScreen('dashboard')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Support Tickets</h2>
+        <div style="background:var(--warning);color:#1a1a1a;border-radius:12px;padding:2px 8px;font-size:10px;font-weight:700;">12 open</div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-chip active">Open (12)</div>
+        <div class="filter-chip">In Progress (5)</div>
+        <div class="filter-chip">Resolved</div>
+        <div class="filter-chip">High Priority</div>
+      </div>
+
+      <div class="card" style="margin:12px;border-radius:14px;overflow:hidden;">
+        <div class="ticket-item" onclick="goToScreen('ticket-detail')">
+          <div class="ticket-header">
+            <div class="ticket-title">Contractor charged more than quoted</div>
+            <span class="badge badge-alert">High</span>
+          </div>
+          <div class="ticket-body">Homeowner reporting $800 overcharge by HVAC contractor. Dispute in progress.</div>
+          <div class="ticket-footer">
+            <div class="ticket-meta">Sarah Davis · #TKT-1041 · Mar 15</div>
+            <span class="badge badge-warning">Open</span>
+          </div>
+        </div>
+
+        <div class="ticket-item" onclick="goToScreen('ticket-detail')">
+          <div class="ticket-header">
+            <div class="ticket-title">Cannot upload warranty documents</div>
+            <span class="badge badge-warning">Medium</span>
+          </div>
+          <div class="ticket-body">File upload fails for PDFs larger than 10MB on iOS devices.</div>
+          <div class="ticket-footer">
+            <div class="ticket-meta">James Wilson · #TKT-1038 · Mar 14</div>
+            <span class="badge badge-info">In Review</span>
+          </div>
+        </div>
+
+        <div class="ticket-item" onclick="goToScreen('ticket-detail')">
+          <div class="ticket-header">
+            <div class="ticket-title">Contractor no-show — need refund</div>
+            <span class="badge badge-alert">High</span>
+          </div>
+          <div class="ticket-body">Contractor missed scheduled appointment, requesting deposit refund of $250.</div>
+          <div class="ticket-footer">
+            <div class="ticket-meta">Emma Lee · #TKT-1035 · Mar 13</div>
+            <span class="badge badge-warning">Open</span>
+          </div>
+        </div>
+
+        <div class="ticket-item" onclick="goToScreen('ticket-detail')">
+          <div class="ticket-header">
+            <div class="ticket-title">Cannot access community board</div>
+            <span class="badge badge-info">Low</span>
+          </div>
+          <div class="ticket-body">User reports HOA community board not loading since last update.</div>
+          <div class="ticket-footer">
+            <div class="ticket-meta">Robert Chen · #TKT-1032 · Mar 12</div>
+            <span class="badge badge-info">In Progress</span>
+          </div>
+        </div>
+
+        <div class="pagination">
+          <button class="page-btn">← Prev</button>
+          <span>1 of 3</span>
+          <button class="page-btn">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: TICKET DETAIL -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-ticket-detail" class="screen">
+      <div class="screen-header">
+        <button class="back-btn" onclick="goToScreen('support-tickets')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Ticket #TKT-1041</h2>
+        <button class="header-action" onclick="showModal('ticket-actions-modal')">Resolve</button>
+      </div>
+      <div class="screen-body">
+        <div class="card" style="padding:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+            <div style="font-size:15px;font-weight:700;flex:1;padding-right:8px;">Contractor charged more than quoted</div>
+            <span class="badge badge-alert">High</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">Opened Mar 15, 2024 · Sarah Davis</div>
+          <div style="font-size:13px;line-height:1.6;color:var(--text);">
+            Homeowner is reporting that the HVAC contractor charged $1,800 for the job despite a quote of $1,000. The contractor claims additional parts were needed but did not notify the homeowner beforehand. Requesting admin mediation.
+          </div>
+        </div>
+        <div class="card">
+          <div class="detail-section-title" style="padding:12px 16px 4px;">Parties</div>
+          <div class="detail-row"><span class="detail-label">Homeowner</span><span class="detail-value" style="color:var(--blue);">Sarah Davis</span></div>
+          <div class="detail-row"><span class="detail-label">Contractor</span><span class="detail-value" style="color:var(--blue);">Mike Johnson (HVAC)</span></div>
+          <div class="detail-row"><span class="detail-label">Dispute Amt.</span><span class="detail-value" style="color:var(--alert);">$800</span></div>
+          <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value">Open</span></div>
+          <div class="detail-row"><span class="detail-label">Assigned To</span><span class="detail-value">Michael J (Admin)</span></div>
+        </div>
+        <div class="action-sheet" style="padding:0;">
+          <button class="action-btn" onclick="alert('Mediation initiated')"><i class="fas fa-handshake"></i> Mediate Dispute</button>
+          <button class="action-btn" onclick="alert('Message sent to parties')"><i class="fas fa-comments"></i> Message Parties</button>
+          <button class="action-btn" onclick="alert('Refund processed')"><i class="fas fa-undo"></i> Process Refund</button>
+          <button class="action-btn" style="color:var(--success);background:var(--success-bg);" onclick="alert('Ticket resolved')"><i class="fas fa-check-circle"></i> Mark Resolved</button>
+        </div>
+      </div>
+      <div class="modal-overlay" id="ticket-actions-modal">
+        <div class="modal-sheet">
+          <div class="modal-handle"></div>
+          <div class="modal-title">Resolve Ticket</div>
+          <div class="modal-sub">#TKT-1041 · High Priority</div>
+          <select style="width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:13px;margin-bottom:12px;background:var(--bg);color:var(--text);">
+            <option>Select resolution...</option>
+            <option>Refund issued to homeowner</option>
+            <option>Contractor paid in full</option>
+            <option>Split compromise reached</option>
+            <option>No action required</option>
+          </select>
+          <textarea placeholder="Resolution notes…" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:13px;height:80px;margin-bottom:12px;background:var(--bg);color:var(--text);resize:none;"></textarea>
+          <button class="btn btn-primary btn-full" style="margin-bottom:8px;" onclick="closeModal('ticket-actions-modal');alert('Ticket resolved!')">Mark Resolved</button>
+          <button class="btn btn-secondary btn-full" onclick="closeModal('ticket-actions-modal')">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: ACTIVITY LOG -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-activity-log" class="screen">
+      <div class="screen-header">
+        <button class="back-btn" onclick="goToScreen('dashboard')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Activity Log</h2>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-chip active">All</div>
+        <div class="filter-chip">Users</div>
+        <div class="filter-chip">Contractors</div>
+        <div class="filter-chip">Properties</div>
+        <div class="filter-chip">Projects</div>
+      </div>
+
+      <div class="card" style="margin:12px;border-radius:14px;overflow:hidden;">
+        <div class="activity-section-header">👥 User Activities</div>
+        <div class="activity-item">
+          <div class="activity-time">Mar 15<br>2:43 PM</div>
+          <div class="activity-body">
+            <div class="activity-title">User Account Suspended</div>
+            <div class="activity-desc">robert@example.com suspended by Michael J — Fraudulent activity</div>
+          </div>
+          <div class="activity-badge"><span class="badge badge-alert">Suspend</span></div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-time">Mar 14<br>11:22 AM</div>
+          <div class="activity-body">
+            <div class="activity-title">User Profile Updated</div>
+            <div class="activity-desc">sarah@example.com phone number changed by System</div>
+          </div>
+          <div class="activity-badge"><span class="badge badge-info">Update</span></div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-time">Mar 13<br>3:15 PM</div>
+          <div class="activity-body">
+            <div class="activity-title">New User Signup</div>
+            <div class="activity-desc">jennifer.park@example.com · Homeowner · Organic search</div>
+          </div>
+          <div class="activity-badge"><span class="badge badge-success">Create</span></div>
+        </div>
+
+        <div class="activity-section-header">🔧 Contractor Activities</div>
+        <div class="activity-item">
+          <div class="activity-time">Mar 15<br>10:30 AM</div>
+          <div class="activity-body">
+            <div class="activity-title">Contractor Approved</div>
+            <div class="activity-desc">tom@andersonplumbing.com approved by Michael J — All checks passed</div>
+          </div>
+          <div class="activity-badge"><span class="badge badge-success">Approve</span></div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-time">Mar 12<br>4:45 PM</div>
+          <div class="activity-body">
+            <div class="activity-title">Specialties Updated</div>
+            <div class="activity-desc">mike@johnsonhvac.com — Added Commercial HVAC specialty</div>
+          </div>
+          <div class="activity-badge"><span class="badge badge-info">Update</span></div>
+        </div>
+
+        <div class="activity-section-header">📋 Project Activities</div>
+        <div class="activity-item">
+          <div class="activity-time">Mar 15<br>9:00 AM</div>
+          <div class="activity-body">
+            <div class="activity-title">Cost Confirmed</div>
+            <div class="activity-desc">Roof Repair at 123 Oak St — $4,200 confirmed by homeowner</div>
+          </div>
+          <div class="activity-badge"><span class="badge badge-success">Confirm</span></div>
+        </div>
+        <div class="pagination">
+          <button class="page-btn">← Prev</button>
+          <span>1 of 77</span>
+          <button class="page-btn">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: ANALYTICS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-analytics" class="screen">
+      <div class="screen-header">
+        <button class="back-btn" onclick="goToScreen('dashboard')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Analytics</h2>
+      </div>
+      <div class="screen-body">
+
+        <div class="section-title">Signup Sources (30d)</div>
+        <div class="card" style="padding:14px 16px;">
+          <div class="analytics-bar-row">
+            <div class="analytics-bar-label">Organic</div>
+            <div class="analytics-bar-wrap"><div class="analytics-bar-fill" style="width:62%;background:#667eea;">62%</div></div>
+            <div class="analytics-bar-val">62%</div>
+          </div>
+          <div class="analytics-bar-row">
+            <div class="analytics-bar-label">Referral</div>
+            <div class="analytics-bar-wrap"><div class="analytics-bar-fill" style="width:21%;background:#27A570;">21%</div></div>
+            <div class="analytics-bar-val">21%</div>
+          </div>
+          <div class="analytics-bar-row">
+            <div class="analytics-bar-label">Paid Ads</div>
+            <div class="analytics-bar-wrap"><div class="analytics-bar-fill" style="width:11%;background:#F5A623;">11%</div></div>
+            <div class="analytics-bar-val">11%</div>
+          </div>
+          <div class="analytics-bar-row" style="margin-bottom:0;">
+            <div class="analytics-bar-label">Direct</div>
+            <div class="analytics-bar-wrap"><div class="analytics-bar-fill" style="width:6%;background:#94A3B8;">6%</div></div>
+            <div class="analytics-bar-val">6%</div>
+          </div>
+        </div>
+
+        <div class="section-title">User Retention</div>
+        <div class="metric-grid">
+          <div class="metric-card">
+            <div class="metric-label">Day 1</div>
+            <div class="metric-value" style="font-size:20px;">82%</div>
+            <div class="metric-sub up">+3% vs prior</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Day 7</div>
+            <div class="metric-value" style="font-size:20px;">61%</div>
+            <div class="metric-sub up">+1% vs prior</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Day 30</div>
+            <div class="metric-value" style="font-size:20px;">44%</div>
+            <div class="metric-sub down">-2% vs prior</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Day 90</div>
+            <div class="metric-value" style="font-size:20px;">31%</div>
+            <div class="metric-sub neutral">Stable</div>
+          </div>
+        </div>
+
+        <div class="section-title">Revenue Breakdown</div>
+        <div class="card">
+          <div class="detail-row"><span class="detail-label">Subscription</span><span class="detail-value" style="font-weight:700;">$9,200/mo</span></div>
+          <div class="detail-row"><span class="detail-label">Marketplace %</span><span class="detail-value" style="font-weight:700;">$2,100/mo</span></div>
+          <div class="detail-row"><span class="detail-label">Contractor Ads</span><span class="detail-value" style="font-weight:700;">$1,100/mo</span></div>
+          <div class="detail-row" style="border-top:2px solid var(--border);"><span class="detail-label" style="font-weight:700;">Total MRR</span><span class="detail-value" style="font-weight:800;color:var(--success);font-size:15px;">$12,400</span></div>
+        </div>
+
+        <div class="section-title">Top States by Properties</div>
+        <div class="card" style="padding:14px 16px;">
+          <div class="analytics-bar-row">
+            <div class="analytics-bar-label">California</div>
+            <div class="analytics-bar-wrap"><div class="analytics-bar-fill" style="width:34%;background:#1a73e8;">34%</div></div>
+            <div class="analytics-bar-val">34%</div>
+          </div>
+          <div class="analytics-bar-row">
+            <div class="analytics-bar-label">Texas</div>
+            <div class="analytics-bar-wrap"><div class="analytics-bar-fill" style="width:22%;background:#1a73e8;">22%</div></div>
+            <div class="analytics-bar-val">22%</div>
+          </div>
+          <div class="analytics-bar-row">
+            <div class="analytics-bar-label">Florida</div>
+            <div class="analytics-bar-wrap"><div class="analytics-bar-fill" style="width:18%;background:#1a73e8;">18%</div></div>
+            <div class="analytics-bar-val">18%</div>
+          </div>
+          <div class="analytics-bar-row" style="margin-bottom:0;">
+            <div class="analytics-bar-label">Other</div>
+            <div class="analytics-bar-wrap"><div class="analytics-bar-fill" style="width:26%;background:#94A3B8;">26%</div></div>
+            <div class="analytics-bar-val">26%</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: NOTIFICATIONS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-notifications" class="screen">
+      <div class="screen-header">
+        <button class="back-btn" onclick="goToScreen('dashboard')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Notifications</h2>
+        <button class="header-action" onclick="alert('All marked as read')">Mark All Read</button>
+      </div>
+      <div class="card" style="margin:12px;border-radius:14px;overflow:hidden;">
+        <div class="list-item" style="background:#FEF2F2;">
+          <div style="width:36px;height:36px;background:var(--alert-bg);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">⚠️</div>
+          <div class="list-item-main">
+            <div class="list-item-name">Fraud Alert — Robert Chen</div>
+            <div class="list-item-sub">Multiple disputes flagged · Review now</div>
+          </div>
+          <div style="font-size:10px;color:var(--text-secondary);">2h ago</div>
+        </div>
+        <div class="list-item">
+          <div style="width:36px;height:36px;background:#EFF6FF;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">📝</div>
+          <div class="list-item-main">
+            <div class="list-item-name">5 Contractor Approvals Pending</div>
+            <div class="list-item-sub">Tom Anderson, Maria Rodriguez +3 more</div>
+          </div>
+          <div style="font-size:10px;color:var(--text-secondary);">4h ago</div>
+        </div>
+        <div class="list-item">
+          <div style="width:36px;height:36px;background:var(--success-bg);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">✅</div>
+          <div class="list-item-main">
+            <div class="list-item-name">System Health: All Good</div>
+            <div class="list-item-sub">99.97% uptime · No incidents</div>
+          </div>
+          <div style="font-size:10px;color:var(--text-secondary);">6h ago</div>
+        </div>
+        <div class="list-item">
+          <div style="width:36px;height:36px;background:#FEF3C7;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">📊</div>
+          <div class="list-item-main">
+            <div class="list-item-name">Monthly Report Ready</div>
+            <div class="list-item-sub">March 2024 — $12.4K MRR achieved</div>
+          </div>
+          <div style="font-size:10px;color:var(--text-secondary);">1d ago</div>
+        </div>
+        <div class="list-item">
+          <div style="width:36px;height:36px;background:var(--gold-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🏘️</div>
+          <div class="list-item-main">
+            <div class="list-item-name">New HOA Signup</div>
+            <div class="list-item-sub">Westview Community HOA · 156 homes</div>
+          </div>
+          <div style="font-size:10px;color:var(--text-secondary);">2d ago</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: DATA QUALITY -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-data-quality" class="screen">
+      <div class="screen-header">
+        <button class="back-btn" onclick="goToScreen('dashboard')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Data Quality</h2>
+      </div>
+      <div class="screen-body">
+        <div class="alert-strip" style="margin:-16px -16px 0;margin-bottom:0;">
+          <i class="fas fa-exclamation-triangle" style="color:var(--warning);"></i>
+          <span><strong>34 issues</strong> require attention</span>
+        </div>
+
+        <div class="section-title">Issue Categories</div>
+        <div class="card">
+          <div class="pending-item" onclick="alert('View missing address records')">
+            <div>
+              <div class="pending-item-label">Missing property addresses</div>
+              <div style="font-size:11px;color:var(--text-secondary);">Properties with no address on file</div>
+            </div>
+            <div class="pending-count" style="color:var(--alert);">12</div>
+          </div>
+          <div class="pending-item" onclick="alert('View unverified emails')">
+            <div>
+              <div class="pending-item-label">Unverified emails (45d+)</div>
+              <div style="font-size:11px;color:var(--text-secondary);">Users who haven't verified</div>
+            </div>
+            <div class="pending-count" style="color:var(--warning);">8</div>
+          </div>
+          <div class="pending-item" onclick="alert('View incomplete profiles')">
+            <div>
+              <div class="pending-item-label">Incomplete contractor profiles</div>
+              <div style="font-size:11px;color:var(--text-secondary);">Missing license or insurance docs</div>
+            </div>
+            <div class="pending-count" style="color:var(--warning);">7</div>
+          </div>
+          <div class="pending-item" onclick="alert('View stale records')">
+            <div>
+              <div class="pending-item-label">Stale property records (1yr+)</div>
+              <div style="font-size:11px;color:var(--text-secondary);">No updates in over 12 months</div>
+            </div>
+            <div class="pending-count" style="color:var(--text-secondary);">7</div>
+          </div>
+        </div>
+
+        <div class="section-title">Bulk Actions</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button class="action-btn" onclick="alert('Sending verification reminders…')"><i class="fas fa-envelope"></i> Send Verification Reminders</button>
+          <button class="action-btn" onclick="alert('Audit report generated')"><i class="fas fa-file-alt"></i> Export Quality Report</button>
+          <button class="action-btn" onclick="alert('Auto-cleanup in progress…')"><i class="fas fa-broom"></i> Auto-Clean Stale Records</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- HAMBURGER NAVIGATION DRAWER -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+    <div class="drawer" id="nav-drawer">
+      <div class="drawer-header">
+        <div class="drawer-logo">HH</div>
+        <div>
+          <div class="drawer-logo-text">HomeHub</div>
+          <div class="drawer-logo-sub">Admin Panel v1.0</div>
+        </div>
+        <button style="margin-left:auto;background:none;border:none;color:#64748B;font-size:16px;cursor:pointer;" onclick="closeDrawer()">✕</button>
+      </div>
+
+      <!-- Role Switcher -->
+      <div class="role-switcher-wrap">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#475569;padding:4px 10px 8px;">Switch Role</div>
+        <div class="role-btn" onclick="alert('Homeowner portal')"><i class="fas fa-home"></i> Homeowner</div>
+        <div class="role-btn" onclick="alert('Agent portal')"><i class="fas fa-briefcase"></i> RE Agent</div>
+        <div class="role-btn" onclick="alert('Inspector portal')"><i class="fas fa-clipboard-check"></i> Inspector</div>
+        <div class="role-btn" onclick="alert('Contractor portal')"><i class="fas fa-tools"></i> Contractor</div>
+        <div class="role-btn current"><i class="fas fa-cog"></i> Admin (current)</div>
+        <div class="role-btn" onclick="alert('Agency portal')"><i class="fas fa-building"></i> RE Agency</div>
+      </div>
+
+      <div style="height:1px;background:#1E293B;margin:8px 0;"></div>
+
+      <div class="drawer-nav">
+        <div class="drawer-section-title">Navigation</div>
+        <div class="drawer-item active" onclick="closeDrawer();goToScreen('dashboard')">
+          <i class="fas fa-th-large"></i> Dashboard
+        </div>
+
+        <div class="drawer-section-title">Core Entities</div>
+        <div class="drawer-item" onclick="closeDrawer();goToScreen('users')">
+          <i class="fas fa-users"></i> Users
+          <span class="drawer-item-badge">12</span>
+        </div>
+        <div class="drawer-item" onclick="closeDrawer();goToScreen('properties')">
+          <i class="fas fa-home"></i> Properties
+        </div>
+        <div class="drawer-item" onclick="closeDrawer();goToScreen('contractors')">
+          <i class="fas fa-tools"></i> Contractors
+          <span class="drawer-item-badge">5</span>
+        </div>
+        <div class="drawer-item" onclick="closeDrawer();goToScreen('projects')">
+          <i class="fas fa-clipboard-list"></i> Projects &amp; Jobs
+        </div>
+
+        <!-- ARCH: Revenue nav section — visible only to roles with revenue=true permission.
+             SOC2 CC6.3: Access to financial data restricted by role. -->
+        <div class="drawer-section-title" id="m-nav-title-revenue" style="display:none;">Revenue</div>
+        <div id="m-nav-section-revenue" style="display:none;">
+          <div class="drawer-item" onclick="closeDrawer();goToScreen('revenue-dashboard')">
+            <i class="fas fa-dollar-sign"></i> Revenue Dashboard
+          </div>
+          <div class="drawer-item" onclick="closeDrawer();goToScreen('subscriptions')">
+            <i class="fas fa-sync-alt"></i> Subscriptions
+          </div>
+          <div class="drawer-item" onclick="closeDrawer();goToScreen('payouts')">
+            <i class="fas fa-hand-holding-usd"></i> Payouts / Giveback
+          </div>
+        </div>
+
+        <!-- ARCH: HH Team nav — visible to roles with team=true permission. -->
+        <div class="drawer-section-title" id="m-nav-title-hhteam" style="display:none;">HH Team</div>
+        <div id="m-nav-section-hhteam" style="display:none;">
+          <div class="drawer-item" onclick="closeDrawer();goToScreen('hh-team')">
+            <i class="fas fa-user-tie"></i> Team Members
+          </div>
+          <div class="drawer-item" onclick="closeDrawer();goToScreen('ae-pipeline')">
+            <i class="fas fa-funnel-dollar"></i> AE Pipeline
+          </div>
+        </div>
+
+        <div class="drawer-section-title">Operations</div>
+        <div class="drawer-item" onclick="closeDrawer();goToScreen('support-tickets')">
+          <i class="fas fa-comment-dots"></i> Support Tickets
+          <span class="drawer-item-badge">12</span>
+        </div>
+        <div class="drawer-item" onclick="closeDrawer();goToScreen('activity-log')">
+          <i class="fas fa-scroll"></i> Activity Log
+        </div>
+        <div class="drawer-item" onclick="closeDrawer();goToScreen('notifications')">
+          <i class="fas fa-bell"></i> Notifications
+        </div>
+
+        <div class="drawer-section-title">Insights</div>
+        <div class="drawer-item" onclick="closeDrawer();goToScreen('analytics')">
+          <i class="fas fa-chart-line"></i> Analytics
+        </div>
+        <div class="drawer-item" onclick="closeDrawer();goToScreen('data-quality')">
+          <i class="fas fa-check-circle"></i> Data Quality
+        </div>
+
+        <!-- ARCH: Security nav — visible to roles with security=true permission.
+             SOC2 CC7.2: Monitoring for unauthorized access attempts. -->
+        <div class="drawer-section-title" id="m-nav-title-security" style="display:none;">Security & Access</div>
+        <div id="m-nav-section-security" style="display:none;">
+          <div class="drawer-item" onclick="closeDrawer();goToScreen('audit-log')">
+            <i class="fas fa-scroll"></i> Audit Log
+          </div>
+          <div class="drawer-item" onclick="closeDrawer();goToScreen('qr-access-log')">
+            <i class="fas fa-qrcode"></i> QR Access Log
+            <span class="drawer-item-badge">3</span>
+          </div>
+          <div class="drawer-item" onclick="closeDrawer();goToScreen('active-sessions')">
+            <i class="fas fa-circle" style="color:#22c55e;font-size:8px;"></i> Active Sessions
+          </div>
+          <div class="drawer-item" onclick="closeDrawer();goToScreen('permissions-matrix')">
+            <i class="fas fa-lock"></i> Permissions Matrix
+          </div>
+        </div>
+
+        <!-- ARCH: SuperAdmin nav — client-side hidden for non-superadmin roles.
+             CRITICAL: Server-side gate REQUIRED in production — client hide is UX only.
+             SOC2 CC6.1: Least privilege; CC6.3: Separation of duties. -->
+        <div class="drawer-section-title" id="m-nav-title-superadmin" style="display:none;color:#C4A747;">SuperAdmin</div>
+        <div id="m-nav-section-superadmin" style="display:none;">
+          <div class="drawer-item" onclick="closeDrawer();goToScreen('platform-config')">
+            <i class="fas fa-cog"></i> Platform Config
+          </div>
+          <div class="drawer-item" onclick="closeDrawer();goToScreen('feature-flags')">
+            <i class="fas fa-flag"></i> Feature Flags
+          </div>
+          <div class="drawer-item" onclick="closeDrawer();goToScreen('impersonate-user')">
+            <i class="fas fa-user-secret"></i> Impersonate User
+          </div>
+          <div class="drawer-item" onclick="closeDrawer();goToScreen('superadmin-log')">
+            <i class="fas fa-book"></i> SuperAdmin Log
+          </div>
+        </div>
+
+      </div>
+
+      <div class="drawer-footer">
+        <div class="drawer-avatar" id="m-drawer-avatar" style="background:linear-gradient(135deg,#C4A747,#a08935);color:#1a1a1a;">MJ</div>
+        <div>
+          <div class="drawer-user-name" id="m-drawer-username">Michael J</div>
+          <div class="drawer-user-role" id="m-drawer-userrole">SuperAdmin</div>
+        </div>
+        <button class="drawer-logout" onclick="adminMobileLogout()">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: REVENUE DASHBOARD (mobile) -->
+    <!-- ══════════════════════════════════════════ -->
+    <!-- ARCH: Revenue data — role-gated. Only visible to: superadmin, hh-platform-admin,
+         hh-finance, hh-sales-mgr, admin. SOC2 CC6.3: financial data access restriction. -->
+    <div id="screen-revenue-dashboard" class="screen">
+      <div class="dashboard-topbar" style="padding-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="goToScreen('dashboard')" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;width:32px;height:32px;color:white;cursor:pointer;"><i class="fas fa-arrow-left" style="font-size:13px;"></i></button>
+          <div>
+            <div class="dash-title" style="font-size:17px;">Revenue</div>
+            <div class="dash-subtitle">Platform-wide financials</div>
+          </div>
+        </div>
+        <!-- Period selector -->
+        <div style="display:flex;gap:6px;margin-top:12px;overflow-x:auto;padding-bottom:2px;">
+          <button id="m-rev-btn-mtd" class="filter-chip active" onclick="mSetRevPeriod('mtd')" style="white-space:nowrap;font-size:10px;">MTD</button>
+          <button id="m-rev-btn-prev-month" class="filter-chip" onclick="mSetRevPeriod('prev-month')" style="white-space:nowrap;font-size:10px;">Prev Month</button>
+          <button id="m-rev-btn-prev-q" class="filter-chip" onclick="mSetRevPeriod('prev-q')" style="white-space:nowrap;font-size:10px;">Prev Quarter</button>
+          <button id="m-rev-btn-ytd" class="filter-chip" onclick="mSetRevPeriod('ytd')" style="white-space:nowrap;font-size:10px;">YTD</button>
+        </div>
+      </div>
+      <div class="screen-body">
+        <!-- Period label -->
+        <div id="m-rev-period-label" style="font-size:11px;color:#64748B;margin-bottom:10px;text-align:center;">Month-to-Date (May 2026)</div>
+
+        <!-- Hero totals -->
+        <div class="metric-grid" style="grid-template-columns:1fr 1fr;">
+          <div class="metric-card" style="grid-column:1/-1;background:linear-gradient(135deg,#1F3A5F,#2D5A8E);color:white;">
+            <div class="metric-label" style="color:rgba(255,255,255,0.7);">Total Revenue</div>
+            <div class="metric-value" id="m-rev-total" style="font-size:28px;color:white;">$47,280</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Subscriptions</div>
+            <div class="metric-value" id="m-rev-sub" style="font-size:18px;color:#27A570;">$38,640</div>
+            <div class="metric-sub">81.7% of total</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Transactions</div>
+            <div class="metric-value" id="m-rev-txn" style="font-size:18px;color:#3B82F6;">$8,640</div>
+            <div class="metric-sub">18.3% of total</div>
+          </div>
+        </div>
+
+        <!-- Subscription breakdown -->
+        <div class="section-title">Subscription Revenue</div>
+        <div class="card" style="padding:14px;">
+          <div class="pending-item">
+            <div class="pending-item-label">🏠 Homeowner Subs</div>
+            <div id="m-rev-homeowner" class="pending-count" style="color:var(--success);">$18,900</div>
+          </div>
+          <div class="pending-item">
+            <div class="pending-item-label">🔧 Contractor Subs</div>
+            <div id="m-rev-contractor" class="pending-count" style="color:var(--success);">$8,550</div>
+          </div>
+          <div class="pending-item">
+            <div class="pending-item-label">🏢 Agent Subs</div>
+            <div id="m-rev-agent" class="pending-count" style="color:var(--success);">$4,750</div>
+          </div>
+          <div class="pending-item">
+            <div class="pending-item-label">🏛️ Agency Subs</div>
+            <div id="m-rev-agency" class="pending-count" style="color:var(--success);">$2,800</div>
+          </div>
+          <div class="pending-item">
+            <div class="pending-item-label">🏘️ HOA Subs</div>
+            <div id="m-rev-hoa" class="pending-count" style="color:var(--success);">$1,920</div>
+          </div>
+          <div class="pending-item">
+            <div class="pending-item-label">🔍 Inspector Subs</div>
+            <div id="m-rev-inspector" class="pending-count" style="color:var(--success);">$1,040</div>
+          </div>
+          <div class="pending-item">
+            <div class="pending-item-label">➕ Additional Property</div>
+            <div id="m-rev-addlprop" class="pending-count" style="color:var(--success);">$680</div>
+          </div>
+        </div>
+
+        <!-- Transaction breakdown -->
+        <div class="section-title">Transaction Revenue</div>
+        <div class="card" style="padding:14px;">
+          <div class="pending-item">
+            <div class="pending-item-label">✅ Job Success Fees</div>
+            <div id="m-rev-jobfee" class="pending-count" style="color:#3B82F6;">$4,200</div>
+          </div>
+          <div class="pending-item">
+            <div class="pending-item-label">🏗️ Builder Onboarding</div>
+            <div id="m-rev-builder" class="pending-count" style="color:#3B82F6;">$1,800</div>
+          </div>
+          <div class="pending-item">
+            <div class="pending-item-label">🔍 Inspector Setup</div>
+            <div id="m-rev-insp-setup" class="pending-count" style="color:#3B82F6;">$960</div>
+          </div>
+          <div class="pending-item">
+            <div class="pending-item-label">📄 Docs / Insights</div>
+            <div id="m-rev-docs" class="pending-count" style="color:#3B82F6;">$1,080</div>
+          </div>
+          <div class="pending-item" style="border-top:1px dashed #E2E8F0;padding-top:8px;margin-top:2px;">
+            <div class="pending-item-label" style="color:#64748B;">🌱 NP Giveback (10%)</div>
+            <div id="m-rev-giveback" class="pending-count" style="color:#D4A574;">–$4,728</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: HH TEAM (mobile) -->
+    <!-- ══════════════════════════════════════════ -->
+    <!-- ARCH: Internal team visibility — role-gated. SOC2 CC6.3. -->
+    <div id="screen-hh-team" class="screen">
+      <div class="dashboard-topbar" style="padding-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="goToScreen('dashboard')" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;width:32px;height:32px;color:white;cursor:pointer;"><i class="fas fa-arrow-left" style="font-size:13px;"></i></button>
+          <div>
+            <div class="dash-title" style="font-size:17px;">HH Team</div>
+            <div class="dash-subtitle">Internal members</div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-body">
+        <div class="section-title">Team Members (7)</div>
+        <!-- TEST: Verify each role badge matches HH_ROLE_PERMISSIONS keys -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#C4A747,#a08935);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#1a1a1a;flex-shrink:0;">MJ</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:600;color:var(--text);">Michael J.</div>
+              <div style="font-size:10px;color:#64748B;">michael@homehub.com</div>
+            </div>
+            <div style="font-size:9px;font-weight:700;padding:3px 7px;border-radius:4px;background:#C4A747;color:#1a1a1a;white-space:nowrap;">👑 SuperAdmin</div>
+          </div>
+          <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;border-radius:50%;background:#3B82F6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;">AC</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:600;color:var(--text);">Alex Chen</div>
+              <div style="font-size:10px;color:#64748B;">alex@homehub.com</div>
+            </div>
+            <div style="font-size:9px;font-weight:700;padding:3px 7px;border-radius:4px;background:rgba(59,130,246,0.1);color:#3B82F6;white-space:nowrap;">🛡️ Platform Admin</div>
+          </div>
+          <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;border-radius:50%;background:#8B5CF6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;">JW</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:600;color:var(--text);">Jordan Walsh</div>
+              <div style="font-size:10px;color:#64748B;">jordan@homehub.com</div>
+            </div>
+            <div style="font-size:9px;font-weight:700;padding:3px 7px;border-radius:4px;background:rgba(139,92,246,0.1);color:#8B5CF6;white-space:nowrap;">💼 AE</div>
+          </div>
+          <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;border-radius:50%;background:#0EA5E9;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;">TM</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:600;color:var(--text);">Taylor Moore</div>
+              <div style="font-size:10px;color:#64748B;">taylor@homehub.com</div>
+            </div>
+            <div style="font-size:9px;font-weight:700;padding:3px 7px;border-radius:4px;background:rgba(14,165,233,0.1);color:#0EA5E9;white-space:nowrap;">🎧 Support</div>
+          </div>
+          <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;border-radius:50%;background:#10B981;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;">CK</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:600;color:var(--text);">Casey Kim</div>
+              <div style="font-size:10px;color:#64748B;">casey@homehub.com</div>
+            </div>
+            <div style="font-size:9px;font-weight:700;padding:3px 7px;border-radius:4px;background:rgba(16,185,129,0.1);color:#10B981;white-space:nowrap;">💰 Finance</div>
+          </div>
+          <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;border-radius:50%;background:#F59E0B;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;">DS</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:600;color:var(--text);">Dana Scott</div>
+              <div style="font-size:10px;color:#64748B;">dana@homehub.com</div>
+            </div>
+            <div style="font-size:9px;font-weight:700;padding:3px 7px;border-radius:4px;background:rgba(245,158,11,0.1);color:#F59E0B;white-space:nowrap;">📈 Sales Mgr</div>
+          </div>
+          <div style="padding:12px 14px;display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;border-radius:50%;background:#64748B;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;">RJ</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:600;color:var(--text);">Riley Johnson</div>
+              <div style="font-size:10px;color:#64748B;">riley@homehub.com</div>
+            </div>
+            <div style="font-size:9px;font-weight:700;padding:3px 7px;border-radius:4px;background:rgba(100,116,139,0.1);color:#64748B;white-space:nowrap;">⚡ Ops</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding:10px 14px;background:rgba(196,167,71,0.08);border-radius:8px;border:1px dashed #C4A747;">
+          <div style="font-size:10px;color:#C4A747;font-weight:600;">🔒 ARCH Note</div>
+          <div style="font-size:10px;color:#64748B;margin-top:3px;">In production: HH team accounts provisioned via internal IdP, not self-registration. Role assignments require SuperAdmin approval + audit log entry.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: AUDIT LOG (mobile) -->
+    <!-- ══════════════════════════════════════════ -->
+    <!-- ARCH: Audit log — append-only in production (no UPDATE/DELETE on audit_logs table).
+         SOC2 CC7.2: Monitoring; CC7.3: Incident response. 2-year retention policy. -->
+    <div id="screen-audit-log" class="screen">
+      <div class="dashboard-topbar" style="padding-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="goToScreen('dashboard')" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;width:32px;height:32px;color:white;cursor:pointer;"><i class="fas fa-arrow-left" style="font-size:13px;"></i></button>
+          <div>
+            <div class="dash-title" style="font-size:17px;">Audit Log</div>
+            <div class="dash-subtitle">Security events</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:10px;overflow-x:auto;padding-bottom:2px;" id="m-audit-filter-bar">
+          <button class="filter-chip active" onclick="mFilterAudit('all',this)" style="font-size:10px;white-space:nowrap;">All</button>
+          <button class="filter-chip" onclick="mFilterAudit('auth',this)" style="font-size:10px;white-space:nowrap;">Auth</button>
+          <button class="filter-chip" onclick="mFilterAudit('permission',this)" style="font-size:10px;white-space:nowrap;">Perm</button>
+          <button class="filter-chip" onclick="mFilterAudit('qr',this)" style="font-size:10px;white-space:nowrap;">QR</button>
+          <button class="filter-chip" onclick="mFilterAudit('data',this)" style="font-size:10px;white-space:nowrap;">Data</button>
+          <button class="filter-chip" onclick="mFilterAudit('revenue',this)" style="font-size:10px;white-space:nowrap;">Revenue</button>
+        </div>
+      </div>
+      <div class="screen-body">
+        <div id="m-audit-log-list" style="display:flex;flex-direction:column;gap:8px;">
+          <!-- populated by mRenderAuditLog() -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: QR ACCESS LOG (mobile) -->
+    <!-- ══════════════════════════════════════════ -->
+    <!-- ARCH: QR tokens are scoped, short-lived, server-revocable. SOC2 CC6.7. -->
+    <div id="screen-qr-access-log" class="screen">
+      <div class="dashboard-topbar" style="padding-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="goToScreen('dashboard')" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;width:32px;height:32px;color:white;cursor:pointer;"><i class="fas fa-arrow-left" style="font-size:13px;"></i></button>
+          <div>
+            <div class="dash-title" style="font-size:17px;">QR Access Log</div>
+            <div class="dash-subtitle">Contractor/agent property access</div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-body">
+        <div class="metric-grid" style="grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
+          <div class="metric-card" style="padding:10px;">
+            <div class="metric-label" style="font-size:9px;">Total Scans</div>
+            <div class="metric-value" style="font-size:20px;">142</div>
+            <div class="metric-sub" style="font-size:9px;">last 30d</div>
+          </div>
+          <div class="metric-card" style="padding:10px;">
+            <div class="metric-label" style="font-size:9px;">Flagged</div>
+            <div class="metric-value" style="font-size:20px;color:var(--alert);">3</div>
+            <div class="metric-sub" style="font-size:9px;">need review</div>
+          </div>
+          <div class="metric-card" style="padding:10px;">
+            <div class="metric-label" style="font-size:9px;">Revoked</div>
+            <div class="metric-value" style="font-size:20px;color:var(--warning);">7</div>
+            <div class="metric-sub" style="font-size:9px;">this month</div>
+          </div>
+        </div>
+        <div class="section-title">Recent QR Events</div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="padding:12px 14px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+              <div style="font-size:12px;font-weight:600;color:var(--text);">Carlos Rodriguez</div>
+              <div style="font-size:9px;padding:2px 6px;background:rgba(239,68,68,0.1);color:#ef4444;border-radius:4px;font-weight:700;">Flagged</div>
+            </div>
+            <div style="font-size:10px;color:#64748B;margin-top:2px;">456 Maple Ln — accessed 3x in 2h · May 22, 2026 08:14</div>
+            <div style="font-size:10px;color:#94A3B8;margin-top:2px;">Scope: kitchen-remodel · Token: qr-a3f8c2</div>
+          </div>
+          <div style="padding:12px 14px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+              <div style="font-size:12px;font-weight:600;color:var(--text);">Bay Area Inspections</div>
+              <div style="font-size:9px;padding:2px 6px;background:rgba(34,197,94,0.1);color:#22c55e;border-radius:4px;font-weight:700;">Valid</div>
+            </div>
+            <div style="font-size:10px;color:#64748B;margin-top:2px;">789 Beach St — single scan · May 21, 2026 14:30</div>
+            <div style="font-size:10px;color:#94A3B8;margin-top:2px;">Scope: full-inspection · Token: qr-b9d7e1</div>
+          </div>
+          <div style="padding:12px 14px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+              <div style="font-size:12px;font-weight:600;color:var(--text);">Rodriguez Home Services</div>
+              <div style="font-size:9px;padding:2px 6px;background:rgba(239,68,68,0.1);color:#ef4444;border-radius:4px;font-weight:700;">Expired Token</div>
+            </div>
+            <div style="font-size:10px;color:#64748B;margin-top:2px;">123 Oak Ave — scan failed · May 20, 2026 16:45</div>
+            <div style="font-size:10px;color:#94A3B8;margin-top:2px;">Token expired 48h prior · Token: qr-c2a9f0</div>
+          </div>
+          <div style="padding:12px 14px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+              <div style="font-size:12px;font-weight:600;color:var(--text);">Coastal Realty Group</div>
+              <div style="font-size:9px;padding:2px 6px;background:rgba(34,197,94,0.1);color:#22c55e;border-radius:4px;font-weight:700;">Valid</div>
+            </div>
+            <div style="font-size:10px;color:#64748B;margin-top:2px;">200 Market St Unit 5 — listing access · May 19, 2026 10:02</div>
+            <div style="font-size:10px;color:#94A3B8;margin-top:2px;">Scope: listing-view · Token: qr-d1b4e8</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding:10px 14px;background:rgba(59,130,246,0.06);border-radius:8px;border:1px dashed #3B82F6;">
+          <div style="font-size:10px;color:#3B82F6;font-weight:600;">🔒 ARCH: QR Token Model</div>
+          <div style="font-size:10px;color:#64748B;margin-top:3px;">Each token stores: scope, expires_at, max_uses, uses_count, revoked (bool). Revocation is server-side immediate. Client cannot bypass a revoked token.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: PERMISSIONS MATRIX (mobile) -->
+    <!-- ══════════════════════════════════════════ -->
+    <!-- ARCH: Reference view only. Enforcement at API/server layer in production. SOC2 CC6.3. -->
+    <div id="screen-permissions-matrix" class="screen">
+      <div class="dashboard-topbar" style="padding-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="goToScreen('dashboard')" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;width:32px;height:32px;color:white;cursor:pointer;"><i class="fas fa-arrow-left" style="font-size:13px;"></i></button>
+          <div>
+            <div class="dash-title" style="font-size:17px;">Permissions Matrix</div>
+            <div class="dash-subtitle">Role access reference</div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-body">
+        <div style="padding:10px 14px;background:rgba(245,158,11,0.08);border-radius:8px;border:1px dashed #F59E0B;margin-bottom:14px;">
+          <div style="font-size:10px;color:#F59E0B;font-weight:600;">⚠️ Reference Only</div>
+          <div style="font-size:10px;color:#64748B;margin-top:2px;">This matrix documents intended permissions. Enforcement requires server-side RBAC middleware — client-side UI gates are prototype-only.</div>
+        </div>
+        <div id="m-permissions-list" style="display:flex;flex-direction:column;gap:6px;">
+          <!-- populated by mRenderPermissionsMatrix() -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: ACTIVE SESSIONS (mobile stub) -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-active-sessions" class="screen">
+      <div class="dashboard-topbar" style="padding-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="goToScreen('dashboard')" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;width:32px;height:32px;color:white;cursor:pointer;"><i class="fas fa-arrow-left" style="font-size:13px;"></i></button>
+          <div><div class="dash-title" style="font-size:17px;">Active Sessions</div></div>
+        </div>
+      </div>
+      <div class="screen-body">
+        <div class="card" style="padding:16px;text-align:center;">
+          <div style="font-size:28px;margin-bottom:8px;">🟢</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">47 Active Sessions</div>
+          <div style="font-size:11px;color:#64748B;margin-top:4px;">Real-time session tracking requires WebSocket backend integration.</div>
+        </div>
+        <!-- ARCH: Production session tracking: Redis with TTL, JWT blacklist for forced revocation.
+             SOC2 CC6.8: Session termination controls. -->
+        <div style="margin-top:12px;padding:10px 14px;background:rgba(59,130,246,0.06);border-radius:8px;border:1px dashed #3B82F6;">
+          <div style="font-size:10px;color:#3B82F6;font-weight:600;">🔒 ARCH: Session Model</div>
+          <div style="font-size:10px;color:#64748B;margin-top:3px;">JWT (15 min) + rotating refresh tokens in httpOnly cookies. Session store in Redis. Admin can forcibly revoke any session. Auto-expire on inactivity.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: PLATFORM CONFIG (SuperAdmin only) -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-platform-config" class="screen">
+      <div class="dashboard-topbar" style="padding-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="goToScreen('dashboard')" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;width:32px;height:32px;color:white;cursor:pointer;"><i class="fas fa-arrow-left" style="font-size:13px;"></i></button>
+          <div>
+            <div class="dash-title" style="font-size:17px;">Platform Config</div>
+            <div class="dash-subtitle" style="color:#C4A747;">SuperAdmin only</div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-body">
+        <div style="padding:10px 14px;background:rgba(196,167,71,0.08);border-radius:8px;border:1px solid #C4A747;margin-bottom:14px;">
+          <div style="font-size:10px;color:#C4A747;font-weight:700;">👑 SuperAdmin Gate</div>
+          <div style="font-size:10px;color:#64748B;margin-top:2px;">ARCH: Server-side enforcement required. Client-side hide is prototype only.</div>
+        </div>
+        <div class="section-title">Fee Configuration</div>
+        <div class="card" style="padding:14px;">
+          <div class="pending-item"><div class="pending-item-label">Job Success Fee</div><div class="pending-count" style="color:var(--text);">3.5%</div></div>
+          <div class="pending-item"><div class="pending-item-label">NP Giveback</div><div class="pending-count" style="color:var(--text);">10%</div></div>
+          <div class="pending-item"><div class="pending-item-label">Builder Onboarding Fee</div><div class="pending-count" style="color:var(--text);">$600</div></div>
+          <div class="pending-item"><div class="pending-item-label">Inspector Setup Fee</div><div class="pending-count" style="color:var(--text);">$120</div></div>
+          <div class="pending-item" style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px;">
+            <div class="pending-item-label">Free Trial Period</div><div class="pending-count" style="color:var(--text);">30 days</div>
+          </div>
+        </div>
+        <div class="section-title" style="margin-top:14px;">Feature Flags</div>
+        <div class="card" style="padding:14px;">
+          <div class="pending-item"><div class="pending-item-label">PriceMatch Engine</div><div style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(34,197,94,0.1);color:#22c55e;font-weight:700;">ON</div></div>
+          <div class="pending-item"><div class="pending-item-label">NP Giveback</div><div style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(34,197,94,0.1);color:#22c55e;font-weight:700;">ON</div></div>
+          <div class="pending-item"><div class="pending-item-label">Agency Portal</div><div style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(34,197,94,0.1);color:#22c55e;font-weight:700;">ON</div></div>
+          <div class="pending-item"><div class="pending-item-label">Builder Module</div><div style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(245,158,11,0.1);color:#F59E0B;font-weight:700;">BETA</div></div>
+          <div class="pending-item"><div class="pending-item-label">Financing Integration</div><div style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(100,116,139,0.1);color:#64748B;font-weight:700;">OFF</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: IMPERSONATE USER (SuperAdmin only) -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-impersonate-user" class="screen">
+      <div class="dashboard-topbar" style="padding-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="goToScreen('dashboard')" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;width:32px;height:32px;color:white;cursor:pointer;"><i class="fas fa-arrow-left" style="font-size:13px;"></i></button>
+          <div>
+            <div class="dash-title" style="font-size:17px;">Impersonate User</div>
+            <div class="dash-subtitle" style="color:#C4A747;">SuperAdmin only</div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-body">
+        <div style="padding:12px 14px;background:rgba(239,68,68,0.08);border-radius:8px;border:1px solid #ef4444;margin-bottom:14px;">
+          <div style="font-size:11px;font-weight:700;color:#ef4444;">⚠️ High-Risk Action</div>
+          <div style="font-size:10px;color:#64748B;margin-top:4px;">Every impersonation session is logged to the SuperAdmin immutable audit log with actor, target user, session ID, timestamp, and justification. Cannot be deleted.</div>
+        </div>
+        <div class="form-field">
+          <label class="form-label">User Email or ID</label>
+          <input class="form-input" type="text" placeholder="user@example.com or user-12345">
+        </div>
+        <div class="form-field">
+          <label class="form-label">Justification (required)</label>
+          <input class="form-input" type="text" placeholder="Support ticket #, reason for access...">
+        </div>
+        <!-- TEST: Verify impersonation always appends to SuperAdmin audit log before session starts -->
+        <button class="btn btn-primary btn-full" style="background:#ef4444;margin-top:8px;" onclick="alert('ARCH: Impersonation requires server-side implementation. This logs intent to audit trail.')">
+          Start Impersonation Session
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: AE PIPELINE (mobile) -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-ae-pipeline" class="screen">
+      <div class="dashboard-topbar" style="padding-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="goToScreen('dashboard')" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;width:32px;height:32px;color:white;cursor:pointer;"><i class="fas fa-arrow-left" style="font-size:13px;"></i></button>
+          <div>
+            <div class="dash-title" style="font-size:17px;">AE Pipeline</div>
+            <div class="dash-subtitle">Account executive view</div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-body">
+        <div class="metric-grid" style="grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+          <div class="metric-card" style="padding:10px;">
+            <div class="metric-label" style="font-size:9px;">Active Accounts</div>
+            <div class="metric-value" style="font-size:20px;">48</div>
+          </div>
+          <div class="metric-card" style="padding:10px;">
+            <div class="metric-label" style="font-size:9px;">Pipeline Value</div>
+            <div class="metric-value" style="font-size:20px;color:#27A570;">$84K</div>
+          </div>
+          <div class="metric-card" style="padding:10px;">
+            <div class="metric-label" style="font-size:9px;">New (30d)</div>
+            <div class="metric-value" style="font-size:20px;">12</div>
+          </div>
+          <div class="metric-card" style="padding:10px;">
+            <div class="metric-label" style="font-size:9px;">At Risk</div>
+            <div class="metric-value" style="font-size:20px;color:var(--alert);">4</div>
+          </div>
+        </div>
+        <div class="section-title">My Accounts</div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="padding:12px 14px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-size:12px;font-weight:600;color:var(--text);">Coastal Realty Group</div>
+              <div style="font-size:9px;padding:2px 6px;border-radius:10px;background:rgba(34,197,94,0.1);color:#22c55e;font-weight:700;">Active</div>
+            </div>
+            <div style="font-size:10px;color:#64748B;margin-top:2px;">Agency · $1,800/mo · 8 agents</div>
+          </div>
+          <div style="padding:12px 14px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-size:12px;font-weight:600;color:var(--text);">Harbor Properties Mgmt</div>
+              <div style="font-size:9px;padding:2px 6px;border-radius:10px;background:rgba(34,197,94,0.1);color:#22c55e;font-weight:700;">Active</div>
+            </div>
+            <div style="font-size:10px;color:#64748B;margin-top:2px;">Property Manager · $950/mo · 45 units</div>
+          </div>
+          <div style="padding:12px 14px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-size:12px;font-weight:600;color:var(--text);">Sunset Hills HOA</div>
+              <div style="font-size:9px;padding:2px 6px;border-radius:10px;background:rgba(245,158,11,0.1);color:#F59E0B;font-weight:700;">At Risk</div>
+            </div>
+            <div style="font-size:10px;color:#64748B;margin-top:2px;">HOA · $480/mo · renewal due Jun 1</div>
+          </div>
+          <div style="padding:12px 14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-size:12px;font-weight:600;color:var(--text);">Bay Area Inspections</div>
+              <div style="font-size:9px;padding:2px 6px;border-radius:10px;background:rgba(139,92,246,0.1);color:#8B5CF6;font-weight:700;">Trial</div>
+            </div>
+            <div style="font-size:10px;color:#64748B;margin-top:2px;">Inspector Co. · Trial ends Jun 8</div>
+          </div>
+        </div>
+        <!-- ARCH: AE data scoping — in production, AEs only see accounts with assigned_ae_id = current user.
+             SOC2 CC6.3: AE cannot access accounts outside their assignment. -->
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SCREEN: SUPERADMIN LOG (mobile) -->
+    <!-- ══════════════════════════════════════════ -->
+    <div id="screen-superadmin-log" class="screen">
+      <div class="dashboard-topbar" style="padding-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="goToScreen('dashboard')" style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;width:32px;height:32px;color:white;cursor:pointer;"><i class="fas fa-arrow-left" style="font-size:13px;"></i></button>
+          <div>
+            <div class="dash-title" style="font-size:17px;">SuperAdmin Log</div>
+            <div class="dash-subtitle" style="color:#C4A747;">Immutable audit trail</div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-body">
+        <div style="padding:10px 14px;background:rgba(196,167,71,0.08);border-radius:8px;border:1px solid #C4A747;margin-bottom:12px;">
+          <div style="font-size:10px;color:#C4A747;font-weight:600;">🔒 ARCH: Immutable Log</div>
+          <div style="font-size:10px;color:#64748B;margin-top:2px;">No UPDATE or DELETE on this table, ever. WORM storage in production. SOC2 CC7.2 + CC7.3.</div>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="padding:12px 14px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;"><div style="font-size:11px;font-weight:600;color:var(--text);">Demo login</div><div style="font-size:9px;color:#64748B;">Just now</div></div>
+            <div style="font-size:10px;color:#64748B;margin-top:2px;">michael@homehub.com · SuperAdmin · session demo-superadmin-xxx</div>
+          </div>
+          <div style="padding:12px 14px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;"><div style="font-size:11px;font-weight:600;color:var(--text);">Platform config viewed</div><div style="font-size:9px;color:#64748B;">2h ago</div></div>
+            <div style="font-size:10px;color:#64748B;margin-top:2px;">Fee structure + feature flags accessed by michael@homehub.com</div>
+          </div>
+          <div style="padding:12px 14px;">
+            <div style="display:flex;justify-content:space-between;"><div style="font-size:11px;font-weight:600;color:var(--text);">Role assigned: Platform Admin</div><div style="font-size:9px;color:#64748B;">May 20</div></div>
+            <div style="font-size:10px;color:#64748B;margin-top:2px;">alex@homehub.com promoted by michael@homehub.com</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /screen-container -->
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav" id="bottom-nav">
+    <div class="nav-item active" id="nav-dashboard" onclick="switchNav('dashboard')">
+      <i class="fas fa-th-large"></i>
+      <span>Dashboard</span>
+    </div>
+    <div class="nav-item" id="nav-users" onclick="switchNav('users')">
+      <i class="fas fa-users"></i>
+      <span>Users</span>
+      <div class="nav-badge-dot">12</div>
+    </div>
+    <div class="nav-item" id="nav-contractors" onclick="switchNav('contractors')">
+      <i class="fas fa-tools"></i>
+      <span>Contractors</span>
+      <div class="nav-badge-dot">5</div>
+    </div>
+    <div class="nav-item" id="nav-tickets" onclick="switchNav('support-tickets')">
+      <i class="fas fa-comment-dots"></i>
+      <span>Tickets</span>
+    </div>
+    <div class="nav-item" id="nav-more" onclick="openDrawer()">
+      <i class="fas fa-bars"></i>
+      <span>More</span>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<script>
+
+// ══════════════════════════════════════════════════════════
+// ARCH: Role-Based Access Control (RBAC)
+// PROTOTYPE: Permissions enforced UI-only via applyRoleBasedUI().
+// PRODUCTION: All gates must be re-enforced at API middleware level.
+// SOC2 CC6.1, CC6.3: Logical access controls + least privilege.
+// ══════════════════════════════════════════════════════════
+
+const HH_ROLE_PERMISSIONS = {
+  // ── Customer-facing admin roles ──
+  'superadmin':        { label: '👑 SuperAdmin',       revenue: true,  team: true,  security: true,  superadmin: true,  impersonate: true,  color: '#C4A747',  initials: 'SA', avatarBg: 'linear-gradient(135deg,#C4A747,#a08935)', avatarColor: '#1a1a1a' },
+  'hh-platform-admin': { label: '🛡️ Platform Admin',  revenue: false, team: true,  security: true,  superadmin: false, impersonate: false, color: '#3B82F6',  initials: 'PA', avatarBg: '#3B82F6', avatarColor: 'white' },
+  'hh-finance':        { label: '💰 Finance',          revenue: true,  team: false, security: false, superadmin: false, impersonate: false, color: '#10B981',  initials: 'FN', avatarBg: '#10B981', avatarColor: 'white' },
+  'hh-ae':             { label: '💼 Account Exec',     revenue: false, team: false, security: false, superadmin: false, impersonate: false, color: '#8B5CF6',  initials: 'AE', avatarBg: '#8B5CF6', avatarColor: 'white' },
+  'hh-support':        { label: '🎧 Support',          revenue: false, team: false, security: false, superadmin: false, impersonate: false, color: '#0EA5E9',  initials: 'CS', avatarBg: '#0EA5E9', avatarColor: 'white' },
+  'hh-sales-mgr':      { label: '📈 Sales Manager',   revenue: true,  team: true,  security: false, superadmin: false, impersonate: false, color: '#F59E0B',  initials: 'SM', avatarBg: '#F59E0B', avatarColor: 'white' },
+  'hh-ops':            { label: '⚡ Operations',       revenue: false, team: true,  security: false, superadmin: false, impersonate: false, color: '#64748B',  initials: 'OP', avatarBg: '#64748B', avatarColor: 'white' },
+  // ── Platform admin roles ──
+  'admin':             { label: '⚙️ Admin',            revenue: true,  team: true,  security: true,  superadmin: false, impersonate: false, color: '#1F3A5F',  initials: 'AD', avatarBg: '#1F3A5F', avatarColor: 'white' },
+  'community-manager': { label: '🏘️ Community Mgr',  revenue: false, team: false, security: false, superadmin: false, impersonate: false, color: '#27A570',  initials: 'CM', avatarBg: '#27A570', avatarColor: 'white' },
+};
+
+// ── Auth State ──
+// ARCH: In production — JWT in httpOnly cookie, not localStorage.
+// localStorage is prototype-only convenience. SOC2 CC6.1.
+let adminMobileAuth = JSON.parse(localStorage.getItem('homeHubAdminAuth') || 'null');
+
+// ── Mobile Audit Log (in-memory — append-only pattern) ──
+// ARCH: In production, write-only to audit_logs table. No UPDATE/DELETE ever.
+// SOC2 CC7.2, CC7.3. 2-year retention minimum.
+let mobileAuditLog = [
+  { ts: '2026-05-22 09:41', category: 'auth',       actor: 'michael@homehub.com', role: 'superadmin',  event: 'Demo login', ip: '127.0.0.1 (prototype)' },
+  { ts: '2026-05-22 08:14', category: 'qr',         actor: 'carlos@demo.com',     role: 'contractor',  event: 'QR scan — 456 Maple Ln (3x in 2h)', ip: '192.168.1.50' },
+  { ts: '2026-05-22 07:00', category: 'permission', actor: 'admin@homehub.com',   role: 'admin',       event: 'Role changed: hh-ae → hh-sales-mgr for jordan@homehub.com', ip: '10.0.0.1' },
+  { ts: '2026-05-21 14:30', category: 'auth',       actor: 'jennifer@demo.com',   role: 'inspector',   event: 'Login successful', ip: '203.0.113.12' },
+  { ts: '2026-05-21 11:00', category: 'data',       actor: 'sarah@demo.com',      role: 'homeowner',   event: 'Document uploaded: warranty-roof-2026.pdf', ip: '198.51.100.4' },
+  { ts: '2026-05-21 09:15', category: 'revenue',    actor: 'casey@homehub.com',   role: 'hh-finance',  event: 'Revenue report exported — April 2026', ip: '10.0.0.3' },
+  { ts: '2026-05-20 16:45', category: 'qr',         actor: 'carlos@demo.com',     role: 'contractor',  event: 'QR scan FAILED — expired token qr-c2a9f0', ip: '192.168.1.51' },
+  { ts: '2026-05-20 10:00', category: 'auth',       actor: 'unknown',             role: '—',           event: '⚠️ Failed login (3 attempts) — admin@homehub.com', ip: '45.33.32.156' },
+];
+
+function mAppendAuditLog(entry) {
+  mobileAuditLog.unshift({ ts: new Date().toISOString().replace('T',' ').substr(0,16), ...entry });
+  mRenderAuditLog();
+}
+
+let mAuditCurrentFilter = 'all';
+
+function mRenderAuditLog() {
+  const list = document.getElementById('m-audit-log-list');
+  if (!list) return;
+  const entries = mAuditCurrentFilter === 'all'
+    ? mobileAuditLog
+    : mobileAuditLog.filter(e => e.category === mAuditCurrentFilter);
+
+  const catColors = { auth: '#3B82F6', qr: '#8B5CF6', permission: '#F59E0B', data: '#27A570', revenue: '#10B981', superadmin: '#C4A747' };
+  list.innerHTML = entries.map(e => `
+    <div style="padding:10px 12px;background:var(--card);border-radius:8px;border:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <div style="font-size:9px;padding:1px 6px;border-radius:10px;background:rgba(0,0,0,0.05);color:${catColors[e.category]||'#64748B'};font-weight:700;text-transform:uppercase;">${e.category}</div>
+        <div style="font-size:9px;color:#94A3B8;">${e.ts}</div>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;">${e.event}</div>
+      <div style="font-size:10px;color:#64748B;">${e.actor} · ${e.role} · ${e.ip}</div>
+    </div>
+  `).join('');
+}
+
+function mFilterAudit(cat, el) {
+  mAuditCurrentFilter = cat;
+  document.querySelectorAll('#m-audit-filter-bar .filter-chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
+  mRenderAuditLog();
+}
+
+// ── Revenue Periods ──
+// ARCH: All revenue figures are mock demo data. In production, query from billing DB.
+// SOC2 CC6.3: Financial data access restricted by role.
+const M_REV_PERIODS = {
+  'mtd':        { label: 'Month-to-Date (May 2026)',      total: '$47,280', sub: '$38,640', txn: '$8,640',  homeowner: '$18,900', contractor: '$8,550', agent: '$4,750', agency: '$2,800', hoa: '$1,920', inspector: '$1,040', addlprop: '$680', jobfee: '$4,200', builder: '$1,800', inspsetup: '$960', docs: '$1,080', giveback: '–$4,728' },
+  'prev-month': { label: 'Previous Month (April 2026)',   total: '$39,920', sub: '$31,640', txn: '$8,280',  homeowner: '$15,300', contractor: '$6,800', agent: '$3,960', agency: '$2,450', hoa: '$1,680', inspector: '$960',  addlprop: '$490', jobfee: '$4,080', builder: '$1,500', inspsetup: '$840', docs: '$960',  giveback: '–$3,992' },
+  'prev-q':     { label: 'Previous Quarter (Q1 2026)',    total: '$98,440', sub: '$79,200', txn: '$19,240', homeowner: '$38,100', contractor: '$17,200', agent: '$9,800', agency: '$6,200', hoa: '$4,400', inspector: '$2,400', addlprop: '$1,100', jobfee: '$9,600', builder: '$4,800', inspsetup: '$2,280', docs: '$2,560', giveback: '–$9,844' },
+  'ytd':        { label: 'Year-to-Date (Jan–May 22, 2026)', total: '$185,680', sub: '$148,920', txn: '$36,760', homeowner: '$72,400', contractor: '$32,800', agent: '$18,700', agency: '$11,600', hoa: '$8,200', inspector: '$4,280', addlprop: '$940', jobfee: '$17,800', builder: '$8,400', inspsetup: '$4,360', docs: '$6,200', giveback: '–$18,568' },
+};
+
+let mCurrentRevPeriod = 'mtd';
+
+function mSetRevPeriod(period) {
+  mCurrentRevPeriod = period;
+  const d = M_REV_PERIODS[period];
+  if (!d) return;
+  // Update period label
+  const lbl = document.getElementById('m-rev-period-label');
+  if (lbl) lbl.textContent = d.label;
+  // Update hero totals
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  setVal('m-rev-total', d.total);
+  setVal('m-rev-sub', d.sub);
+  setVal('m-rev-txn', d.txn);
+  setVal('m-rev-homeowner', d.homeowner);
+  setVal('m-rev-contractor', d.contractor);
+  setVal('m-rev-agent', d.agent);
+  setVal('m-rev-agency', d.agency);
+  setVal('m-rev-hoa', d.hoa);
+  setVal('m-rev-inspector', d.inspector);
+  setVal('m-rev-addlprop', d.addlprop);
+  setVal('m-rev-jobfee', d.jobfee);
+  setVal('m-rev-builder', d.builder);
+  setVal('m-rev-insp-setup', d.inspsetup);
+  setVal('m-rev-docs', d.docs);
+  setVal('m-rev-giveback', d.giveback);
+  // Update filter chip states
+  ['mtd','prev-month','prev-q','ytd'].forEach(p => {
+    const btn = document.getElementById('m-rev-btn-' + p);
+    if (btn) btn.classList.toggle('active', p === period);
+  });
+  // Log to audit trail
+  mAppendAuditLog({ category: 'revenue', actor: adminMobileAuth?.email || 'demo', role: adminMobileAuth?.role || 'superadmin', event: 'Revenue period viewed: ' + d.label, ip: '127.0.0.1 (prototype)' });
+}
+
+// ── Permissions Matrix (simplified list for mobile) ──
+const M_PERM_ROWS = [
+  ['Own Property Data',  '✓','✓','R','OWN','LIM','✗','✗','✗'],
+  ['All Properties',     '✓','✓','R','R','LIM','✗','✗','R'],
+  ['Revenue / Financials','✓','✗','✓','✗','✗','✗','✓','✗'],
+  ['User Accounts',      '✓','✓','R','✗','R','✗','✗','✗'],
+  ['Audit Log',          '✓','✓','✗','✗','✗','✗','✗','✗'],
+  ['QR Access Log',      '✓','✓','✗','✗','✗','✗','✗','✗'],
+  ['HH Team Members',    '✓','✓','✗','✓','✓','✓','✗','✗'],
+  ['Platform Config',    '✓','✗','✗','✗','✗','✗','✗','✗'],
+  ['Feature Flags',      '✓','✗','✗','✗','✗','✗','✗','✗'],
+  ['Impersonate User',   '✓','✗','✗','✗','✗','✗','✗','✗'],
+];
+const M_PERM_COLS = ['Resource','SA','PA','Fin','AE','Sup','Ops','SM','Mgr'];
+
+function mRenderPermissionsMatrix() {
+  const list = document.getElementById('m-permissions-list');
+  if (!list) return;
+  // Header
+  let html = `<div style="display:grid;grid-template-columns:1fr repeat(8,28px);gap:2px;padding:6px 8px;background:rgba(0,0,0,0.15);border-radius:6px;margin-bottom:4px;">
+    <div style="font-size:9px;font-weight:700;color:#94A3B8;">Resource</div>
+    ${M_PERM_COLS.slice(1).map(c => `<div style="font-size:9px;font-weight:700;color:#94A3B8;text-align:center;">${c}</div>`).join('')}
+  </div>`;
+  const valueColor = v => ({ '✓': '#22c55e', '✗': '#ef4444', 'R': '#3B82F6', 'OWN': '#F59E0B', 'LIM': '#8B5CF6' }[v] || '#94A3B8');
+  M_PERM_ROWS.forEach(row => {
+    html += `<div style="display:grid;grid-template-columns:1fr repeat(8,28px);gap:2px;padding:7px 8px;background:var(--card);border-radius:6px;border:1px solid var(--border);align-items:center;">
+      <div style="font-size:10px;font-weight:500;color:var(--text);">${row[0]}</div>
+      ${row.slice(1).map(v => `<div style="font-size:9px;font-weight:700;text-align:center;color:${valueColor(v)};">${v}</div>`).join('')}
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+// ── Demo Login ──
+// ARCH: In production — SSO/OIDC login, MFA enforced, IP allowlist for admin.
+// SOC2 CC6.1: Authentication mechanisms.
+function adminDemoLogin(role, displayName, email) {
+  const sessionId = 'demo-' + role + '-' + Math.random().toString(36).substr(2, 9);
+  const auth = { isAuthenticated: true, role, displayName, email, sessionId, loginTime: new Date().toISOString() };
+  adminMobileAuth = auth;
+  localStorage.setItem('homeHubAdminAuth', JSON.stringify(auth));
+  goToScreen('dashboard');
+  applyRoleBasedUI(role, displayName, email);
+  mAppendAuditLog({ category: 'auth', actor: email, role, event: 'Demo login — ' + (HH_ROLE_PERMISSIONS[role]?.label || role), ip: '127.0.0.1 (prototype)' });
+}
+
+function adminMobileLogout() {
+  // ARCH: Production logout: revoke refresh token server-side, clear httpOnly cookie, blacklist JWT.
+  // SOC2 CC6.8: Session termination.
+  mAppendAuditLog({ category: 'auth', actor: adminMobileAuth?.email || 'unknown', role: adminMobileAuth?.role || '—', event: 'Logout', ip: '127.0.0.1 (prototype)' });
+  adminMobileAuth = null;
+  localStorage.removeItem('homeHubAdminAuth');
+  goToScreen('login');
+  closeDrawer();
+  // Reset sidebar
+  document.getElementById('m-drawer-username').textContent = '—';
+  document.getElementById('m-drawer-userrole').textContent = '—';
+}
+
+// ── Apply Role-Based UI ──
+// ARCH: PROTOTYPE ONLY — hides/shows UI by role.
+// CRITICAL: Server-side middleware must enforce identical permissions in production.
+function applyRoleBasedUI(role, displayName, email) {
+  const perms = HH_ROLE_PERMISSIONS[role] || {};
+
+  // Show/hide nav sections
+  const setSection = (titleId, sectionId, visible) => {
+    const t = document.getElementById(titleId), s = document.getElementById(sectionId);
+    if (t) t.style.display = visible ? '' : 'none';
+    if (s) s.style.display = visible ? '' : 'none';
+  };
+  setSection('m-nav-title-revenue',   'm-nav-section-revenue',   !!perms.revenue);
+  setSection('m-nav-title-hhteam',    'm-nav-section-hhteam',    !!perms.team);
+  setSection('m-nav-title-security',  'm-nav-section-security',  !!perms.security);
+  setSection('m-nav-title-superadmin','m-nav-section-superadmin',!!perms.superadmin);
+
+  // Update drawer footer
+  const name = displayName || 'User';
+  const initials = name.split(' ').map(p => p[0]).join('').substr(0,2).toUpperCase();
+  const avatarEl = document.getElementById('m-drawer-avatar');
+  if (avatarEl) {
+    avatarEl.textContent = initials;
+    avatarEl.style.background = perms.avatarBg || '#1F3A5F';
+    avatarEl.style.color = perms.avatarColor || 'white';
+  }
+  const nameEl = document.getElementById('m-drawer-username');
+  if (nameEl) nameEl.textContent = name;
+  const roleEl = document.getElementById('m-drawer-userrole');
+  if (roleEl) roleEl.textContent = perms.label || role;
+
+  // Update dashboard greeting
+  const greetingEl = document.querySelector('.dash-greeting');
+  if (greetingEl) greetingEl.textContent = 'Good morning, ' + name.split(' ')[0];
+
+  // Render data-driven screens
+  mRenderAuditLog();
+  mRenderPermissionsMatrix();
+}
+
+// ── Screen Navigation ──
+function goToScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('screen-' + id);
+  if (target) {
+    target.classList.add('active');
+    target.scrollTop = 0;
+  }
+  const bottomNav = document.getElementById('bottom-nav');
+  const noNavScreens = ['login','user-detail','property-detail','contractor-detail','ticket-detail',
+    'revenue-dashboard','hh-team','audit-log','qr-access-log','permissions-matrix',
+    'active-sessions','platform-config','impersonate-user','ae-pipeline','superadmin-log'];
+  if (bottomNav) bottomNav.style.display = noNavScreens.includes(id) ? 'none' : 'flex';
+}
+
+function switchNav(screenId) {
+  goToScreen(screenId);
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const map = {
+    'dashboard':'nav-dashboard',
+    'users':'nav-users',
+    'contractors':'nav-contractors',
+    'support-tickets':'nav-tickets'
+  };
+  if (map[screenId]) {
+    document.getElementById(map[screenId])?.classList.add('active');
+  }
+}
+
+// ── Drawer ──
+function openDrawer() {
+  document.getElementById('nav-drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('active');
+}
+function closeDrawer() {
+  document.getElementById('nav-drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('active');
+}
+
+// ── Modals ──
+function showModal(id) {
+  const m = document.getElementById(id);
+  if (m) { m.style.display = 'flex'; m.classList.add('active'); }
+}
+function closeModal(id) {
+  const m = document.getElementById(id);
+  if (m) { m.style.display = 'none'; m.classList.remove('active'); }
+}
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', function(e) {
+    if (e.target === this) closeModal(this.id);
+  });
+});
+
+// ── Filter chips ──
+function setFilter(el, section) {
+  const bar = el.closest('.filter-bar');
+  bar.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  const flaggedSec = document.getElementById('users-flagged-section');
+  const allSec = document.getElementById('users-all-section');
+  if (flaggedSec && allSec) {
+    if (section === 'users-flagged') {
+      flaggedSec.style.display = 'flex';
+      allSec.style.display = 'none';
+    } else {
+      flaggedSec.style.display = 'none';
+      allSec.style.display = 'block';
+    }
+  }
+}
+
+// ── Mini Bar Chart (Dashboard) ──
+function buildChart() {
+  const container = document.getElementById('mobile-chart');
+  if (!container) return;
+  const days = ['M','T','W','T','F','S','S'];
+  const hw = [18,24,15,30,22,35,28];
+  const co = [5,8,4,12,7,15,10];
+  const la = [2,3,1,5,4,8,6];
+  const max = Math.max(...hw.map((v,i) => v + co[i] + la[i]));
+  container.innerHTML = '';
+  days.forEach((d,i) => {
+    const col = document.createElement('div');
+    col.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;gap:0;';
+    const barWrap = document.createElement('div');
+    barWrap.style.cssText = 'width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:60px;gap:1px;';
+    const pct = v => Math.max(2, Math.round((v/max)*58)) + 'px';
+    ['#667eea','#27A570','#F5A623'].forEach((color, ci) => {
+      const vals = [hw, co, la];
+      const bar = document.createElement('div');
+      bar.style.cssText = `width:100%;height:${pct(vals[ci][i])};background:${color};border-radius:2px;`;
+      barWrap.appendChild(bar);
+    });
+    const label = document.createElement('div');
+    label.style.cssText = 'font-size:9px;color:#94A3B8;margin-top:4px;';
+    label.textContent = d;
+    col.appendChild(barWrap);
+    col.appendChild(label);
+    container.appendChild(col);
+  });
+}
+
+// ── Theme toggle ──
+let dark = false;
+function toggleTheme() {
+  dark = !dark;
+  const icon = document.getElementById('theme-icon');
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : '');
+  if (icon) icon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
+  if (dark) {
+    document.documentElement.style.setProperty('--card','#1E293B');
+    document.documentElement.style.setProperty('--bg','#0F172A');
+    document.documentElement.style.setProperty('--text','#E2E8F0');
+    document.documentElement.style.setProperty('--text-secondary','#94A3B8');
+    document.documentElement.style.setProperty('--border','#334155');
+    document.querySelectorAll('.screen').forEach(s => s.style.background = '#0F172A');
+  } else {
+    document.documentElement.style.setProperty('--card','#FFFFFF');
+    document.documentElement.style.setProperty('--bg','#F1F5F9');
+    document.documentElement.style.setProperty('--text','#1E293B');
+    document.documentElement.style.setProperty('--text-secondary','#64748B');
+    document.documentElement.style.setProperty('--border','#E2E8F0');
+    document.querySelectorAll('.screen').forEach(s => s.style.background = '#F1F5F9');
+  }
+}
+
+// ── User detail shortcut ──
+function showUserDetail(id) { goToScreen('user-detail'); }
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+(function init() {
+  buildChart();
+  // Check for existing session
+  // ARCH: In production — validate JWT with server on load; don't trust localStorage alone.
+  const storedAuth = localStorage.getItem('homeHubAdminAuth');
+  if (storedAuth) {
+    try {
+      const auth = JSON.parse(storedAuth);
+      if (auth?.isAuthenticated && auth?.role) {
+        adminMobileAuth = auth;
+        goToScreen('dashboard');
+        applyRoleBasedUI(auth.role, auth.displayName, auth.email);
+        return;
+      }
+    } catch(e) {}
+  }
+  // Default: show login, but pre-apply SuperAdmin UI for demo context
+  applyRoleBasedUI('superadmin', 'Michael (SuperAdmin)', 'michael@homehub.com');
+  mRenderAuditLog();
+  mRenderPermissionsMatrix();
+})();
+</script>
+</body>
+</html>

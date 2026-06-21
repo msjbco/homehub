@@ -1,0 +1,1698 @@
+<!--
+================================================================================
+HomeHub Application Suite - homehub-inspector-web.html
+================================================================================
+
+TITLE: Homehub Inspector Web
+PURPOSE: Home inspector interface for property assessments and reporting
+LAST UPDATED: 2026-05-16
+
+This HTML file is part of the HomeHub platform - a comprehensive property
+management system for homeowners. Single-page application with vanilla JS,
+responsive design, and dark mode support.
+
+================================================================================
+STRUCTURE: <style> CSS | <body> HTML | <script> JavaScript
+================================================================================
+
+CSS VARIABLES: --blue, --green, --orange, --gold (+ light/dark variants)
+RESPONSIVE: Mobile (<768px) | Tablet (768px) | Desktop (1024px+)
+DARK MODE: [data-theme="dark"] selector overrides CSS variables
+
+Key Components:
+  • Sidebar/Navigation (fixed 280px, collapsible on mobile)
+  • Responsive grid/flexbox layouts
+  • Card-based UI components
+  • Modal overlays for forms
+  • Dynamic JavaScript interactions
+
+================================================================================
+QUICK REFERENCE
+================================================================================
+
+CSS Customization:
+  1. Update color variables in :root and [data-theme="dark"]
+  2. Modify font-size and padding for spacing
+  3. Adjust media queries for different breakpoints
+
+JavaScript Patterns:
+  • DOM selection: querySelector, querySelectorAll
+  • Events: addEventListener, event delegation
+  • Storage: localStorage for persistent settings
+  • DOM updates: innerHTML, classList, setAttribute
+
+Testing:
+  ✓ Responsive design (test all breakpoints)
+  ✓ Dark mode toggle
+  ✓ Keyboard navigation
+  ✓ Button/form interactions
+  ✓ Cross-browser compatibility
+
+================================================================================
+For detailed documentation, see sections marked with === throughout the file
+================================================================================
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HomeHub — Home Inspector Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body { font-family: 'Inter', sans-serif; background: #f5f5f5; color: #1E293B; }
+
+:root {
+  --gold: #C4A747;
+  --dark: #1a1a1a;
+  --white: #FFFFFF;
+  --light-gray: #F5F5F5;
+  --gray: #808080;
+  --bg-page: #f5f5f5;
+  --bg-card: #FFFFFF;
+  --text-primary: #1E293B;
+  --text-secondary: #808080;
+  --border-color: #e5e5e5;
+}
+
+[data-theme="dark"] {
+  --bg-page: #0F172A;
+  --bg-card: #1E293B;
+  --text-primary: #F1F5F9;
+  --text-secondary: #CBD5E1;
+  --border-color: #334155;
+}
+
+body {
+  background: var(--bg-page);
+  color: var(--text-primary);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  background: var(--bg-card);
+  border-right: 1px solid var(--border-color);
+  padding: 24px 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  height: 100vh;
+  width: 280px;
+  left: 0;
+  top: 0;
+}
+
+.sidebar-logo {
+  padding: 0 20px;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--dark);
+  cursor: pointer;
+}
+
+.sidebar-logo i {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--gold), #a08935);
+  color: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.sidebar-nav-item {
+  padding: 12px 16px;
+  margin: 0 10px;
+  border-radius: 10px;
+  color: var(--gray);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s;
+}
+
+.sidebar-nav-item:hover {
+  background: var(--light-gray);
+  color: var(--dark);
+}
+
+.sidebar-nav-item.active {
+  background: rgba(196, 167, 71, 0.15);
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.sidebar-nav-item i {
+  width: 18px;
+  text-align: center;
+}
+
+.main-content {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.top-bar {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.top-bar-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--dark);
+}
+
+.top-bar-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-logout {
+  padding: 8px 16px;
+  background: #f0f0f0;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--gray);
+}
+
+.btn-logout:hover {
+  background: var(--gold);
+  color: var(--dark);
+}
+
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.dashboard-header {
+  margin-bottom: 32px;
+}
+
+.dashboard-header h1 {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 8px;
+}
+
+.dashboard-header p {
+  font-size: 15px;
+  color: var(--gray);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid var(--border-color);
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 8px;
+}
+
+.stat-change {
+  font-size: 12px;
+  color: #27A570;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 20px;
+  margin-top: 32px;
+}
+
+.inspections-table {
+  background: var(--bg-card);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid var(--border-color);
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1.5fr 1fr;
+  gap: 16px;
+  padding: 16px 24px;
+  background: #f9f9f9;
+  border-bottom: 1px solid #e5e5e5;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gray);
+  text-transform: uppercase;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1.5fr 1fr;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e5e5e5;
+  align-items: center;
+  font-size: 14px;
+}
+
+.table-row:hover {
+  background: #f9f9f9;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.property-name {
+  font-weight: 600;
+  color: var(--dark);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-completed {
+  background: rgba(39, 165, 112, 0.15);
+  color: #27A570;
+}
+
+.status-pending {
+  background: rgba(196, 167, 71, 0.15);
+  color: var(--gold);
+}
+
+.status-in-progress {
+  background: rgba(74, 144, 226, 0.15);
+  color: #4A90E2;
+}
+
+.inspection-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.inspection-card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-left: 5px solid var(--gold);
+  border: 1px solid var(--border-color);
+  border-left: 5px solid var(--gold);
+}
+
+.inspection-card.completed {
+  border-left-color: #27A570;
+}
+
+.inspection-card.pending {
+  border-left-color: #FFB84D;
+}
+
+.inspection-date {
+  font-size: 12px;
+  color: var(--gray);
+  margin-bottom: 8px;
+}
+
+.inspection-address {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 12px;
+}
+
+.inspection-details {
+  font-size: 13px;
+  color: var(--gray);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.btn-primary {
+  padding: 8px 16px;
+  background: var(--gold);
+  color: var(--dark);
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  background: #b8941f;
+}
+
+/* Screen Navigation */
+.screen {
+  display: none;
+}
+
+.screen.active {
+  display: block;
+  width: 100%;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Form Styling */
+.form-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+[data-theme="dark"] .form-card {
+  border-color: var(--border-color);
+}
+
+.form-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+[data-theme="dark"] .form-section-title {
+  color: var(--text-primary);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  transition: border-color 0.2s;
+}
+
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .form-group textarea {
+  background: #374151;
+  border-color: #4B5563;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(196, 167, 71, 0.1);
+}
+
+.form-subsection {
+  padding: 16px;
+  background: var(--light-gray);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+[data-theme="dark"] .form-subsection {
+  background: #1F2937;
+  border-color: #374151;
+}
+
+.btn-back {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.btn-back:hover {
+  background: var(--light-gray);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+[data-theme="dark"] .btn-back:hover {
+  background: #374151;
+}
+
+.privacy-notice {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  background: rgba(196, 167, 71, 0.1);
+  border-left: 4px solid var(--gold);
+  border-radius: 4px;
+  margin-bottom: 16px;
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .stat-value {
+  color: var(--text-primary);
+}
+
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .inspection-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: absolute;
+    left: -280px;
+    transition: left 0.3s;
+    z-index: 1000;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  .main-content {
+    grid-column: 1;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .inspection-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .table-header, .table-row {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+<script>
+// Screen Navigation - Must be in head for onclick handlers to work
+function goToScreen(screenName, param1, param2) {
+  // Hide all screens
+  document.querySelectorAll('.screen').forEach(screen => {
+    screen.classList.remove('active');
+  });
+
+  // Update sidebar nav
+  document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+    item.classList.remove('active');
+  });
+
+  // Show requested screen
+  const screen = document.getElementById('screen-' + screenName);
+  if (screen) {
+    screen.classList.add('active');
+  }
+
+  // Update page title
+  const titleMap = {
+    'dashboard': 'Home Inspector Dashboard',
+    'inspection-detail': 'Inspection Details',
+    'assignment-detail': 'Upcoming Assignment',
+    'report-view': 'Inspection Report',
+    'inspections': 'All Inspections',
+    'reports': 'Reports Archive',
+    'schedule': 'Inspection Schedule',
+    'clients': 'Clients',
+    'settings': 'Inspector Settings'
+  };
+  document.getElementById('pageTitle').textContent = titleMap[screenName] || 'HomeHub';
+
+  // Highlight active nav item based on data attribute
+  let navScreenName = screenName;
+  if (screenName.includes('inspection') && screenName !== 'inspections') {
+    navScreenName = 'inspections';
+  } else if (screenName.includes('assignment')) {
+    navScreenName = 'inspections';
+  } else if (screenName.includes('report')) {
+    navScreenName = 'reports';
+  }
+
+  const activeNav = document.querySelector(`[data-screen="${navScreenName}"]`);
+  if (activeNav) {
+    activeNav.classList.add('active');
+  }
+
+  // Handle specific screen data
+  if (screenName === 'inspection-detail') {
+    document.getElementById('inspectAddress').value = param1 || '123 Oak Street, San Francisco, CA';
+  }
+
+  if (screenName === 'assignment-detail') {
+    const assignmentData = {
+      'assign-1': { address: '123 Oak Street, San Francisco, CA', date: 'April 22, 2026' },
+      'assign-2': { address: '456 Maple Avenue, Oakland, CA', date: 'April 24, 2026' },
+    };
+    const data = assignmentData[param1] || assignmentData['assign-1'];
+    document.getElementById('assignAddress').textContent = data.address;
+  }
+
+  if (screenName === 'report-view') {
+    const reportData = {
+      'report-1': { address: '321 Elm Street, San Jose, CA', date: 'April 19, 2026' },
+      'report-draft': { address: 'Draft Report', date: new Date().toLocaleDateString() },
+    };
+    const data = reportData[param1] || reportData['report-1'];
+    document.getElementById('reportAddress').textContent = data.address;
+    document.getElementById('reportDate').textContent = data.date;
+  }
+
+  // Scroll to top
+  document.querySelector('.content-area').scrollTop = 0;
+}
+</script>
+</head>
+<body>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <i class="fas fa-home"></i>
+      <span>HomeHub</span>
+    </div>
+
+    <!-- User + Role Switcher -->
+    <div style="padding: 0 12px 20px 12px;">
+      <!-- User Card -->
+      <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px 10px 0 0; border-bottom: none;">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), #a08935); display: flex; align-items: center; justify-content: center; color: white; font-size: 15px; font-weight: 700; flex-shrink: 0;">I</div>
+        <div style="flex: 1; min-width: 0;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Inspector Demo</div>
+          <div style="font-size: 11px; color: var(--text-secondary);">Home Inspector</div>
+        </div>
+      </div>
+      <!-- Switch Role Button -->
+      <button onclick="toggleRoleSwitcher()" style="width: 100%; background: #2E9E8E; border: 1px solid var(--border-color); border-radius: 0 0 10px 10px; padding: 10px 14px; color: #ffffff; cursor: pointer; font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s;">
+        <span><i class="fas fa-exchange-alt" style="margin-right: 7px; font-size: 12px;"></i>Switch Role</span>
+        <i class="fas fa-chevron-down" id="switcher-icon" style="transition: transform 0.25s; font-size: 12px;"></i>
+      </button>
+      <!-- Role Dropdown -->
+      <div id="role-switcher" style="display: none; flex-direction: column; background: #2E9E8E; border-radius: 0 0 10px 10px; overflow: hidden; margin-top: 2px;">
+        <a href="homehub-homeowner-web.html" onclick="setRoleAndGo('homeowner', event)" style="display: flex; align-items: center; gap: 10px; padding: 11px 16px; color: #ffffff; text-decoration: none; border-top: 1px solid rgba(255,255,255,0.15); font-size: 13px; font-weight: 500; transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='transparent'"><i class="fas fa-home" style="width: 18px; opacity: 0.85;"></i><span>Homeowner</span></a>
+        <a href="homehub-agent-web.html" onclick="setRoleAndGo('agent', event)" style="display: flex; align-items: center; gap: 10px; padding: 11px 16px; color: #ffffff; text-decoration: none; border-top: 1px solid rgba(255,255,255,0.15); font-size: 13px; font-weight: 500; transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='transparent'"><i class="fas fa-briefcase" style="width: 18px; opacity: 0.85;"></i><span>RE Agent</span></a>
+        <a href="homehub-inspector-web.html" onclick="setRoleAndGo('inspector', event)" style="display: flex; align-items: center; gap: 10px; padding: 11px 16px; color: #ffffff; text-decoration: none; border-top: 1px solid rgba(255,255,255,0.15); font-size: 13px; font-weight: 700; background: rgba(255,255,255,0.18); transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.28)'" onmouseout="this.style.background='rgba(255,255,255,0.18)'"><i class="fas fa-clipboard-check" style="width: 18px;"></i><span>Home Inspector ✓</span></a>
+        <a href="homehub-contractor-web.html" onclick="setRoleAndGo('contractor', event)" style="display: flex; align-items: center; gap: 10px; padding: 11px 16px; color: #ffffff; text-decoration: none; border-top: 1px solid rgba(255,255,255,0.15); font-size: 13px; font-weight: 500; transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='transparent'"><i class="fas fa-tools" style="width: 18px; opacity: 0.85;"></i><span>Contractor</span></a>
+        <a href="homehub-admin-web.html" onclick="setRoleAndGo('admin', event)" style="display: flex; align-items: center; gap: 10px; padding: 11px 16px; color: #ffffff; text-decoration: none; border-top: 1px solid rgba(255,255,255,0.15); font-size: 13px; font-weight: 500; transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='transparent'"><i class="fas fa-cog" style="width: 18px; opacity: 0.85;"></i><span>Admin</span></a>
+        <a href="homehub-agency-web.html" onclick="setRoleAndGo('agency', event)" style="display: flex; align-items: center; gap: 10px; padding: 11px 16px; color: #ffffff; text-decoration: none; border-top: 1px solid rgba(255,255,255,0.15); font-size: 13px; font-weight: 500; transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='transparent'"><i class="fas fa-building" style="width: 18px; opacity: 0.85;"></i><span>RE Agency</span></a>
+        <a href="homehub-insuranceagent-web.html" onclick="setRoleAndGo('insuranceagent', event)" style="display: flex; align-items: center; gap: 10px; padding: 11px 16px; color: #ffffff; text-decoration: none; border-top: 1px solid rgba(255,255,255,0.15); border-radius: 0 0 10px 10px; font-size: 13px; font-weight: 500; transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='transparent'"><i class="fas fa-shield-halved" style="width: 18px; opacity: 0.85;"></i><span>Insurance Agent</span></a>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-nav-item active" data-screen="dashboard" onclick="goToScreen('dashboard')">
+        <i class="fas fa-chart-line"></i>
+        <span>Dashboard</span>
+      </div>
+      <div class="sidebar-nav-item" data-screen="inspections" onclick="goToScreen('inspections')">
+        <i class="fas fa-clipboard-list"></i>
+        <span>Inspections</span>
+      </div>
+      <div class="sidebar-nav-item" data-screen="reports" onclick="goToScreen('reports')">
+        <i class="fas fa-file-pdf"></i>
+        <span>Reports</span>
+      </div>
+      <div class="sidebar-nav-item" data-screen="schedule" onclick="goToScreen('schedule')">
+        <i class="fas fa-calendar"></i>
+        <span>Schedule</span>
+      </div>
+      <div class="sidebar-nav-item" data-screen="clients" onclick="goToScreen('clients')">
+        <i class="fas fa-user"></i>
+        <span>Clients</span>
+      </div>
+      <div class="sidebar-nav-item" data-screen="settings" onclick="goToScreen('settings')">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </div>
+    </nav>
+
+    <div style="padding: 16px 10px; border-top: 1px solid #e5e5e5;">
+      <button class="btn-logout" style="width: 100%;" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="top-bar">
+      <div class="top-bar-title" id="pageTitle">Home Inspector Dashboard</div>
+      <div class="top-bar-actions" style="display: flex; gap: 8px; align-items: center;">
+        <button style="width:36px;height:36px;border-radius:8px;border:1px solid var(--border-color);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:15px;transition:all 0.2s;" title="Search" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'"><i class="fas fa-search"></i></button>
+        <button style="width:36px;height:36px;border-radius:8px;border:1px solid var(--border-color);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:15px;transition:all 0.2s;" title="Notifications" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'"><i class="fas fa-bell"></i></button>
+        <button onclick="toggleDarkMode()" style="width:36px;height:36px;border-radius:8px;border:1px solid var(--border-color);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:15px;transition:all 0.2s;" title="Toggle Theme" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'"><i class="fas fa-moon" id="theme-icon"></i></button>
+        <button style="width:36px;height:36px;border-radius:8px;border:1px solid var(--border-color);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:15px;transition:all 0.2s;" title="Settings" onmouseover="this.style.background='rgba(0,0,0,0.05)'" onmouseout="this.style.background='transparent'"><i class="fas fa-cog"></i></button>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <!-- SCREEN: Dashboard -->
+      <div id="screen-dashboard" class="screen active">
+        <div class="dashboard-header">
+          <h1>Welcome Back!</h1>
+          <p>Your inspection schedule and report status for this month</p>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Inspections YTD</div>
+            <div class="stat-value">24</div>
+            <div class="stat-change">↑ 4 this month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Reports Delivered</div>
+            <div class="stat-value">18</div>
+            <div class="stat-change">↑ 2 awaiting client pickup</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">In Progress</div>
+            <div class="stat-value">6</div>
+            <div class="stat-change">↑ 3 scheduled this week</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg. Rating</div>
+            <div class="stat-value">4.8</div>
+            <div class="stat-change">★ From 21 reviews</div>
+          </div>
+        </div>
+
+        <!-- Active Inspections -->
+        <h2 class="section-title">Active Inspections</h2>
+        <div class="inspections-table">
+          <div class="table-header">
+            <div>Property Address</div>
+            <div>Scheduled Date</div>
+            <div>Status</div>
+            <div>Action</div>
+          </div>
+          <div class="table-row">
+            <div class="property-name">123 Oak Street, San Francisco, CA</div>
+            <div>April 22, 2026</div>
+            <div><span class="status-badge status-in-progress">In Progress</span></div>
+            <div><button class="btn-primary" onclick="goToScreen('inspection-detail', '123 Oak Street, San Francisco, CA', 'in-progress')">View</button></div>
+          </div>
+          <div class="table-row">
+            <div class="property-name">456 Maple Avenue, Oakland, CA</div>
+            <div>April 24, 2026</div>
+            <div><span class="status-badge status-in-progress">Scheduled</span></div>
+            <div><button class="btn-primary" onclick="goToScreen('inspection-detail', '456 Maple Avenue, Oakland, CA', 'scheduled')">View</button></div>
+          </div>
+          <div class="table-row">
+            <div class="property-name">789 Pine Road, Berkeley, CA</div>
+            <div>April 25, 2026</div>
+            <div><span class="status-badge status-pending">Report Due</span></div>
+            <div><button class="btn-primary" onclick="goToScreen('inspection-detail', '789 Pine Road, Berkeley, CA', 'report-due')">View</button></div>
+          </div>
+          <div class="table-row">
+            <div class="property-name">321 Elm Street, San Jose, CA</div>
+            <div>April 18, 2026</div>
+            <div><span class="status-badge status-completed">Delivered</span></div>
+            <div><button class="btn-primary" onclick="goToScreen('inspection-detail', '321 Elm Street, San Jose, CA', 'delivered')">View</button></div>
+          </div>
+        </div>
+
+        <!-- Upcoming Inspections -->
+        <h2 class="section-title">Upcoming Assignments</h2>
+        <div class="inspection-cards">
+          <div class="inspection-card pending">
+            <div class="inspection-date">April 22, 2026</div>
+            <div class="inspection-address">123 Oak Street</div>
+            <div class="inspection-details">
+              <strong>Inspection Type:</strong> General Home Inspection<br>
+              <strong>Client:</strong> Sarah Mitchell<br>
+              <strong>Property Type:</strong> Single Family Home
+            </div>
+            <button class="btn-primary" onclick="goToScreen('assignment-detail', 'assign-1')">View Details</button>
+          </div>
+          <div class="inspection-card pending">
+            <div class="inspection-date">April 24, 2026</div>
+            <div class="inspection-address">456 Maple Avenue</div>
+            <div class="inspection-details">
+              <strong>Inspection Type:</strong> General Home Inspection<br>
+              <strong>Client:</strong> Jennifer Chen<br>
+              <strong>Property Type:</strong> Townhome
+            </div>
+            <button class="btn-primary" onclick="goToScreen('assignment-detail', 'assign-2')">View Details</button>
+          </div>
+          <div class="inspection-card completed">
+            <div class="inspection-date">April 19, 2026</div>
+            <div class="inspection-address">321 Elm Street</div>
+            <div class="inspection-details">
+              <strong>Inspection Type:</strong> General Home Inspection<br>
+              <strong>Client:</strong> Michael Rodriguez<br>
+              <strong>Status:</strong> Report Delivered
+            </div>
+            <button class="btn-primary" onclick="goToScreen('report-view', 'report-1')">View Report</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN: Inspection Details (Active Inspections) -->
+      <div id="screen-inspection-detail" class="screen">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+          <button class="btn-back" onclick="goToScreen('dashboard')"><i class="fas fa-arrow-left"></i> Back</button>
+          <h1 style="font-size: 28px; font-weight: 800; color: var(--dark);">Inspection Details</h1>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+          <!-- Left: Main inspection form -->
+          <div>
+            <!-- Property Info Card -->
+            <div class="form-card">
+              <h2 class="form-section-title">Property Information</h2>
+              <div class="form-group">
+                <label>Address</label>
+                <input type="text" id="inspectAddress" readonly style="background: var(--light-gray); cursor: not-allowed;">
+              </div>
+              <div class="form-group">
+                <label>Property Type</label>
+                <input type="text" value="Single Family Home" readonly style="background: var(--light-gray); cursor: not-allowed;">
+              </div>
+              <div class="form-group">
+                <label>Year Built</label>
+                <input type="text" value="1998" readonly style="background: var(--light-gray); cursor: not-allowed;">
+              </div>
+              <div class="form-group">
+                <label>Square Footage</label>
+                <input type="text" value="2,480 sq ft" readonly style="background: var(--light-gray); cursor: not-allowed;">
+              </div>
+            </div>
+
+            <!-- Inspection Categories -->
+            <div class="form-card">
+              <h2 class="form-section-title">Inspection Findings</h2>
+
+              <!-- Roof -->
+              <div class="form-subsection">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                  <h3 style="font-weight: 700; color: var(--dark); font-size: 14px;"><i class="fas fa-home" style="margin-right: 8px;"></i> Roof</h3>
+                  <select id="roof-status" style="padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 12px;">
+                    <option value="good">Good</option>
+                    <option value="fair">Fair</option>
+                    <option value="poor">Poor</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
+                <textarea placeholder="Roof condition notes..." style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; font-family: Inter, sans-serif; min-height: 80px;"></textarea>
+              </div>
+
+              <!-- Foundation -->
+              <div class="form-subsection">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                  <h3 style="font-weight: 700; color: var(--dark); font-size: 14px;"><i class="fas fa-building" style="margin-right: 8px;"></i> Foundation</h3>
+                  <select id="foundation-status" style="padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 12px;">
+                    <option value="good">Good</option>
+                    <option value="fair">Fair</option>
+                    <option value="poor">Poor</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
+                <textarea placeholder="Foundation condition notes..." style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; font-family: Inter, sans-serif; min-height: 80px;"></textarea>
+              </div>
+
+              <!-- HVAC -->
+              <div class="form-subsection">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                  <h3 style="font-weight: 700; color: var(--dark); font-size: 14px;"><i class="fas fa-fan" style="margin-right: 8px;"></i> HVAC</h3>
+                  <select id="hvac-status" style="padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 12px;">
+                    <option value="good">Good</option>
+                    <option value="fair">Fair</option>
+                    <option value="poor">Poor</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
+                <textarea placeholder="HVAC system notes..." style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; font-family: Inter, sans-serif; min-height: 80px;"></textarea>
+              </div>
+
+              <!-- Plumbing -->
+              <div class="form-subsection">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                  <h3 style="font-weight: 700; color: var(--dark); font-size: 14px;"><i class="fas fa-water" style="margin-right: 8px;"></i> Plumbing</h3>
+                  <select id="plumbing-status" style="padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 12px;">
+                    <option value="good">Good</option>
+                    <option value="fair">Fair</option>
+                    <option value="poor">Poor</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
+                <textarea placeholder="Plumbing system notes..." style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; font-family: Inter, sans-serif; min-height: 80px;"></textarea>
+              </div>
+
+              <!-- Electrical -->
+              <div class="form-subsection">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                  <h3 style="font-weight: 700; color: var(--dark); font-size: 14px;"><i class="fas fa-bolt" style="margin-right: 8px;"></i> Electrical</h3>
+                  <select id="electrical-status" style="padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 12px;">
+                    <option value="good">Good</option>
+                    <option value="fair">Fair</option>
+                    <option value="poor">Poor</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
+                <textarea placeholder="Electrical system notes..." style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; font-family: Inter, sans-serif; min-height: 80px;"></textarea>
+              </div>
+            </div>
+
+            <!-- Photo Upload -->
+            <div class="form-card">
+              <h2 class="form-section-title">Documentation</h2>
+              <div style="border: 2px dashed var(--border-color); border-radius: 8px; padding: 32px; text-align: center; cursor: pointer;">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 32px; color: var(--text-secondary); margin-bottom: 12px; display: block;"></i>
+                <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 4px;">Drop photos here or click to upload</p>
+                <p style="color: var(--gray); font-size: 12px;">Supported: JPG, PNG (up to 10 MB each)</p>
+              </div>
+              <div id="photo-list" style="margin-top: 16px;"></div>
+            </div>
+          </div>
+
+          <!-- Right: Summary & Actions -->
+          <div>
+            <!-- Risk Assessment -->
+            <div class="form-card">
+              <h2 class="form-section-title">Risk Assessment</h2>
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="padding: 12px; background: rgba(39, 165, 112, 0.08); border-left: 4px solid #27A570; border-radius: 4px;">
+                  <div style="font-size: 12px; font-weight: 700; color: #27A570; margin-bottom: 4px;">Overall Risk: <span id="overallRisk">Pending</span></div>
+                  <div style="font-size: 12px; color: var(--text-secondary);">Based on findings</div>
+                </div>
+                <div style="padding: 12px; background: var(--light-gray); border-radius: 6px;">
+                  <div style="font-size: 12px; font-weight: 600; color: var(--dark); margin-bottom: 4px;">Critical Issues Found:</div>
+                  <div style="font-size: 13px; color: var(--text-secondary);" id="criticalCount">0</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Estimated Repairs -->
+            <div class="form-card">
+              <h2 class="form-section-title">Estimated Repairs</h2>
+              <div class="form-group">
+                <label>Total Estimated Cost</label>
+                <input type="text" placeholder="$0.00" style="font-size: 18px; font-weight: 700; color: var(--gold);">
+              </div>
+              <div style="padding: 12px; background: var(--light-gray); border-radius: 6px; font-size: 12px; color: var(--text-secondary);">
+                <strong>Breakdown:</strong> View detailed cost estimate below
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="form-card">
+              <h2 class="form-section-title">Actions</h2>
+              <button style="width: 100%; padding: 12px; background: #27A570; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; margin-bottom: 10px;" onclick="alert('Report draft saved')">Save Draft</button>
+              <button style="width: 100%; padding: 12px; background: var(--gold); color: var(--dark); border: none; border-radius: 6px; font-weight: 600; cursor: pointer;" onclick="goToScreen('report-view', 'report-draft')">Generate Report</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN: Assignment Detail -->
+      <div id="screen-assignment-detail" class="screen">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+          <button class="btn-back" onclick="goToScreen('dashboard')"><i class="fas fa-arrow-left"></i> Back</button>
+          <h1 style="font-size: 28px; font-weight: 800; color: var(--dark);">Upcoming Assignment Details</h1>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+          <div>
+            <!-- Assignment Info -->
+            <div class="form-card">
+              <h2 class="form-section-title">Assignment Details</h2>
+              <div class="form-group">
+                <label>Property Address</label>
+                <div style="padding: 10px; background: var(--light-gray); border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; color: var(--dark);">
+                  <span id="assignAddress">123 Oak Street, San Francisco, CA</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Inspection Type</label>
+                <div style="padding: 10px; background: var(--light-gray); border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; color: var(--dark);">
+                  General Home Inspection
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Scheduled Date</label>
+                <div style="padding: 10px; background: var(--light-gray); border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; color: var(--dark);">
+                  April 22, 2026 at 10:00 AM
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Duration</label>
+                <div style="padding: 10px; background: var(--light-gray); border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; color: var(--dark);">
+                  3-4 hours
+                </div>
+              </div>
+            </div>
+
+            <!-- Client Info (Private) -->
+            <div class="form-card">
+              <h2 class="form-section-title">Client Information</h2>
+              <div class="privacy-notice">
+                <i class="fas fa-lock" style="margin-right: 6px;"></i>
+                <span style="font-size: 12px;">This information is confidential.</span>
+              </div>
+              <div class="form-group">
+                <label>Primary Contact</label>
+                <div style="padding: 10px; background: var(--light-gray); border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; color: var(--dark);">
+                  Sarah Mitchell
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Phone</label>
+                <div style="padding: 10px; background: var(--light-gray); border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; color: var(--dark);">
+                  (555) 123-4567
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <div style="padding: 10px; background: var(--light-gray); border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; color: var(--dark);">
+                  sarah.mitchell@email.com
+                </div>
+              </div>
+            </div>
+
+            <!-- Property Details (Limited) -->
+            <div class="form-card">
+              <h2 class="form-section-title">Property Overview</h2>
+              <div class="form-group">
+                <label>Property Type</label>
+                <div style="padding: 10px; background: var(--light-gray); border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; color: var(--dark);">
+                  Single Family Home
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Year Built</label>
+                <div style="padding: 10px; background: var(--light-gray); border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; color: var(--dark);">
+                  1998
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Square Footage</label>
+                <div style="padding: 10px; background: var(--light-gray); border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; color: var(--dark);">
+                  2,480 sq ft
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <!-- Sidebar Info -->
+            <div class="form-card">
+              <h2 class="form-section-title">Next Steps</h2>
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="padding: 12px; background: rgba(196, 167, 71, 0.1); border-radius: 6px; border-left: 4px solid var(--gold);">
+                  <div style="font-size: 13px; font-weight: 600; color: var(--dark); margin-bottom: 4px;"><i class="fas fa-clipboard" style="margin-right: 6px;"></i> 1. Complete Inspection</div>
+                  <div style="font-size: 11px; color: var(--text-secondary);">Perform on-site inspection</div>
+                </div>
+                <div style="padding: 12px; background: rgba(74, 144, 226, 0.1); border-radius: 6px; border-left: 4px solid #4A90E2;">
+                  <div style="font-size: 13px; font-weight: 600; color: var(--dark); margin-bottom: 4px;"><div class="fas fa-pen-fancy" style="margin-right: 6px;"></i> 2. Add Details</div>
+                  <div style="font-size: 11px; color: var(--text-secondary);">Record findings & photos</div>
+                </div>
+                <div style="padding: 12px; background: rgba(39, 165, 112, 0.1); border-radius: 6px; border-left: 4px solid #27A570;">
+                  <div style="font-size: 13px; font-weight: 600; color: var(--dark); margin-bottom: 4px;"><i class="fas fa-file-pdf" style="margin-right: 6px;"></i> 3. Generate Report</div>
+                  <div style="font-size: 11px; color: var(--text-secondary);">Create inspection report</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-card">
+              <button style="width: 100%; padding: 12px; background: var(--gold); color: var(--dark); border: none; border-radius: 6px; font-weight: 600; cursor: pointer; margin-bottom: 10px;" onclick="goToScreen('inspection-detail', '123 Oak Street, San Francisco, CA', 'pending')">Add Inspection Details</button>
+              <button style="width: 100%; padding: 12px; background: #f0f0f0; color: var(--dark); border: 1px solid var(--border-color); border-radius: 6px; font-weight: 600; cursor: pointer;" onclick="alert('Contact info copied')">Contact Client</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN: Report View -->
+      <div id="screen-report-view" class="screen">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+          <button class="btn-back" onclick="goToScreen('dashboard')"><i class="fas fa-arrow-left"></i> Back</button>
+          <h1 style="font-size: 28px; font-weight: 800; color: var(--dark);">Inspection Report</h1>
+        </div>
+
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 40px; max-width: 900px;">
+          <!-- Report Header -->
+          <div style="text-align: center; padding-bottom: 24px; border-bottom: 2px solid var(--border-color); margin-bottom: 32px;">
+            <div style="font-size: 24px; font-weight: 800; color: var(--dark); margin-bottom: 8px;">HomeHub Inspection Report</div>
+            <div style="font-size: 13px; color: var(--text-secondary);">Professional Home Inspection Documentation</div>
+          </div>
+
+          <!-- Report Meta -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase; margin-bottom: 4px;">Report Date</div>
+              <div style="font-size: 14px; color: var(--dark);" id="reportDate">April 19, 2026</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase; margin-bottom: 4px;">Inspector</div>
+              <div style="font-size: 14px; color: var(--dark);">James Walker, CPE</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase; margin-bottom: 4px;">Property Address</div>
+              <div style="font-size: 14px; color: var(--dark);" id="reportAddress">321 Elm Street, San Jose, CA</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase; margin-bottom: 4px;">Inspection Type</div>
+              <div style="font-size: 14px; color: var(--dark);">General Home Inspection</div>
+            </div>
+          </div>
+
+          <!-- Executive Summary -->
+          <div style="margin-bottom: 32px;">
+            <h2 style="font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--border-color);">Executive Summary</h2>
+            <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.8; margin-bottom: 12px;">
+              This property has been inspected in accordance with professional standards. The home is generally in good condition with proper maintenance evident. Several minor recommendations have been noted below that may require attention within the next 12-24 months.
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div style="padding: 12px; background: rgba(39, 165, 112, 0.1); border-left: 4px solid #27A570; border-radius: 4px;">
+                <div style="font-size: 11px; font-weight: 700; color: #27A570; text-transform: uppercase; margin-bottom: 4px;">Areas of Concern</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--dark);">2</div>
+              </div>
+              <div style="padding: 12px; background: rgba(74, 144, 226, 0.1); border-left: 4px solid #4A90E2; border-radius: 4px;">
+                <div style="font-size: 11px; font-weight: 700; color: #4A90E2; text-transform: uppercase; margin-bottom: 4px;">Defects Found</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--dark);">5</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detailed Findings -->
+          <div style="margin-bottom: 32px;">
+            <h2 style="font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--border-color);">Detailed Findings</h2>
+
+            <div style="margin-bottom: 20px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="display: inline-block; width: 12px; height: 12px; background: #27A570; border-radius: 50%;"></span>
+                <h3 style="font-size: 13px; font-weight: 700; color: var(--dark);">Roof - Good</h3>
+              </div>
+              <p style="font-size: 12px; color: var(--text-secondary); margin-left: 20px; line-height: 1.6;">Asphalt shingles in good condition. Recent maintenance evident. No immediate repairs needed. Recommend routine inspection every 2-3 years.</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="display: inline-block; width: 12px; height: 12px; background: #27A570; border-radius: 50%;"></span>
+                <h3 style="font-size: 13px; font-weight: 700; color: var(--dark);">Foundation - Good</h3>
+              </div>
+              <p style="font-size: 12px; color: var(--text-secondary); margin-left: 20px; line-height: 1.6;">Concrete foundation shows no major cracks or settling. Minor hairline cracks noted but not concerning. Proper grading around structure.</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="display: inline-block; width: 12px; height: 12px; background: #FFB84D; border-radius: 50%;"></span>
+                <h3 style="font-size: 13px; font-weight: 700; color: var(--dark);">HVAC - Fair</h3>
+              </div>
+              <p style="font-size: 12px; color: var(--text-secondary); margin-left: 20px; line-height: 1.6;">Heating/cooling system is functional but appears to be original (13 years old). Recommend servicing before next cooling season. May require replacement within 5-7 years. Estimated repair/replacement cost: $4,500-$6,500.</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="display: inline-block; width: 12px; height: 12px; background: #27A570; border-radius: 50%;"></span>
+                <h3 style="font-size: 13px; font-weight: 700; color: var(--dark);">Plumbing - Good</h3>
+              </div>
+              <p style="font-size: 12px; color: var(--text-secondary); margin-left: 20px; line-height: 1.6;">Water supply and drainage systems functioning normally. No visible leaks or water damage. Copper pipes in good condition.</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="display: inline-block; width: 12px; height: 12px; background: #FFB84D; border-radius: 50%;"></span>
+                <h3 style="font-size: 13px; font-weight: 700; color: var(--dark);">Electrical - Fair</h3>
+              </div>
+              <p style="font-size: 12px; color: var(--text-secondary); margin-left: 20px; line-height: 1.6;">Service panel is adequate. Some outlets lack grounding (common in older homes). Recommend having electrician evaluate and upgrade if budget allows. Estimated cost: $2,000-$3,500.</p>
+            </div>
+          </div>
+
+          <!-- Cost Summary -->
+          <div style="background: var(--light-gray); padding: 20px; border-radius: 8px; margin-bottom: 32px;">
+            <h3 style="font-size: 13px; font-weight: 700; color: var(--dark); margin-bottom: 12px;">Estimated Repair Costs</h3>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-size: 12px; color: var(--text-secondary);">HVAC Service/Replacement</span>
+              <span style="font-size: 12px; font-weight: 600; color: var(--dark);">$4,500 - $6,500</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-size: 12px; color: var(--text-secondary);">Electrical Upgrades</span>
+              <span style="font-size: 12px; font-weight: 600; color: var(--dark);">$2,000 - $3,500</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border-color);">
+              <span style="font-size: 13px; font-weight: 700; color: var(--dark);">Total Estimated</span>
+              <span style="font-size: 13px; font-weight: 700; color: var(--gold);">$6,500 - $10,000</span>
+            </div>
+          </div>
+
+          <!-- Recommendations -->
+          <div style="margin-bottom: 32px;">
+            <h2 style="font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--border-color);">Inspector Recommendations</h2>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+              <li style="padding: 8px 0; border-bottom: 1px solid var(--light-gray); font-size: 12px; color: var(--text-secondary);">
+                <strong style="color: var(--dark);">Priority 1:</strong> Have HVAC system professionally serviced before next heating season
+              </li>
+              <li style="padding: 8px 0; border-bottom: 1px solid var(--light-gray); font-size: 12px; color: var(--text-secondary);">
+                <strong style="color: var(--dark);">Priority 2:</strong> Consult electrician regarding grounding updates to older outlets
+              </li>
+              <li style="padding: 8px 0; border-bottom: 1px solid var(--light-gray); font-size: 12px; color: var(--text-secondary);">
+                <strong style="color: var(--dark);">Routine Maintenance:</strong> Continue regular roof inspections and maintain gutters
+              </li>
+              <li style="padding: 8px 0; font-size: 12px; color: var(--text-secondary);">
+                <strong style="color: var(--dark);">Note:</strong> This report is for informational purposes only and should not be construed as an endorsement of the property's condition or value.
+              </li>
+            </ul>
+          </div>
+
+          <!-- Footer -->
+          <div style="text-align: center; padding-top: 24px; border-top: 2px solid var(--border-color); color: var(--gray); font-size: 11px;">
+            <p style="margin: 0 0 4px 0;">James Walker | Certified Professional Inspector (CPE)</p>
+            <p style="margin: 0;">HomeHub Inspection Services | License #CA-2024-1847</p>
+          </div>
+        </div>
+
+        <!-- Export/Print Options -->
+        <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: center;">
+          <button style="padding: 12px 24px; background: #27A570; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;" onclick="alert('Report sent to client')"><i class="fas fa-envelope" style="margin-right: 6px;"></i> Send to Client</button>
+          <button style="padding: 12px 24px; background: var(--gold); color: var(--dark); border: none; border-radius: 6px; font-weight: 600; cursor: pointer;" onclick="window.print()"><i class="fas fa-print" style="margin-right: 6px;"></i> Print/PDF</button>
+        </div>
+      </div>
+
+      <!-- SCREEN: Inspections List -->
+      <div id="screen-inspections" class="screen">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+          <h1 style="font-size: 28px; font-weight: 800; color: var(--dark);">All Inspections</h1>
+          <div style="display: flex; gap: 12px;">
+            <input type="text" placeholder="Search inspections..." style="padding: 10px 16px; border: 1px solid var(--border-color); border-radius: 6px; width: 250px;">
+            <select style="padding: 10px 16px; border: 1px solid var(--border-color); border-radius: 6px;">
+              <option>All Status</option>
+              <option>Scheduled</option>
+              <option>In Progress</option>
+              <option>Completed</option>
+              <option>Report Due</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="inspections-table">
+          <div class="table-header">
+            <div>Property Address</div>
+            <div>Client</div>
+            <div>Date</div>
+            <div>Status</div>
+            <div>Action</div>
+          </div>
+          <div class="table-row">
+            <div class="property-name">123 Oak Street, San Francisco, CA</div>
+            <div style="font-size: 12px;">Sarah Mitchell</div>
+            <div>April 22, 2026</div>
+            <div><span class="status-badge status-in-progress">In Progress</span></div>
+            <div><button class="btn-primary" onclick="goToScreen('inspection-detail', '123 Oak Street, San Francisco, CA')">View</button></div>
+          </div>
+          <div class="table-row">
+            <div class="property-name">456 Maple Avenue, Oakland, CA</div>
+            <div style="font-size: 12px;">Jennifer Chen</div>
+            <div>April 24, 2026</div>
+            <div><span class="status-badge status-in-progress">Scheduled</span></div>
+            <div><button class="btn-primary" onclick="goToScreen('inspection-detail', '456 Maple Avenue, Oakland, CA')">View</button></div>
+          </div>
+          <div class="table-row">
+            <div class="property-name">789 Pine Road, Berkeley, CA</div>
+            <div style="font-size: 12px;">Michael Rodriguez</div>
+            <div>April 25, 2026</div>
+            <div><span class="status-badge status-pending">Report Due</span></div>
+            <div><button class="btn-primary" onclick="goToScreen('inspection-detail', '789 Pine Road, Berkeley, CA')">View</button></div>
+          </div>
+          <div class="table-row">
+            <div class="property-name">321 Elm Street, San Jose, CA</div>
+            <div style="font-size: 12px;">David Park</div>
+            <div>April 18, 2026</div>
+            <div><span class="status-badge status-completed">Completed</span></div>
+            <div><button class="btn-primary" onclick="goToScreen('inspection-detail', '321 Elm Street, San Jose, CA')">View</button></div>
+          </div>
+          <div class="table-row">
+            <div class="property-name">555 Birch Lane, Palo Alto, CA</div>
+            <div style="font-size: 12px;">Emily Johnson</div>
+            <div>April 12, 2026</div>
+            <div><span class="status-badge status-completed">Completed</span></div>
+            <div><button class="btn-primary" onclick="goToScreen('inspection-detail', '555 Birch Lane, Palo Alto, CA')">View</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN: Reports Archive -->
+      <div id="screen-reports" class="screen">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+          <h1 style="font-size: 28px; font-weight: 800; color: var(--dark);">Reports Archive</h1>
+          <select style="padding: 10px 16px; border: 1px solid var(--border-color); border-radius: 6px;">
+            <option>2026</option>
+            <option>2025</option>
+            <option>2024</option>
+          </select>
+        </div>
+
+        <div style="display: grid; gap: 16px;">
+          <div style="padding: 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--dark);">321 Elm Street, San Jose, CA</div>
+              <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Client: David Park | Date: April 19, 2026</div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button style="padding: 8px 16px; background: var(--gold); color: var(--dark); border: none; border-radius: 6px; font-weight: 600; cursor: pointer;" onclick="goToScreen('report-view', 'report-1')"><i class="fas fa-eye" style="margin-right: 6px;"></i>View</button>
+              <button style="padding: 8px 16px; background: #f0f0f0; color: var(--dark); border: 1px solid var(--border-color); border-radius: 6px; font-weight: 600; cursor: pointer;" onclick="alert('Report downloaded')"><i class="fas fa-download" style="margin-right: 6px;"></i>Download</button>
+            </div>
+          </div>
+          <div style="padding: 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--dark);">555 Birch Lane, Palo Alto, CA</div>
+              <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Client: Emily Johnson | Date: April 13, 2026</div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button style="padding: 8px 16px; background: var(--gold); color: var(--dark); border: none; border-radius: 6px; font-weight: 600; cursor: pointer;" onclick="goToScreen('report-view', 'report-2')"><i class="fas fa-eye" style="margin-right: 6px;"></i>View</button>
+              <button style="padding: 8px 16px; background: #f0f0f0; color: var(--dark); border: 1px solid var(--border-color); border-radius: 6px; font-weight: 600; cursor: pointer;" onclick="alert('Report downloaded')"><i class="fas fa-download" style="margin-right: 6px;"></i>Download</button>
+            </div>
+          </div>
+          <div style="padding: 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--dark);">222 Cedar Court, Mountain View, CA</div>
+              <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Client: Robert Williams | Date: March 28, 2026</div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button style="padding: 8px 16px; background: var(--gold); color: var(--dark); border: none; border-radius: 6px; font-weight: 600; cursor: pointer;" onclick="goToScreen('report-view', 'report-3')"><i class="fas fa-eye" style="margin-right: 6px;"></i>View</button>
+              <button style="padding: 8px 16px; background: #f0f0f0; color: var(--dark); border: 1px solid var(--border-color); border-radius: 6px; font-weight: 600; cursor: pointer;" onclick="alert('Report downloaded')"><i class="fas fa-download" style="margin-right: 6px;"></i>Download</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN: Schedule -->
+      <div id="screen-schedule" class="screen">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+          <h1 style="font-size: 28px; font-weight: 800; color: var(--dark);">Inspection Schedule</h1>
+          <button style="padding: 10px 16px; background: var(--gold); color: var(--dark); border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">+ Add Inspection</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 200px 1fr; gap: 20px;">
+          <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; height: fit-content;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--gray); text-transform: uppercase; margin-bottom: 12px;">View By</div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button style="text-align: left; padding: 10px; background: var(--gold); color: var(--dark); border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">This Week</button>
+              <button style="text-align: left; padding: 10px; background: transparent; color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">This Month</button>
+              <button style="text-align: left; padding: 10px; background: transparent; color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">All Upcoming</button>
+            </div>
+          </div>
+
+          <div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <!-- Monday -->
+              <div style="border-left: 4px solid var(--gold); padding-left: 16px; padding-top: 16px; padding-bottom: 16px;">
+                <div style="font-size: 12px; font-weight: 700; color: var(--gold); text-transform: uppercase;">Monday, April 21, 2026</div>
+                <div style="margin-top: 12px; padding: 12px; background: var(--light-gray); border-radius: 6px;">
+                  <div style="font-size: 13px; font-weight: 600; color: var(--dark);">123 Oak Street, San Francisco</div>
+                  <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">10:00 AM - 1:00 PM</div>
+                  <div style="font-size: 12px; color: var(--text-secondary);">Client: Sarah Mitchell</div>
+                </div>
+              </div>
+
+              <!-- Tuesday -->
+              <div style="border-left: 4px solid #4A90E2; padding-left: 16px; padding-top: 16px; padding-bottom: 16px;">
+                <div style="font-size: 12px; font-weight: 700; color: #4A90E2; text-transform: uppercase;">Tuesday, April 22, 2026</div>
+                <div style="margin-top: 12px; padding: 12px; background: var(--light-gray); border-radius: 6px;">
+                  <div style="font-size: 13px; font-weight: 600; color: var(--dark);">456 Maple Avenue, Oakland</div>
+                  <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">9:00 AM - 12:00 PM</div>
+                  <div style="font-size: 12px; color: var(--text-secondary);">Client: Jennifer Chen</div>
+                </div>
+              </div>
+
+              <!-- Wednesday -->
+              <div style="border-left: 4px solid #27A570; padding-left: 16px; padding-top: 16px; padding-bottom: 16px;">
+                <div style="font-size: 12px; font-weight: 700; color: #27A570; text-transform: uppercase;">Wednesday, April 23, 2026</div>
+                <div style="margin-top: 12px; padding: 12px; background: var(--light-gray); border-radius: 6px;">
+                  <div style="font-size: 13px; font-weight: 600; color: var(--dark);">789 Pine Road, Berkeley</div>
+                  <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">2:00 PM - 5:00 PM</div>
+                  <div style="font-size: 12px; color: var(--text-secondary);">Client: Michael Rodriguez</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN: Clients -->
+      <div id="screen-clients" class="screen">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+          <h1 style="font-size: 28px; font-weight: 800; color: var(--dark);">Clients</h1>
+        </div>
+
+        <div class="inspections-table">
+          <div class="table-header">
+            <div>Client Name</div>
+            <div>Contact</div>
+            <div>Inspections</div>
+            <div>Status</div>
+            <div>Action</div>
+          </div>
+          <div class="table-row">
+            <div class="property-name">Sarah Mitchell</div>
+            <div style="font-size: 12px;">sarah.mitchell@email.com<br>(555) 123-4567</div>
+            <div style="text-align: center;">1</div>
+            <div><span class="status-badge status-active">Active</span></div>
+            <div><button class="btn-primary">View</button></div>
+          </div>
+          <div class="table-row">
+            <div class="property-name">Jennifer Chen</div>
+            <div style="font-size: 12px;">jennifer.chen@email.com<br>(555) 234-5678</div>
+            <div style="text-align: center;">2</div>
+            <div><span class="status-badge status-active">Active</span></div>
+            <div><button class="btn-primary">View</button></div>
+          </div>
+          <div class="table-row">
+            <div class="property-name">Michael Rodriguez</div>
+            <div style="font-size: 12px;">mrodriguez@email.com<br>(555) 345-6789</div>
+            <div style="text-align: center;">3</div>
+            <div><span class="status-badge status-active">Active</span></div>
+            <div><button class="btn-primary">View</button></div>
+          </div>
+          <div class="table-row">
+            <div class="property-name">David Park</div>
+            <div style="font-size: 12px;">david.park@email.com<br>(555) 456-7890</div>
+            <div style="text-align: center;">5</div>
+            <div><span class="status-badge" style="background: rgba(39, 165, 112, 0.15); color: #27A570;">Inactive</span></div>
+            <div><button class="btn-primary">View</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN: Inspector Settings -->
+      <div id="screen-settings" class="screen">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+          <h1 style="font-size: 28px; font-weight: 800; color: var(--dark);">Inspector Settings</h1>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+          <div>
+            <!-- Inspector Information -->
+            <div class="form-card">
+              <h2 class="form-section-title">Inspector Information</h2>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                  <label>First Name</label>
+                  <input type="text" value="James">
+                </div>
+                <div class="form-group">
+                  <label>Last Name</label>
+                  <input type="text" value="Walker">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" value="james.walker@inspectors.com">
+              </div>
+              <div class="form-group">
+                <label>Phone</label>
+                <input type="tel" value="(555) 987-6543">
+              </div>
+              <div class="form-group">
+                <label>License Number</label>
+                <input type="text" value="CA-2024-1847">
+              </div>
+              <div class="form-group">
+                <label>Specializations</label>
+                <input type="text" value="Residential, Commercial, Radon Testing">
+              </div>
+            </div>
+
+            <!-- Certifications -->
+            <div class="form-card">
+              <h2 class="form-section-title">Certifications & Licenses</h2>
+              <div class="form-group">
+                <label>CPE Certification</label>
+                <input type="text" value="Certified Professional Inspector (CPE)" readonly style="background: var(--light-gray); cursor: not-allowed;">
+              </div>
+              <div class="form-group">
+                <label>Certificate of Insurance (COI)</label>
+                <input type="text" value="Uploaded | Expires: 12/31/2026" readonly style="background: var(--light-gray); cursor: not-allowed;">
+              </div>
+              <button style="width: 100%; padding: 10px; background: #f0f0f0; color: var(--dark); border: 1px solid var(--border-color); border-radius: 6px; font-weight: 600; cursor: pointer; margin-bottom: 10px;">Update Certifications</button>
+            </div>
+
+            <!-- Company/Agency Info -->
+            <div class="form-card">
+              <h2 class="form-section-title">Agency Information</h2>
+              <div class="form-group">
+                <label>Agency Name</label>
+                <input type="text" value="HomeHub Inspection Services">
+              </div>
+              <div class="form-group">
+                <label>Office Address</label>
+                <input type="text" value="500 Market Street, San Francisco, CA 94105">
+              </div>
+              <div class="form-group">
+                <label>Office Phone</label>
+                <input type="tel" value="(555) 345-6789">
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <!-- Profile Summary -->
+            <div class="form-card">
+              <h2 class="form-section-title">Profile Summary</h2>
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="padding: 12px; background: var(--light-gray); border-radius: 6px;">
+                  <div style="font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase;">Total Inspections</div>
+                  <div style="font-size: 18px; font-weight: 800; color: var(--dark); margin-top: 4px;">24</div>
+                </div>
+                <div style="padding: 12px; background: var(--light-gray); border-radius: 6px;">
+                  <div style="font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase;">Reports Delivered</div>
+                  <div style="font-size: 18px; font-weight: 800; color: var(--dark); margin-top: 4px;">18</div>
+                </div>
+                <div style="padding: 12px; background: var(--light-gray); border-radius: 6px;">
+                  <div style="font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase;">Avg. Rating</div>
+                  <div style="font-size: 18px; font-weight: 800; color: var(--gold); margin-top: 4px;">4.8 / 5.0</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="form-card">
+              <h2 class="form-section-title">Actions</h2>
+              <button style="width: 100%; padding: 12px; background: var(--gold); color: var(--dark); border: none; border-radius: 6px; font-weight: 600; cursor: pointer; margin-bottom: 10px;" onclick="alert('Changes saved')"><i class="fas fa-save" style="margin-right: 6px;"></i> Save Changes</button>
+              <button style="width: 100%; padding: 12px; background: #f0f0f0; color: var(--dark); border: 1px solid var(--border-color); border-radius: 6px; font-weight: 600; cursor: pointer;" onclick="alert('Password changed')"><i class="fas fa-lock" style="margin-right: 6px;"></i> Change Password</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// SOC2: Check if user is authenticated
+// Add small delay to ensure localStorage is properly synced
+setTimeout(function() {
+  const authState = JSON.parse(localStorage.getItem('homeHubAuth') || '{}');
+
+  // If not authenticated or wrong role, set default inspector auth
+  if (!authState.isAuthenticated || authState.role !== 'inspector') {
+    // Set default inspector auth for demo purposes
+    localStorage.setItem('homeHubAuth', JSON.stringify({
+      isAuthenticated: true,
+      role: 'inspector',
+      displayName: 'Inspector Demo'
+    }));
+  }
+}, 50);
+
+function logout() {
+  localStorage.removeItem('homeHubAuth');
+  window.location.href = 'homehub-web.html';
+}
+
+// Dark Mode Toggle
+function toggleDarkMode() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+
+  if (isDark) {
+    html.removeAttribute('data-theme');
+    localStorage.setItem('homehub-theme', 'light');
+    document.getElementById('theme-icon').className = 'fas fa-moon';
+  } else {
+    html.setAttribute('data-theme', 'dark');
+    localStorage.setItem('homehub-theme', 'dark');
+    document.getElementById('theme-icon').className = 'fas fa-sun';
+  }
+}
+
+// Role Switcher Toggle
+function toggleRoleSwitcher() {
+  const switcher = document.getElementById('role-switcher');
+  const icon = document.getElementById('switcher-icon');
+  const isOpen = switcher.style.display === 'flex';
+
+  switcher.style.display = isOpen ? 'none' : 'flex';
+  switcher.style.flexDirection = 'column';
+
+  if (icon) {
+    icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+  }
+}
+
+// Set auth role in localStorage then navigate
+function setRoleAndGo(role, event) {
+  event.preventDefault();
+  const theme = localStorage.getItem('homehub-theme') || 'light';
+  const urlMap = {
+    'homeowner': 'homehub-homeowner-web.html',
+    'agent': 'homehub-agent-web.html',
+    'inspector': 'homehub-inspector-web.html',
+    'contractor': 'homehub-contractor-web.html',
+    'admin': 'homehub-admin-web.html',
+    'compliance': 'homehub-compliance-web.html',
+    'agency': 'homehub-agency-web.html'
+  };
+  localStorage.setItem('homeHubAuth', JSON.stringify({
+    isAuthenticated: true,
+    role: role,
+    displayName: 'Demo User'
+  }));
+  window.location.href = urlMap[role] + '?theme=' + theme;
+}
+
+// Close role switcher when clicking elsewhere
+document.addEventListener('click', function(event) {
+  const switcher = document.getElementById('role-switcher');
+  if (!switcher) return;
+  const isInsideToggle = event.target.closest('[onclick*="toggleRoleSwitcher"]') || event.target.closest('#role-switcher');
+  if (!isInsideToggle && switcher.style.display === 'flex') {
+    switcher.style.display = 'none';
+    const icon = document.getElementById('switcher-icon');
+    if (icon) icon.style.transform = 'rotate(0deg)';
+  }
+});
+
+// Read theme from URL param if present
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const urlTheme = params.get('theme');
+  if (urlTheme === 'dark' || urlTheme === 'light') {
+    localStorage.setItem('homehub-theme', urlTheme);
+  }
+})();
+
+// Load saved theme
+if (localStorage.getItem('homehub-theme') === 'dark') {
+  document.documentElement.setAttribute('data-theme', 'dark');
+  document.getElementById('theme-icon').className = 'fas fa-sun';
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1567 @@
+<!--
+================================================================================
+HomeHub Application Suite - homehub-buyer-invite-flow.html
+================================================================================
+
+TITLE: Homehub Buyer Invite Flow
+PURPOSE: Buyer invitation flow for pre-sale property transfers
+LAST UPDATED: 2026-05-16
+
+This HTML file is part of the HomeHub platform - a comprehensive property
+management system for homeowners. Single-page application with vanilla JS,
+responsive design, and dark mode support.
+
+================================================================================
+STRUCTURE: <style> CSS | <body> HTML | <script> JavaScript
+================================================================================
+
+CSS VARIABLES: --blue, --green, --orange, --gold (+ light/dark variants)
+RESPONSIVE: Mobile (<768px) | Tablet (768px) | Desktop (1024px+)
+DARK MODE: [data-theme="dark"] selector overrides CSS variables
+
+Key Components:
+  • Sidebar/Navigation (fixed 280px, collapsible on mobile)
+  • Responsive grid/flexbox layouts
+  • Card-based UI components
+  • Modal overlays for forms
+  • Dynamic JavaScript interactions
+
+================================================================================
+QUICK REFERENCE
+================================================================================
+
+CSS Customization:
+  1. Update color variables in :root and [data-theme="dark"]
+  2. Modify font-size and padding for spacing
+  3. Adjust media queries for different breakpoints
+
+JavaScript Patterns:
+  • DOM selection: querySelector, querySelectorAll
+  • Events: addEventListener, event delegation
+  • Storage: localStorage for persistent settings
+  • DOM updates: innerHTML, classList, setAttribute
+
+Testing:
+  ✓ Responsive design (test all breakpoints)
+  ✓ Dark mode toggle
+  ✓ Keyboard navigation
+  ✓ Button/form interactions
+  ✓ Cross-browser compatibility
+
+================================================================================
+For detailed documentation, see sections marked with === throughout the file
+================================================================================
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomeHub - Buyer Invite Transfer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #1e5a96;
+            --primary-blue-light: #2d7ab8;
+            --primary-blue-lighter: #e8f1f7;
+            --accent-orange: #ff9f43;
+            --accent-orange-light: #fff4e6;
+            --neutral-gray: #6b7280;
+            --neutral-gray-light: #f3f4f6;
+            --neutral-gray-lighter: #fafafa;
+            --white: #ffffff;
+            --black: #1f2937;
+            --error-red: #dc2626;
+            --success-green: #059669;
+            --border-radius: 12px;
+            --spacing-unit: 16px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background-color: var(--white);
+            color: var(--black);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Mobile Container */
+        .mobile-frame {
+            max-width: 390px;
+            height: 844px;
+            margin: 20px auto;
+            background: var(--white);
+            border: 1px solid var(--neutral-gray-light);
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: var(--primary-blue);
+            color: var(--white);
+            padding: 10px var(--spacing-unit);
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Screen Container */
+        .screen {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: var(--spacing-unit);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: calc(var(--spacing-unit) * 2);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: var(--spacing-unit);
+            letter-spacing: -0.5px;
+        }
+
+        .headline {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: calc(var(--spacing-unit) * 0.5);
+            line-height: 1.3;
+        }
+
+        .subheadline {
+            font-size: 15px;
+            color: var(--neutral-gray);
+            line-height: 1.5;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--neutral-gray-lighter);
+            border-radius: var(--border-radius);
+            padding: calc(var(--spacing-unit) * 1.5);
+            margin-bottom: var(--spacing-unit);
+            border: 1px solid var(--neutral-gray-light);
+        }
+
+        .card.primary {
+            background: var(--primary-blue-lighter);
+            border-color: var(--primary-blue);
+        }
+
+        .card.highlight {
+            background: var(--accent-orange-light);
+            border-color: var(--accent-orange);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: calc(var(--spacing-unit) * 1.5);
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--black);
+            margin-bottom: 8px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="tel"],
+        input[type="date"],
+        .code-input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: 1px solid var(--neutral-gray-light);
+            border-radius: 8px;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        input[type="tel"]:focus,
+        input[type="date"]:focus,
+        .code-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px var(--primary-blue-lighter);
+        }
+
+        .code-input {
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: 8px;
+            text-align: center;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        input.error,
+        .code-input.error {
+            border-color: var(--error-red);
+        }
+
+        .error-message {
+            color: var(--error-red);
+            font-size: 13px;
+            margin-top: 6px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-unit);
+            margin-top: auto;
+            padding-top: var(--spacing-unit);
+        }
+
+        button {
+            padding: 14px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-blue-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(30, 90, 150, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--neutral-gray-light);
+            color: var(--black);
+            border: 1px solid var(--neutral-gray-light);
+        }
+
+        .btn-secondary:hover {
+            background: var(--neutral-gray);
+            color: var(--white);
+        }
+
+        .btn-tertiary {
+            background: transparent;
+            color: var(--primary-blue);
+            text-decoration: underline;
+            padding: 10px 0;
+        }
+
+        .btn-tertiary:hover {
+            color: var(--primary-blue-light);
+        }
+
+        .btn-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--neutral-gray-light);
+            margin-bottom: calc(var(--spacing-unit) * 1.5);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--neutral-gray);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-button.active {
+            color: var(--primary-blue);
+            border-bottom-color: var(--primary-blue);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Property Info */
+        .property-info {
+            background: var(--primary-blue-lighter);
+            border: 1px solid var(--primary-blue);
+            border-radius: var(--border-radius);
+            padding: calc(var(--spacing-unit) * 1.5);
+            margin-bottom: var(--spacing-unit);
+        }
+
+        .property-address {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 12px;
+        }
+
+        .property-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--neutral-gray);
+            margin-top: 4px;
+        }
+
+        /* Status Badge */
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: var(--primary-blue-lighter);
+            color: var(--primary-blue);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .badge.success {
+            background: #d1fae5;
+            color: var(--success-green);
+        }
+
+        .badge.warning {
+            background: var(--accent-orange-light);
+            color: var(--accent-orange);
+        }
+
+        /* Lists */
+        .list {
+            list-style: none;
+        }
+
+        .list li {
+            padding: 10px 0;
+            padding-left: 28px;
+            position: relative;
+            font-size: 15px;
+            color: var(--black);
+            line-height: 1.5;
+        }
+
+        .list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success-green);
+            font-weight: 700;
+        }
+
+        /* Trust Badges Section */
+        .trust-section {
+            background: var(--neutral-gray-lighter);
+            border-radius: var(--border-radius);
+            padding: calc(var(--spacing-unit) * 1.5);
+            margin: var(--spacing-unit) 0;
+        }
+
+        .trust-section h4 {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--neutral-gray);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        /* Video Placeholder */
+        .video-placeholder {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: linear-gradient(135deg, var(--primary-blue-lighter) 0%, var(--accent-orange-light) 100%);
+            border-radius: var(--border-radius);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: var(--spacing-unit);
+            border: 1px solid var(--neutral-gray-light);
+        }
+
+        .play-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(30, 90, 150, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            font-size: 28px;
+        }
+
+        .video-text {
+            font-size: 14px;
+            color: var(--primary-blue);
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* Email Preview */
+        .email-preview {
+            background: var(--white);
+            border: 1px solid var(--neutral-gray-light);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        .email-header {
+            background: var(--neutral-gray-light);
+            padding: var(--spacing-unit);
+            border-bottom: 1px solid var(--neutral-gray-light);
+        }
+
+        .email-from {
+            font-size: 13px;
+            color: var(--neutral-gray);
+            margin-bottom: 4px;
+        }
+
+        .email-subject {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--black);
+        }
+
+        .email-body {
+            padding: calc(var(--spacing-unit) * 1.5);
+        }
+
+        .email-body p {
+            margin-bottom: var(--spacing-unit);
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--black);
+        }
+
+        .code-box {
+            background: var(--primary-blue-lighter);
+            border: 2px solid var(--primary-blue);
+            border-radius: 8px;
+            padding: var(--spacing-unit);
+            margin: var(--spacing-unit) 0;
+            text-align: center;
+        }
+
+        .code-label {
+            font-size: 12px;
+            color: var(--primary-blue);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .code-display {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            letter-spacing: 2px;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        .code-note {
+            font-size: 12px;
+            color: var(--neutral-gray);
+            margin-top: 8px;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .banner {
+            background: var(--accent-orange-light);
+            border: 1px solid var(--accent-orange);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-unit);
+            margin-bottom: var(--spacing-unit);
+        }
+
+        .banner-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-orange);
+            margin-bottom: 4px;
+        }
+
+        .banner-text {
+            font-size: 13px;
+            color: var(--neutral-gray);
+            line-height: 1.5;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--black);
+            margin-top: calc(var(--spacing-unit) * 1.5);
+            margin-bottom: var(--spacing-unit);
+        }
+
+        .maintenance-record {
+            background: var(--neutral-gray-lighter);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .record-name {
+            font-weight: 600;
+            color: var(--black);
+            font-size: 14px;
+        }
+
+        .record-date {
+            font-size: 13px;
+            color: var(--neutral-gray);
+        }
+
+        .system-pill {
+            display: inline-block;
+            background: var(--primary-blue-lighter);
+            color: var(--primary-blue);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .contractor-card {
+            background: var(--neutral-gray-lighter);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .contractor-name {
+            font-weight: 600;
+            color: var(--black);
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .contractor-type {
+            font-size: 13px;
+            color: var(--neutral-gray);
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: var(--spacing-unit);
+        }
+
+        .photo-placeholder {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, var(--primary-blue-lighter), var(--accent-orange-light));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--neutral-gray);
+            font-size: 24px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: flex-end;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            width: 100%;
+            border-radius: 20px 20px 0 0;
+            padding: calc(var(--spacing-unit) * 2);
+            max-height: 70vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            background: var(--neutral-gray-light);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--black);
+        }
+
+        /* Progress Indicator */
+        .progress-steps {
+            display: flex;
+            gap: 8px;
+            margin-bottom: var(--spacing-unit);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .step {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--neutral-gray-light);
+            transition: all 0.2s;
+        }
+
+        .step.active {
+            background: var(--primary-blue);
+            width: 24px;
+            border-radius: 4px;
+        }
+
+        .step.completed {
+            background: var(--success-green);
+        }
+
+        /* Scrollable Area */
+        .scrollable {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .scrollable::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .scrollable::-webkit-scrollbar-track {
+            background: var(--neutral-gray-light);
+            border-radius: 2px;
+        }
+
+        .scrollable::-webkit-scrollbar-thumb {
+            background: var(--neutral-gray);
+            border-radius: 2px;
+        }
+
+        /* Utilities */
+        .text-center {
+            text-align: center;
+        }
+
+        .text-muted {
+            color: var(--neutral-gray);
+            font-size: 13px;
+        }
+
+        .mt-1 {
+            margin-top: 8px;
+        }
+
+        .mt-2 {
+            margin-top: 16px;
+        }
+
+        .mb-1 {
+            margin-bottom: 8px;
+        }
+
+        .mb-2 {
+            margin-bottom: 16px;
+        }
+
+        .gap-1 {
+            gap: 8px;
+        }
+
+        .success-state {
+            text-align: center;
+            padding: var(--spacing-unit) 0;
+        }
+
+        .success-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .success-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--success-green);
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-frame">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>HomeHub</span>
+            <span>●●●●●</span>
+        </div>
+
+        <!-- SCREEN 1: Email Preview -->
+        <div class="screen active" id="screen-email">
+            <div class="header">
+                <div class="logo">HomeHub</div>
+                <div class="headline">Buyer Invite Email</div>
+                <div class="subheadline">This is what the buyer receives</div>
+            </div>
+
+            <div class="scrollable">
+                <div class="email-preview">
+                    <div class="email-header">
+                        <div class="email-from">From: invites@homehub.com</div>
+                        <div class="email-subject">Your HomeHub record is ready for 123 Main St, Wilmington, NC 28401</div>
+                    </div>
+                    <div class="email-body">
+                        <p style="font-weight: 600; font-size: 18px; color: var(--black);">
+                            You've been invited to receive your new home's HomeHub record.
+                        </p>
+                        <p>
+                            The previous homeowner has started a secure transfer of the HomeHub record for <strong>123 Main St, Wilmington, NC 28401</strong>. This record may include:
+                        </p>
+                        <ul style="margin-left: 20px; margin-bottom: 16px; color: var(--black); font-size: 14px;">
+                            <li>Maintenance history</li>
+                            <li>Equipment details</li>
+                            <li>Contractor records</li>
+                            <li>Photos</li>
+                            <li>Documents</li>
+                            <li>Compliance records</li>
+                            <li>Future project notes</li>
+                        </ul>
+                        <div class="code-box">
+                            <div class="code-label">One-Time Transfer Code</div>
+                            <div class="code-display">482913</div>
+                            <div class="code-note">You'll need this code when opening your secure invite.</div>
+                        </div>
+                        <button class="btn-primary" style="width: 100%; margin-top: 16px;" onclick="showScreen('screen-landing')">Open Secure Transfer</button>
+                        <p style="text-align: center; margin-top: 16px;">
+                            <span class="text-muted">This code can only be used once and will expire soon.</span>
+                        </p>
+                        <p style="text-align: center; margin-top: 16px; font-size: 14px;">
+                            <a href="#" style="color: var(--primary-blue); text-decoration: none; font-weight: 600;">Learn more about HomeHub →</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" onclick="showScreen('screen-code-entry')">Proceed to Buyer Flow</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 1.5: HomeHub Landing Page -->
+        <div class="screen" id="screen-landing">
+            <div class="header">
+                <div class="logo">HomeHub</div>
+                <div class="headline">Your home's complete record.</div>
+                <div class="subheadline">Everything you need to know about your home, in one place.</div>
+            </div>
+
+            <div class="scrollable">
+                <div class="card highlight">
+                    <div style="font-size: 24px; margin-bottom: 12px;">🏠</div>
+                    <div style="font-weight: 600; margin-bottom: 8px; color: var(--black);">What is HomeHub?</div>
+                    <p style="font-size: 14px; line-height: 1.6; color: var(--black);">
+                        HomeHub is a digital record of your home's entire history—maintenance, equipment, contractors, documents, and more. It helps you manage your property and preserve its value.
+                    </p>
+                </div>
+
+                <div class="section-title">Why HomeHub Matters</div>
+                <ul class="list">
+                    <li>Track all maintenance and repairs</li>
+                    <li>Never lose important documents</li>
+                    <li>Know your home's systems and history</li>
+                    <li>Track details of past, current & future projects</li>
+                    <li>Prepare for resale with complete records</li>
+                    <li>Manage contractors and warranties</li>
+                    <li>Set maintenance reminders</li>
+                </ul>
+
+                <div class="section-title">What You're Receiving</div>
+                <div class="card">
+                    <p style="font-size: 14px; color: var(--neutral-gray); line-height: 1.6; margin-bottom: 12px;">
+                        The previous homeowner has shared their home record with you, including:
+                    </p>
+                    <ul style="margin-left: 20px; color: var(--black); font-size: 14px;">
+                        <li>Maintenance history</li>
+                        <li>Equipment details</li>
+                        <li>Contractor records</li>
+                        <li>Photos</li>
+                        <li>Documents</li>
+                        <li>Compliance records</li>
+                        <li>Future project notes</li>
+                    </ul>
+                </div>
+
+                <div class="trust-section">
+                    <h4>🔒 Privacy & Security</h4>
+                    <p style="font-size: 13px; color: var(--neutral-gray); line-height: 1.6;">
+                        Your transfer is secure. Private seller information (billing, insurance, personal notes) is never shared.
+                    </p>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" onclick="showScreen('screen-code-entry')">Enter Transfer Code</button>
+                <button class="btn-secondary" onclick="showScreen('screen-email')">Back</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 2: Code Entry -->
+        <div class="screen" id="screen-code-entry">
+            <div class="progress-steps">
+                <div class="step completed"></div>
+                <div class="step active"></div>
+                <div class="step"></div>
+                <div class="step"></div>
+                <div class="step"></div>
+            </div>
+
+            <div class="header">
+                <div class="logo">HomeHub</div>
+                <div class="headline">You've Been Invited to Take Ownership of This Home's Record</div>
+                <div class="subheadline">Enter the one-time transfer code from your email to continue.</div>
+            </div>
+
+            <div class="scrollable">
+                <div class="property-info">
+                    <div class="property-address">123 Main St, Wilmington, NC 28401</div>
+                </div>
+
+                <div class="form-group">
+                    <label>One-Time Transfer Code</label>
+                    <input type="text" class="code-input" id="codeInput" placeholder="000000" maxlength="6" inputmode="numeric">
+                    <div class="error-message" id="codeError">That code doesn't match. Please check your email and try again.</div>
+                </div>
+
+                <div class="card">
+                    <p style="font-size: 13px; color: var(--neutral-gray); line-height: 1.6;">
+                        💡 <strong>Tip:</strong> Check your email for the 6-digit code sent by the previous homeowner.
+                    </p>
+                </div>
+
+                <button class="btn-tertiary" onclick="showScreen('screen-code-entry')">I don't have my code</button>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" id="verifyBtn" onclick="verifyCode()" disabled>Verify Code</button>
+                <button class="btn-secondary" onclick="showScreen('screen-email')">Back</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: Invite Overview -->
+        <div class="screen" id="screen-overview">
+            <div class="progress-steps">
+                <div class="step completed"></div>
+                <div class="step completed"></div>
+                <div class="step active"></div>
+                <div class="step"></div>
+                <div class="step"></div>
+            </div>
+
+            <div class="header">
+                <div class="headline">Your new home already has a history.</div>
+                <div class="subheadline">The previous homeowner has shared this HomeHub record so you can understand, manage, and protect your home from day one.</div>
+            </div>
+
+            <div class="scrollable">
+                <div class="property-info">
+                    <div class="property-address">123 Main St, Wilmington, NC 28401</div>
+                    <div class="property-stats">
+                        <div class="stat">
+                            <span class="stat-number">42</span>
+                            <span class="stat-label">Maintenance Records</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">18</span>
+                            <span class="stat-label">Photos</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">6</span>
+                            <span class="stat-label">Contractors</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">12</span>
+                            <span class="stat-label">Documents</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="video-placeholder">
+                    <div class="play-icon">▶</div>
+                    <div class="video-text">Coming soon: Quick intro to your HomeHub record</div>
+                </div>
+
+                <div class="section-title">What You're Receiving</div>
+                <ul class="list">
+                    <li>Maintenance and service history</li>
+                    <li>HVAC, roof, plumbing, electrical, and appliance details</li>
+                    <li>Contractor records and notes</li>
+                    <li>Photos and documents</li>
+                    <li>Compliance and safety records</li>
+                    <li>Future project notes, if shared</li>
+                </ul>
+
+                <div class="section-title">What Stays Private</div>
+                <ul class="list">
+                    <li>Prior owner billing information</li>
+                    <li>Insurance policies</li>
+                    <li>Personal notes</li>
+                    <li>Financial documents</li>
+                    <li>Private uploads</li>
+                </ul>
+
+                <div class="trust-section">
+                    <h4>Security & Privacy</h4>
+                    <div class="badge-row">
+                        <span class="badge success">✓ Secure Transfer</span>
+                        <span class="badge success">✓ Code Verified</span>
+                        <span class="badge success">✓ No Private Data</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" onclick="showScreen('screen-account')">Accept & View Home Record</button>
+                <button class="btn-secondary" onclick="showScreen('screen-email')">I'm Not the Buyer</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 4: Account Creation/Login -->
+        <div class="screen" id="screen-account">
+            <div class="progress-steps">
+                <div class="step completed"></div>
+                <div class="step completed"></div>
+                <div class="step completed"></div>
+                <div class="step active"></div>
+                <div class="step"></div>
+            </div>
+
+            <div class="header">
+                <div class="logo">HomeHub</div>
+                <div class="headline">Create Your Account</div>
+                <div class="subheadline">Set up your HomeHub to access your home's complete record.</div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-button active" onclick="switchTab('create')">Create Account</button>
+                <button class="tab-button" onclick="switchTab('login')">Log In</button>
+            </div>
+
+            <div class="scrollable">
+                <!-- Create Account Tab -->
+                <div class="tab-content active" id="tab-create">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="fullName" placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="createEmail" placeholder="john@example.com" value="buyer@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="phone" placeholder="(555) 123-4567">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="createPassword" placeholder="••••••••">
+                    </div>
+                </div>
+
+                <!-- Log In Tab -->
+                <div class="tab-content" id="tab-login">
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="loginEmail" placeholder="john@example.com" value="buyer@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" placeholder="••••••••">
+                    </div>
+                    <button class="btn-tertiary">Forgot password?</button>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" onclick="proceedToVerification()">Continue</button>
+                <button class="btn-secondary" onclick="showScreen('screen-overview')">Back</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 5: Property Verification -->
+        <div class="screen" id="screen-verify">
+            <div class="progress-steps">
+                <div class="step completed"></div>
+                <div class="step completed"></div>
+                <div class="step completed"></div>
+                <div class="step completed"></div>
+                <div class="step active"></div>
+            </div>
+
+            <div class="header">
+                <div class="logo">HomeHub</div>
+                <div class="headline">Confirm This Is Your New Home</div>
+                <div class="subheadline">Please verify the property details.</div>
+            </div>
+
+            <div class="scrollable">
+                <div class="form-group">
+                    <label>Street Address</label>
+                    <input type="text" id="verifyAddress" placeholder="123 Main St" value="123 Main St">
+                </div>
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" id="verifyCity" placeholder="Wilmington" value="Wilmington">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label>State</label>
+                        <input type="text" id="verifyState" placeholder="NC" value="NC">
+                    </div>
+                    <div class="form-group">
+                        <label>Zip Code</label>
+                        <input type="text" id="verifyZip" placeholder="28401" value="28401">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Expected Closing Date</label>
+                    <input type="date" id="closingDate">
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text" id="lastName" placeholder="Doe">
+                </div>
+
+                <div class="card">
+                    <p style="font-size: 13px; color: var(--neutral-gray); line-height: 1.6;">
+                        🔐 We verify this information against public property records to ensure secure transfer.
+                    </p>
+                </div>
+
+                <div class="section-title">Alternative Verification</div>
+                <button class="btn-secondary" style="width: 100%; margin-bottom: 8px;">📱 Scan Property QR Code</button>
+                <button class="btn-secondary" style="width: 100%; margin-bottom: 8px;">📄 Upload Closing Document</button>
+                <button class="btn-tertiary" style="width: 100%;">Request Manual Review</button>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" onclick="verifyProperty()">Verify Property</button>
+                <button class="btn-secondary" onclick="showScreen('screen-account')">Back</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 6: Read-Only Dashboard -->
+        <div class="screen" id="screen-dashboard">
+            <div class="dashboard">
+                <div style="flex-shrink: 0;">
+                    <div class="progress-steps">
+                        <div class="step completed"></div>
+                        <div class="step completed"></div>
+                        <div class="step completed"></div>
+                        <div class="step completed"></div>
+                        <div class="step completed"></div>
+                    </div>
+
+                    <div class="header">
+                        <div class="logo">HomeHub</div>
+                    </div>
+
+                    <div class="banner">
+                        <div class="banner-title">📖 Read-Only Mode</div>
+                        <div class="banner-text">You're viewing this HomeHub record in read-only mode. Activate your account to add records, upload documents, set reminders, and manage this home going forward.</div>
+                    </div>
+                </div>
+
+                <div class="scrollable">
+                    <div class="section-title">Home Profile</div>
+                    <div class="card">
+                        <div style="margin-bottom: 12px;">
+                            <strong style="color: var(--black);">123 Main St, Wilmington, NC 28401</strong>
+                        </div>
+                        <div style="font-size: 14px; color: var(--neutral-gray); line-height: 1.6;">
+                            <p>Single-family home</p>
+                            <p>Built: 1985</p>
+                            <p>Square footage: 2,450 sq ft</p>
+                        </div>
+                    </div>
+
+                    <div class="section-title">Maintenance History</div>
+                    <div class="maintenance-record">
+                        <div>
+                            <div class="record-name">HVAC Service</div>
+                            <div class="record-date">March 12, 2025</div>
+                        </div>
+                    </div>
+                    <div class="maintenance-record">
+                        <div>
+                            <div class="record-name">Roof Inspection</div>
+                            <div class="record-date">August 4, 2024</div>
+                        </div>
+                    </div>
+                    <div class="maintenance-record">
+                        <div>
+                            <div class="record-name">Water Heater Replacement</div>
+                            <div class="record-date">January 18, 2023</div>
+                        </div>
+                    </div>
+
+                    <div class="section-title">Major Systems</div>
+                    <div style="display: flex; flex-wrap: wrap;">
+                        <span class="system-pill">HVAC</span>
+                        <span class="system-pill">Roof</span>
+                        <span class="system-pill">Water Heater</span>
+                        <span class="system-pill">Electrical Panel</span>
+                        <span class="system-pill">Plumbing</span>
+                        <span class="system-pill">Appliances</span>
+                    </div>
+
+                    <div class="section-title">Contractors</div>
+                    <div class="contractor-card">
+                        <div class="contractor-name">Reliable HVAC</div>
+                        <div class="contractor-type">HVAC Services</div>
+                    </div>
+                    <div class="contractor-card">
+                        <div class="contractor-name">Peak Roofing Co.</div>
+                        <div class="contractor-type">Roofing</div>
+                    </div>
+                    <div class="contractor-card">
+                        <div class="contractor-name">Clear Flow Plumbing</div>
+                        <div class="contractor-type">Plumbing</div>
+                    </div>
+
+                    <div class="section-title">Documents</div>
+                    <div class="maintenance-record">
+                        <div>
+                            <div class="record-name">HVAC Warranty</div>
+                            <div class="record-date">2025-2035</div>
+                        </div>
+                    </div>
+                    <div class="maintenance-record">
+                        <div>
+                            <div class="record-name">Roof Inspection Report</div>
+                            <div class="record-date">August 2024</div>
+                        </div>
+                    </div>
+
+                    <div class="section-title">Photos</div>
+                    <div class="photo-grid">
+                        <div class="photo-placeholder">📸</div>
+                        <div class="photo-placeholder">📸</div>
+                        <div class="photo-placeholder">📸</div>
+                        <div class="photo-placeholder">📸</div>
+                    </div>
+
+                    <div class="section-title">Future Projects</div>
+                    <div class="maintenance-record">
+                        <div>
+                            <div class="record-name">Deck Staining</div>
+                            <div class="record-date">Planned</div>
+                        </div>
+                    </div>
+                    <div class="maintenance-record">
+                        <div>
+                            <div class="record-name">Gutter Guards</div>
+                            <div class="record-date">Planned</div>
+                        </div>
+                    </div>
+                    <div class="maintenance-record">
+                        <div>
+                            <div class="record-name">Attic Insulation Review</div>
+                            <div class="record-date">Planned</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="flex-shrink: 0; padding-top: var(--spacing-unit);">
+                    <div class="button-group">
+                        <button class="btn-primary" onclick="showActivation()">🔓 Activate for $29/year</button>
+                        <button class="btn-secondary" onclick="showScreen('screen-overview')">Maybe Later</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 7: Activation -->
+        <div class="screen" id="screen-activation">
+            <div class="header">
+                <div class="logo">HomeHub</div>
+                <div class="headline">Activate Your HomeHub</div>
+                <div class="subheadline">Unlock full home management features.</div>
+            </div>
+
+            <div class="scrollable">
+                <div class="card highlight">
+                    <div style="text-align: center;">
+                        <div style="font-size: 32px; font-weight: 700; color: var(--accent-orange); margin-bottom: 8px;">$29</div>
+                        <div style="font-size: 14px; color: var(--neutral-gray);">per year</div>
+                    </div>
+                </div>
+
+                <div class="section-title">What You'll Get</div>
+                <ul class="list">
+                    <li>Add and edit home records</li>
+                    <li>Upload documents and photos</li>
+                    <li>Track maintenance schedules</li>
+                    <li>Set reminders for upcoming service</li>
+                    <li>Use contractor QR code access</li>
+                    <li>Manage future projects</li>
+                    <li>Preserve your home's history for resale</li>
+                </ul>
+
+                <div class="card">
+                    <p style="font-size: 13px; color: var(--neutral-gray); line-height: 1.6;">
+                        ✓ No hidden fees<br>
+                        ✓ Cancel anytime<br>
+                        ✓ Works with your property QR code<br>
+                        ✓ Updates sync across devices
+                    </p>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" onclick="showPaymentPlaceholder()">Continue to Payment</button>
+                <button class="btn-secondary" onclick="showScreen('screen-dashboard')">Back to Dashboard</button>
+            </div>
+        </div>
+
+        <!-- Payment Placeholder -->
+        <div class="screen" id="screen-payment">
+            <div class="header">
+                <div class="logo">HomeHub</div>
+                <div class="headline">Payment</div>
+            </div>
+
+            <div class="scrollable" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px;">
+                <div style="font-size: 48px;">💳</div>
+                <div style="text-align: center;">
+                    <p style="font-size: 18px; font-weight: 600; margin-bottom: 12px; color: var(--black);">Payment Integration Coming Soon</p>
+                    <p style="font-size: 14px; color: var(--neutral-gray); line-height: 1.6;">
+                        For this demo, we've skipped the Stripe integration. In production, you'll complete payment here and immediately access all features.
+                    </p>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" onclick="completeActivation()">Mock: Complete Payment</button>
+                <button class="btn-secondary" onclick="showScreen('screen-activation')">Back</button>
+            </div>
+        </div>
+
+        <!-- Success Modal -->
+        <div class="modal" id="successModal">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeModal()">×</button>
+                <div class="success-state">
+                    <div class="success-icon">✓</div>
+                    <p class="success-text" id="successMessage">Code verified!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Read-Only Modal -->
+        <div class="modal" id="readOnlyModal">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeModal()">×</button>
+                <div style="text-align: center;">
+                    <div style="font-size: 40px; margin-bottom: 16px;">🔒</div>
+                    <p style="font-size: 16px; font-weight: 600; color: var(--black); margin-bottom: 12px;">Activate HomeHub to Manage This Home</p>
+                    <p style="font-size: 14px; color: var(--neutral-gray); line-height: 1.6; margin-bottom: 24px;">
+                        Your transferred record is available to view for free. Activate for $29/year to add new records, upload documents, track projects, and keep your home history complete.
+                    </p>
+                    <div class="button-group" style="margin-bottom: 0;">
+                        <button class="btn-primary" onclick="showActivation()">Activate for $29/year</button>
+                        <button class="btn-secondary" onclick="closeModal()">Continue Viewing Read-Only</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State Management
+        const state = {
+            currentScreen: 'screen-email',
+            codeVerified: false,
+            inviteAccepted: false,
+            propertyVerified: false,
+            accountCreated: false,
+            activated: false,
+            transferCode: '482913'
+        };
+
+        // Screen Navigation
+        function showScreen(screenId) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+
+            // Show selected screen
+            document.getElementById(screenId).classList.add('active');
+            state.currentScreen = screenId;
+
+            // Scroll to top
+            document.querySelectorAll('.scrollable').forEach(el => {
+                el.scrollTop = 0;
+            });
+        }
+
+        // Code Verification
+        const codeInput = document.getElementById('codeInput');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const codeError = document.getElementById('codeError');
+
+        codeInput.addEventListener('input', (e) => {
+            // Only allow numbers
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+
+            // Enable button if 6 digits
+            verifyBtn.disabled = e.target.value.length !== 6;
+        });
+
+        function verifyCode() {
+            const code = codeInput.value;
+
+            if (code === state.transferCode) {
+                state.codeVerified = true;
+                codeInput.classList.remove('error');
+                codeError.classList.remove('show');
+
+                // Show success modal
+                const modal = document.getElementById('successModal');
+                document.getElementById('successMessage').textContent = 'Code verified!';
+                modal.classList.add('active');
+
+                setTimeout(() => {
+                    closeModal();
+                    showScreen('screen-overview');
+                }, 2000);
+            } else {
+                codeInput.classList.add('error');
+                codeError.classList.add('show');
+            }
+        }
+
+        // Tab Switching
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active from all buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab and mark button active
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Account Creation
+        function proceedToVerification() {
+            const tabCreate = document.getElementById('tab-create');
+            const tabLogin = document.getElementById('tab-login');
+
+            if (tabCreate.classList.contains('active')) {
+                const fullName = document.getElementById('fullName').value;
+                const email = document.getElementById('createEmail').value;
+
+                if (fullName && email) {
+                    state.accountCreated = true;
+                    showScreen('screen-verify');
+                }
+            } else if (tabLogin.classList.contains('active')) {
+                state.accountCreated = true;
+                showScreen('screen-verify');
+            }
+        }
+
+        // Property Verification
+        function verifyProperty() {
+            const address = document.getElementById('verifyAddress').value;
+            const city = document.getElementById('verifyCity').value;
+            const state_input = document.getElementById('verifyState').value;
+            const zip = document.getElementById('verifyZip').value;
+
+            // Simple validation - check if matches expected property
+            if (address.includes('123 Main') && city.includes('Wilmington') && state_input.includes('NC') && zip.includes('28401')) {
+                state.propertyVerified = true;
+                showScreen('screen-dashboard');
+            } else {
+                const modal = document.getElementById('successModal');
+                document.getElementById('successMessage').textContent = "We couldn't verify those details. Please check and try again.";
+                modal.classList.add('active');
+                setTimeout(() => closeModal(), 3000);
+            }
+        }
+
+        // Dashboard Interactions
+        function showActivation() {
+            showScreen('screen-activation');
+        }
+
+        function showPaymentPlaceholder() {
+            showScreen('screen-payment');
+        }
+
+        function completeActivation() {
+            state.activated = true;
+            const modal = document.getElementById('successModal');
+            document.getElementById('successMessage').textContent = 'Welcome to HomeHub! Your account is now active.';
+            modal.classList.add('active');
+
+            setTimeout(() => {
+                closeModal();
+                showScreen('screen-dashboard');
+            }, 2000);
+        }
+
+        // Add read-only protection
+        document.addEventListener('click', (e) => {
+            if (state.currentScreen === 'screen-dashboard' && !state.activated) {
+                const clickedBtn = e.target.closest('button');
+                if (clickedBtn && clickedBtn.textContent.includes('Add')) {
+                    e.preventDefault();
+                    document.getElementById('readOnlyModal').classList.add('active');
+                }
+            }
+        });
+
+        // Modal Management
+        function closeModal() {
+            document.getElementById('successModal').classList.remove('active');
+            document.getElementById('readOnlyModal').classList.remove('active');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('successModal').addEventListener('click', (e) => {
+            if (e.target.id === 'successModal') {
+                closeModal();
+            }
+        });
+
+        document.getElementById('readOnlyModal').addEventListener('click', (e) => {
+            if (e.target.id === 'readOnlyModal') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

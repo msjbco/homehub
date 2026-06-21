@@ -1,0 +1,2671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomeHub Insurance Agency Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --gold: #C4A747;
+            --dark: #1a1a1a;
+            --white: #FFFFFF;
+            --light-gray: #F5F5F5;
+            --gray: #808080;
+            --text: #1E293B;
+            --text-primary: #1E293B;
+            --text-secondary: #64748B;
+            --border: #E5E5E5;
+            --border-color: #E5E5E5;
+            --bg-light: #F5F9F8;
+            --bg-card: #FFFFFF;
+            --bg-body: #F5F9F8;
+            --bg-secondary: #F0F4F8;
+            --bg-hover: #F0F4F8;
+            --accent: #27A570;
+            --primary: #1a73e8;
+            --primary-dark: #1558b0;
+            --success: #22c55e;
+            --alert: #ef4444;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        [data-theme="dark"] {
+            --text: #E2E8F0;
+            --text-primary: #E2E8F0;
+            --text-secondary: #94A3B8;
+            --border: #374151;
+            --border-color: #374151;
+            --bg-light: #111827;
+            --bg-secondary: #1a2130;
+            --bg-card: #1F2937;
+            --bg-body: #111827;
+            --bg-hover: #2D3748;
+            --primary: #4a9eff;
+            --primary-dark: #2b7de9;
+            --success: #4ade80;
+            --alert: #f87171;
+            --warning: #fbbf24;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-body);
+            color: var(--text);
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 240px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-logo {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .sidebar-branding h1 {
+            font-size: 14px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .sidebar-branding p {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .role-switcher {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .role-switcher label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .role-switcher select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-light);
+            color: var(--text);
+            font-size: 12px;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 20px;
+        }
+
+        .nav-section-title {
+            padding: 0 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            color: var(--text);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .nav-item.active {
+            background: var(--bg-secondary);
+            border-left-color: var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .nav-item i {
+            width: 16px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .nav-item .badge {
+            margin-left: auto;
+            background: var(--alert);
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        /* ===== MAIN AREA ===== */
+        .main-area {
+            flex: 1;
+            margin-left: 240px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== TOPBAR ===== */
+        .topbar {
+            height: 60px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            gap: 20px;
+        }
+
+        .topbar-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text);
+            font-size: 16px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-icon {
+            position: relative;
+            cursor: pointer;
+            color: var(--text);
+            font-size: 16px;
+        }
+
+        .notification-icon .badge {
+            position: absolute;
+            top: -5px;
+            right: -8px;
+            background: var(--alert);
+            color: white;
+            border-radius: 10px;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* ===== CONTENT ===== */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        .screens-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            min-height: 100%;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            margin: 0;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+        }
+
+        .btn-success {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1d8a59;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* ===== TABLES ===== */
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--bg-secondary);
+        }
+
+        th {
+            padding: 10px 14px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border);
+            text-align: left;
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        tbody tr {
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-hover);
+        }
+
+        /* ===== BADGES ===== */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge-gifted {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        [data-theme="dark"] .badge-gifted {
+            background: #1e3a8a;
+            color: #93c5fd;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        [data-theme="dark"] .badge-success {
+            background: #064e3b;
+            color: #86efac;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        [data-theme="dark"] .badge-warning {
+            background: #78350f;
+            color: #fcd34d;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        [data-theme="dark"] .badge-danger {
+            background: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        .badge-primary {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        [data-theme="dark"] .badge-primary {
+            background: #1e3a8a;
+            color: #93c5fd;
+        }
+
+        /* ===== KPI GRID ===== */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .kpi-subtext {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* ===== QUICK ACTIONS ===== */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .quick-action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            color: var(--text);
+        }
+
+        .quick-action-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--primary);
+        }
+
+        .quick-action-btn i {
+            font-size: 24px;
+            color: var(--primary);
+        }
+
+        .quick-action-btn span {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* ===== ACTIVITY FEED ===== */
+        .activity-feed {
+            margin-top: 20px;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--bg-secondary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: var(--primary);
+            font-size: 14px;
+        }
+
+        .activity-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .activity-text {
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .activity-date {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* ===== FORMS ===== */
+        .form-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="phone"],
+        input[type="tel"],
+        select,
+        textarea {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-light);
+            color: var(--text);
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="tel"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--bg-card);
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* ===== FILTERS ===== */
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-input {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .filter-input input {
+            width: 100%;
+        }
+
+        .filter-select {
+            min-width: 150px;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .filter-tab {
+            padding: 10px 0;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: -2px;
+        }
+
+        .filter-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* ===== PAGINATION ===== */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+
+        .pagination select {
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        .pagination-button {
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-card);
+            cursor: pointer;
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .pagination-button:hover {
+            background: var(--bg-hover);
+        }
+
+        /* ===== MODALS ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideIn 0.2s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 20px;
+            padding: 0;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* ===== TOASTS ===== */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+            padding: 15px 20px;
+            min-width: 300px;
+            font-size: 13px;
+            animation: slideInRight 0.2s ease-out;
+        }
+
+        .toast.success {
+            border-left-color: var(--success);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning);
+        }
+
+        .toast.error {
+            border-left-color: var(--danger);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* ===== UTILITIES ===== */
+        .text-muted {
+            color: var(--text-secondary);
+        }
+
+        .text-bold {
+            font-weight: 600;
+        }
+
+        .gap-2 {
+            gap: 20px;
+        }
+
+        .mt-20 {
+            margin-top: 20px;
+        }
+
+        .mb-20 {
+            margin-bottom: 20px;
+        }
+
+        .unread-banner {
+            background: #dbeafe;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #1e40af;
+            font-size: 13px;
+        }
+
+        [data-theme="dark"] .unread-banner {
+            background: #1e3a8a;
+            border-color: #1e40af;
+            color: #93c5fd;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.3s;
+        }
+
+        .stat-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* ===== LAYOUT UTILITIES ===== */
+        .flex-between {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .column-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 1200px) {
+            .column-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            }
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">HH</div>
+                <div class="sidebar-branding">
+                    <h1>HomeHub</h1>
+                    <p>Insurance Portal</p>
+                </div>
+            </div>
+
+            <div class="role-switcher">
+                <label for="roleSelect">Active Role</label>
+                <select id="roleSelect">
+                    <option value="single-agent">Single Agent</option>
+                    <option value="agency-admin">Agency Admin</option>
+                </select>
+            </div>
+
+            <nav class="sidebar-nav" id="sidebarNav"></nav>
+        </aside>
+
+        <!-- MAIN AREA -->
+        <div class="main-area">
+            <!-- TOPBAR -->
+            <header class="topbar">
+                <h2 class="topbar-title" id="pageTitle">Dashboard</h2>
+                <div class="topbar-actions">
+                    <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <div class="notification-icon" id="notificationBell">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge" id="notificationBadge" style="display: none;">0</span>
+                    </div>
+                    <div class="user-avatar" title="User Profile">JC</div>
+                </div>
+            </header>
+
+            <!-- CONTENT -->
+            <div class="content">
+                <div class="screens-container" id="screensContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal-overlay" id="homeownerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Homeowner Details</h3>
+                <button class="modal-close" onclick="closeModal('homeownerModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="homeownerModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('homeownerModal')">Close</button>
+                <button class="btn btn-primary"><i class="fas fa-envelope"></i> Send Email</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="docRequestModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Document Request Details</h3>
+                <button class="modal-close" onclick="closeModal('docRequestModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="docRequestModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('docRequestModal')">Close</button>
+                <button class="btn btn-warning"><i class="fas fa-sync"></i> Send Reminder</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="newDocModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">New Document Request</h3>
+                <button class="modal-close" onclick="closeModal('newDocModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="docHomeownerSelect">Homeowner</label>
+                    <select id="docHomeownerSelect">
+                        <option value="">Select a homeowner...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="docTypeSelect">Document Type</label>
+                    <select id="docTypeSelect">
+                        <option value="">Select document type...</option>
+                        <option value="Roof Inspection Report">Roof Inspection Report</option>
+                        <option value="Home Inventory Photos">Home Inventory Photos</option>
+                        <option value="HVAC Service History">HVAC Service History</option>
+                        <option value="Animal Evacuation Plan">Animal Evacuation Plan</option>
+                        <option value="Wildfire Mitigation Docs">Wildfire Mitigation Docs</option>
+                        <option value="SmokeCO Compliance">SmokeCO Compliance</option>
+                        <option value="Electrical Inspection">Electrical Inspection</option>
+                        <option value="Flood Zone Certificate">Flood Zone Certificate</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="docNotes">Notes</label>
+                    <textarea id="docNotes" placeholder="Add any notes about this request..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('newDocModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitNewDocRequest()"><i class="fas fa-check"></i> Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="addAgentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Agent</h3>
+                <button class="modal-close" onclick="closeModal('addAgentModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="agentName">Full Name</label>
+                    <input type="text" id="agentName" placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label for="agentEmail">Email</label>
+                    <input type="email" id="agentEmail" placeholder="john@agency.com">
+                </div>
+                <div class="form-group">
+                    <label for="agentPhone">Phone</label>
+                    <input type="tel" id="agentPhone" placeholder="(910) 555-0100">
+                </div>
+                <div class="form-group">
+                    <label for="agentRole">Role</label>
+                    <select id="agentRole">
+                        <option value="Agent">Agent</option>
+                        <option value="Master Agent">Master Agent</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addAgentModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitAddAgent()"><i class="fas fa-check"></i> Add Agent</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="agentDetailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Agent Details</h3>
+                <button class="modal-close" onclick="closeModal('agentDetailModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="agentDetailModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('agentDetailModal')">Close</button>
+                <button class="btn btn-primary"><i class="fas fa-edit"></i> Edit Agent</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="composeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Compose Message</h3>
+                <button class="modal-close" onclick="closeModal('composeModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="composeTo">To</label>
+                    <input type="email" id="composeTo" placeholder="recipient@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="composeSubject">Subject</label>
+                    <input type="text" id="composeSubject" placeholder="Message subject">
+                </div>
+                <div class="form-group">
+                    <label for="composeBody">Message</label>
+                    <textarea id="composeBody" placeholder="Type your message here..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('composeModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitMessage()"><i class="fas fa-paper-plane"></i> Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // ===== DATA =====
+        const AGENCY = {
+            id: 'IA001',
+            name: 'Coastal Shield Insurance',
+            city: 'Wilmington, NC',
+            plan: 'Pro',
+            quota: 25,
+            gifted: 18,
+            mrr: 198,
+            activation: 82,
+            status: 'Active',
+            joined: '2025-01-12',
+            contact: 'Jennifer Caldwell',
+            email: 'j.caldwell@coastalshield.com',
+            phone: '(910) 555-0142'
+        };
+
+        const AGENTS = [
+            { id:'AG001', name:'Jennifer Caldwell', email:'j.caldwell@coastalshield.com', phone:'(910) 555-0142', homeowners:47, gifted:18, docRequests:12, prepScore:74, activity:'High', lastLogin:'Today', status:'Active', role:'Master Agent' },
+            { id:'AG002', name:'Robert Kim', email:'r.kim@coastalshield.com', phone:'(910) 555-0217', homeowners:31, gifted:12, docRequests:8, prepScore:68, activity:'Medium', lastLogin:'Yesterday', status:'Active', role:'Agent' },
+            { id:'AG003', name:'Maria Santos', email:'m.santos@coastalshield.com', phone:'(910) 555-0389', homeowners:22, gifted:9, docRequests:5, prepScore:71, activity:'Medium', lastLogin:'2 days ago', status:'Active', role:'Agent' },
+            { id:'AG004', name:'Thomas Wright', email:'t.wright@coastalshield.com', phone:'(910) 555-0451', homeowners:18, gifted:7, docRequests:3, prepScore:65, activity:'Low', lastLogin:'5 days ago', status:'Active', role:'Agent' },
+        ];
+
+        let HOMEOWNERS = [
+            { id:'HW001', name:'Caroline Marsh', address:'214 Ocean Dr, Wilmington, NC', email:'c.marsh@email.com', phone:'(910) 555-1001', plan:'Pro', joined:'2025-02-10', prepScore:81, lastActive:'Today', gifted:true, agentId:'AG001', status:'Active' },
+            { id:'HW002', name:'Darnell Foster', address:'89 Shoreline Blvd, Wilmington, NC', email:'d.foster@email.com', phone:'(910) 555-1002', plan:'Pro', joined:'2025-02-18', prepScore:76, lastActive:'Yesterday', gifted:true, agentId:'AG001', status:'Active' },
+            { id:'HW003', name:'Patricia Nguyen', address:'312 Magnolia Ct, Wilmington, NC', email:'p.nguyen@email.com', phone:'(910) 555-1003', plan:'Pro', joined:'2025-03-01', prepScore:72, lastActive:'2 days ago', gifted:true, agentId:'AG002', status:'Active' },
+            { id:'HW004', name:'Evan Kowalski', address:'55 Harbor View Ln, Wilmington, NC', email:'e.kowalski@email.com', phone:'(910) 555-1004', plan:'Starter', joined:'2025-03-14', prepScore:68, lastActive:'1 week ago', gifted:true, agentId:'AG002', status:'Active' },
+            { id:'HW005', name:'Tanya Osei', address:'408 Riverwalk Rd, Wilmington, NC', email:'t.osei@email.com', phone:'(910) 555-1005', plan:'Pro', joined:'2025-03-22', prepScore:79, lastActive:'Today', gifted:true, agentId:'AG003', status:'Active' },
+            { id:'HW006', name:'Marcus Ellis', address:'17 Palmetto Way, Wilmington, NC', email:'m.ellis@email.com', phone:'(910) 555-1006', plan:'Pro', joined:'2025-04-03', prepScore:71, lastActive:'3 days ago', gifted:true, agentId:'AG003', status:'Active' },
+            { id:'HW007', name:'Samantha Rhodes', address:'630 Peachtree Pl, Wilmington, NC', email:'s.rhodes@email.com', phone:'(910) 555-1007', plan:'Starter', joined:'2025-04-11', prepScore:65, lastActive:'5 days ago', gifted:true, agentId:'AG004', status:'Active' },
+            { id:'HW008', name:'Jerome Walton', address:'101 Sycamore St, Wilmington, NC', email:'j.walton@email.com', phone:'(910) 555-1008', plan:'Pro', joined:'2025-04-19', prepScore:74, lastActive:'Yesterday', gifted:true, agentId:'AG004', status:'Active' },
+            { id:'HW009', name:'Alicia Brennan', address:'88 Azalea Ave, Wilmington, NC', email:'a.brennan@email.com', phone:'(910) 555-1009', plan:'Pro', joined:'2025-04-28', prepScore:78, lastActive:'Today', gifted:true, agentId:'AG001', status:'Active' },
+            { id:'HW010', name:'Derek Chung', address:'523 Lighthouse Rd, Wilmington, NC', email:'d.chung@email.com', phone:'(910) 555-1010', plan:'Pro', joined:'2025-05-05', prepScore:70, lastActive:'2 days ago', gifted:true, agentId:'AG001', status:'Active' },
+            { id:'HW011', name:'Felicia Burton', address:'209 Coastal Hwy, Wilmington, NC', email:'f.burton@email.com', phone:'(910) 555-1011', plan:'Starter', joined:'2025-05-12', prepScore:63, lastActive:'1 week ago', gifted:false, agentId:'AG002', status:'Active' },
+            { id:'HW012', name:'Randall Hicks', address:'74 Sand Dollar Cir, Wilmington, NC', email:'r.hicks@email.com', phone:'(910) 555-1012', plan:'Pro', joined:'2025-05-18', prepScore:73, lastActive:'4 days ago', gifted:false, agentId:'AG002', status:'Active' },
+            { id:'HW013', name:'Monica Tran', address:'361 Dune Grass Dr, Wilmington, NC', email:'m.tran@email.com', phone:'(910) 555-1013', plan:'Starter', joined:'2025-05-22', prepScore:61, lastActive:'Today', gifted:false, agentId:'AG003', status:'Active' },
+            { id:'HW014', name:'Kenneth Odom', address:'12 Inlet View Ct, Wilmington, NC', email:'k.odom@email.com', phone:'(910) 555-1014', plan:'Pro', joined:'2025-05-25', prepScore:69, lastActive:'Yesterday', gifted:false, agentId:'AG003', status:'Active' },
+            { id:'HW015', name:'Stephanie Poole', address:'498 Marsh Creek Rd, Wilmington, NC', email:'s.poole@email.com', phone:'(910) 555-1015', plan:'Pro', joined:'2025-06-01', prepScore:75, lastActive:'2 days ago', gifted:false, agentId:'AG004', status:'Active' },
+            { id:'HW016', name:'Calvin Drake', address:'156 Surf Ave, Wilmington, NC', email:'c.drake@email.com', phone:'(910) 555-1016', plan:'Pro', joined:'2025-06-09', prepScore:77, lastActive:'Today', gifted:false, agentId:'AG004', status:'Active' },
+            { id:'HW017', name:'Ingrid Sorensen', address:'34 Pelican Path, Wilmington, NC', email:'i.sorensen@email.com', phone:'(910) 555-1017', plan:'Starter', joined:'2025-06-15', prepScore:64, lastActive:'3 days ago', gifted:false, agentId:'AG001', status:'Active' },
+            { id:'HW018', name:'Bobby Owens', address:'277 Brackish Bay Rd, Wilmington, NC', email:'b.owens@email.com', phone:'(910) 555-1018', plan:'Pro', joined:'2025-06-20', prepScore:72, lastActive:'Yesterday', gifted:false, agentId:'AG001', status:'Active' },
+            { id:'HW019', name:'Linda Park', address:'9 Shell Cove Ln, Wilmington, NC', email:'l.park@email.com', phone:'(910) 555-1019', plan:'Pro', joined:'2025-01-22', prepScore:83, lastActive:'Today', gifted:false, agentId:'AG002', status:'Active' },
+            { id:'HW020', name:'Tyrone Bell', address:'467 Wharf St, Wilmington, NC', email:'t.bell@email.com', phone:'(910) 555-1020', plan:'Pro', joined:'2025-01-30', prepScore:80, lastActive:'Today', gifted:false, agentId:'AG002', status:'Active' },
+        ];
+
+        let DOC_REQUESTS = [
+            { id:'DR001', homeownerId:'HW001', homeowner:'Caroline Marsh', agentId:'AG001', agent:'Jennifer Caldwell', docType:'Roof Inspection Report', requested:'2026-05-28', status:'Fulfilled', notes:'Needed for renewal review' },
+            { id:'DR002', homeownerId:'HW002', homeowner:'Darnell Foster', agentId:'AG001', agent:'Jennifer Caldwell', docType:'Home Inventory Photos', requested:'2026-05-27', status:'Pending', notes:'Annual inventory update' },
+            { id:'DR003', homeownerId:'HW003', homeowner:'Patricia Nguyen', agentId:'AG002', agent:'Robert Kim', docType:'HVAC Service History', requested:'2026-05-26', status:'Fulfilled', notes:'' },
+            { id:'DR004', homeownerId:'HW005', homeowner:'Tanya Osei', agentId:'AG003', agent:'Maria Santos', docType:'Animal Evacuation Plan', requested:'2026-05-25', status:'Pending', notes:'Wildfire season prep' },
+            { id:'DR005', homeownerId:'HW009', homeowner:'Alicia Brennan', agentId:'AG001', agent:'Jennifer Caldwell', docType:'Wildfire Mitigation Docs', requested:'2026-05-24', status:'Fulfilled', notes:'' },
+            { id:'DR006', homeownerId:'HW010', homeowner:'Derek Chung', agentId:'AG001', agent:'Jennifer Caldwell', docType:'SmokeCO Compliance', requested:'2026-05-22', status:'Expired', notes:'Not submitted in time' },
+            { id:'DR007', homeownerId:'HW012', homeowner:'Randall Hicks', agentId:'AG002', agent:'Robert Kim', docType:'Electrical Inspection', requested:'2026-05-20', status:'Pending', notes:'' },
+            { id:'DR008', homeownerId:'HW015', homeowner:'Stephanie Poole', agentId:'AG004', agent:'Thomas Wright', docType:'Flood Zone Certificate', requested:'2026-05-18', status:'Fulfilled', notes:'Coastal property' },
+        ];
+
+        let MESSAGES = [
+            { id:'MSG001', from:'HomeHub Admin', to:'Agency', subject:'Q2 Partnership Review Scheduled', body:'Your Q2 performance review is scheduled for June 10. Please prepare your gifted account report.', date:'2026-05-28', read:false, type:'inbox' },
+            { id:'MSG002', from:'Caroline Marsh', to:'Agent', subject:'Question about my prep score', body:'Hi, I noticed my prep score dropped from 84 to 81. Can you help me understand why?', date:'2026-05-27', read:false, type:'inbox' },
+            { id:'MSG003', from:'HomeHub Admin', to:'Agency', subject:'New feature: Bulk gifting now available', body:'You can now gift multiple accounts at once from the Gift Account screen.', date:'2026-05-25', read:true, type:'inbox' },
+            { id:'MSG004', from:'Agency', to:'Darnell Foster', subject:'Your home inventory request', body:'Hi Darnell, please upload your updated home inventory photos at your earliest convenience.', date:'2026-05-27', read:true, type:'sent' },
+            { id:'MSG005', from:'Agency', to:'HomeHub Admin', subject:'Quota increase request', body:'We have been consistently hitting our gifted account quota. Could we discuss upgrading to Enterprise?', date:'2026-05-26', read:true, type:'sent' },
+        ];
+
+        // ===== STATE =====
+        let currentRole = 'single-agent';
+        let currentScreen = 'dashboard';
+        let currentPageSize = 25;
+        let currentPage = 1;
+        let currentFilter = 'all';
+        let currentMessageTab = 'inbox';
+
+        // ===== UTILITY FUNCTIONS =====
+        function getAgentName(agentId) {
+            const agent = AGENTS.find(a => a.id === agentId);
+            return agent ? agent.name : 'N/A';
+        }
+
+        function getPrepScoreBadgeClass(score) {
+            if (score >= 75) return 'badge-success';
+            if (score >= 65) return 'badge-warning';
+            return 'badge-danger';
+        }
+
+        function getActivityBadgeClass(activity) {
+            if (activity === 'High') return 'badge-success';
+            if (activity === 'Medium') return 'badge-warning';
+            return 'badge-danger';
+        }
+
+        function getStatusBadgeClass(status) {
+            if (status === 'Fulfilled') return 'badge-success';
+            if (status === 'Pending') return 'badge-warning';
+            if (status === 'Expired') return 'badge-danger';
+            return 'badge-primary';
+        }
+
+        function toast(msg, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = msg;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function goToScreen(name) {
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(s => s.classList.remove('active'));
+            const screen = document.getElementById(`screen-${name}`);
+            if (screen) {
+                screen.classList.add('active');
+                currentScreen = name;
+                updatePageTitle();
+            }
+        }
+
+        function updatePageTitle() {
+            const titles = {
+                'dashboard': 'Dashboard',
+                'homeowners': 'My Homeowners',
+                'gift': 'Gift Account',
+                'documents': 'Document Requests',
+                'performance': 'Performance',
+                'messages': 'Messages',
+                'settings': 'Settings',
+                'agents': 'My Agents',
+                'agency-overview': 'Agency Overview'
+            };
+            document.getElementById('pageTitle').textContent = titles[currentScreen] || 'Dashboard';
+        }
+
+        // ===== RENDER FUNCTIONS =====
+        function renderSidebarNav() {
+            const nav = document.getElementById('sidebarNav');
+            nav.innerHTML = '';
+
+            if (currentRole === 'single-agent') {
+                const items = [
+                    { screen: 'dashboard', label: 'Dashboard', icon: 'fa-home' },
+                    { screen: 'homeowners', label: 'My Homeowners', icon: 'fa-users' },
+                    { screen: 'gift', label: 'Gift Account', icon: 'fa-gift' },
+                    { screen: 'documents', label: 'Document Requests', icon: 'fa-file-alt' },
+                    { screen: 'performance', label: 'Performance', icon: 'fa-chart-line' },
+                    { screen: 'messages', label: 'Messages', icon: 'fa-envelope', badge: getUnreadCount() },
+                    { screen: 'settings', label: 'Settings', icon: 'fa-cog' },
+                ];
+
+                items.forEach(item => {
+                    const section = document.createElement('div');
+                    section.className = 'nav-section';
+                    const itemEl = document.createElement('div');
+                    itemEl.className = `nav-item ${item.screen === currentScreen ? 'active' : ''}`;
+                    itemEl.onclick = () => goToScreen(item.screen);
+                    itemEl.innerHTML = `
+                        <i class="fas ${item.icon}"></i>
+                        <span>${item.label}</span>
+                        ${item.badge ? `<span class="badge">${item.badge}</span>` : ''}
+                    `;
+                    section.appendChild(itemEl);
+                    nav.appendChild(section);
+                });
+            } else {
+                const sections = [
+                    {
+                        title: 'OVERVIEW',
+                        items: [
+                            { screen: 'dashboard', label: 'Dashboard', icon: 'fa-home' },
+                            { screen: 'agency-overview', label: 'Agency Overview', icon: 'fa-building' },
+                        ]
+                    },
+                    {
+                        title: 'CLIENTS',
+                        items: [
+                            { screen: 'homeowners', label: 'My Homeowners', icon: 'fa-users' },
+                            { screen: 'gift', label: 'Gift Account', icon: 'fa-gift' },
+                            { screen: 'documents', label: 'Document Requests', icon: 'fa-file-alt' },
+                        ]
+                    },
+                    {
+                        title: 'TEAM',
+                        items: [
+                            { screen: 'agents', label: 'My Agents', icon: 'fa-user-tie' },
+                        ]
+                    },
+                    {
+                        title: 'INSIGHTS',
+                        items: [
+                            { screen: 'performance', label: 'Performance', icon: 'fa-chart-line' },
+                        ]
+                    },
+                    {
+                        title: 'COMMUNICATION',
+                        items: [
+                            { screen: 'messages', label: 'Messages', icon: 'fa-envelope', badge: getUnreadCount() },
+                        ]
+                    },
+                    {
+                        title: 'ACCOUNT',
+                        items: [
+                            { screen: 'settings', label: 'Settings', icon: 'fa-cog' },
+                        ]
+                    },
+                ];
+
+                sections.forEach(section => {
+                    const sectionEl = document.createElement('div');
+                    sectionEl.className = 'nav-section';
+                    if (section.title) {
+                        const titleEl = document.createElement('span');
+                        titleEl.className = 'nav-section-title';
+                        titleEl.textContent = section.title;
+                        sectionEl.appendChild(titleEl);
+                    }
+                    section.items.forEach(item => {
+                        const itemEl = document.createElement('div');
+                        itemEl.className = `nav-item ${item.screen === currentScreen ? 'active' : ''}`;
+                        itemEl.onclick = () => goToScreen(item.screen);
+                        itemEl.innerHTML = `
+                            <i class="fas ${item.icon}"></i>
+                            <span>${item.label}</span>
+                            ${item.badge ? `<span class="badge">${item.badge}</span>` : ''}
+                        `;
+                        sectionEl.appendChild(itemEl);
+                    });
+                    nav.appendChild(sectionEl);
+                });
+            }
+        }
+
+        function getUnreadCount() {
+            return MESSAGES.filter(m => !m.read).length;
+        }
+
+        function updateNotificationBadge() {
+            const unreadCount = getUnreadCount();
+            const badge = document.getElementById('notificationBadge');
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function renderAllScreens() {
+            const container = document.getElementById('screensContainer');
+            container.innerHTML = `
+                ${renderDashboardScreen()}
+                ${renderHomeownersScreen()}
+                ${renderGiftScreen()}
+                ${renderDocumentsScreen()}
+                ${renderPerformanceScreen()}
+                ${renderMessagesScreen()}
+                ${renderSettingsScreen()}
+                ${currentRole === 'agency-admin' ? renderAgentsScreen() : ''}
+                ${currentRole === 'agency-admin' ? renderAgencyOverviewScreen() : ''}
+            `;
+        }
+
+        function renderDashboardScreen() {
+            const gifted = HOMEOWNERS.filter(h => h.gifted).length;
+            const avgPrepScore = Math.round(HOMEOWNERS.reduce((sum, h) => sum + h.prepScore, 0) / HOMEOWNERS.length);
+            const docCount = DOC_REQUESTS.length;
+            const unreadMessages = MESSAGES.filter(m => !m.read).length;
+
+            let kpiTiles = `
+                <div class="kpi-card">
+                    <div class="kpi-label">Gifted MTD</div>
+                    <div class="kpi-value">${gifted}</div>
+                    <div class="kpi-subtext">${gifted}/${AGENCY.quota} quota</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Homeowners</div>
+                    <div class="kpi-value">${HOMEOWNERS.length}</div>
+                    <div class="kpi-subtext">All statuses</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Avg Prep Score</div>
+                    <div class="kpi-value">${avgPrepScore}</div>
+                    <div class="kpi-subtext">out of 100</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Doc Requests (30d)</div>
+                    <div class="kpi-value">${docCount}</div>
+                    <div class="kpi-subtext">${DOC_REQUESTS.filter(d => d.status === 'Pending').length} pending</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Quota Used</div>
+                    <div class="kpi-value">${Math.round((gifted / AGENCY.quota) * 100)}%</div>
+                    <div class="kpi-subtext">${gifted} of ${AGENCY.quota}</div>
+                </div>
+            `;
+
+            if (currentRole === 'agency-admin') {
+                kpiTiles += `
+                    <div class="kpi-card">
+                        <div class="kpi-label">Agents</div>
+                        <div class="kpi-value">${AGENTS.length}</div>
+                        <div class="kpi-subtext">on team</div>
+                    </div>
+                `;
+            }
+
+            const recentActivity = [
+                { icon: 'fa-gift', text: 'Jennifer Caldwell gifted account to Caroline Marsh', date: 'Today 2:30 PM' },
+                { icon: 'fa-file-check', text: 'Document request fulfilled: Roof Inspection Report', date: 'Today 10:15 AM' },
+                { icon: 'fa-user-plus', text: 'New homeowner: Monica Tran added to platform', date: 'Yesterday 4:45 PM' },
+                { icon: 'fa-chart-line', text: 'Prep score increased to 83 for Linda Park', date: 'Yesterday 2:20 PM' },
+                { icon: 'fa-envelope', text: 'Message from HomeHub Admin about Q2 review', date: '2 days ago' },
+                { icon: 'fa-clock', text: 'Document request expiring: SmokeCO Compliance', date: '3 days ago' },
+                { icon: 'fa-star', text: 'New 5-star review from Tanya Osei', date: '4 days ago' },
+                { icon: 'fa-sync', text: 'Reminder sent for HVAC Service History', date: '5 days ago' },
+                { icon: 'fa-home', text: 'Property information updated for Derek Chung', date: '1 week ago' },
+                { icon: 'fa-thumbs-up', text: 'Activation milestone: 80% homeowner activation', date: '1 week ago' },
+            ];
+
+            return `
+                <div id="screen-dashboard" class="screen active">
+                    ${unreadMessages > 0 ? `
+                        <div class="unread-banner">
+                            <i class="fas fa-bell"></i>
+                            You have ${unreadMessages} unread message${unreadMessages > 1 ? 's' : ''}.
+                        </div>
+                    ` : ''}
+
+                    <div class="card">
+                        <div class="kpi-grid">${kpiTiles}</div>
+                    </div>
+
+                    <div class="card" style="margin-top: 30px;">
+                        <h3 class="card-title" style="margin-bottom: 20px;">Quick Actions</h3>
+                        <div class="quick-actions">
+                            <div class="quick-action-btn" onclick="goToScreen('gift')">
+                                <i class="fas fa-gift"></i>
+                                <span>Gift Account</span>
+                            </div>
+                            <div class="quick-action-btn" onclick="openModal('newDocModal')">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Request Document</span>
+                            </div>
+                            <div class="quick-action-btn" onclick="goToScreen('performance')">
+                                <i class="fas fa-chart-line"></i>
+                                <span>View Leaderboard</span>
+                            </div>
+                            <div class="quick-action-btn" onclick="toast('Support team contacted', 'info')">
+                                <i class="fas fa-headset"></i>
+                                <span>Contact Support</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top: 30px;">
+                        <h3 class="card-title" style="margin-bottom: 20px;">Recent Activity</h3>
+                        <div class="activity-feed">
+                            ${recentActivity.map(item => `
+                                <div class="activity-item">
+                                    <div class="activity-icon"><i class="fas ${item.icon}"></i></div>
+                                    <div class="activity-content">
+                                        <div class="activity-text">${item.text}</div>
+                                        <div class="activity-date">${item.date}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderHomeownersScreen() {
+            return `
+                <div id="screen-homeowners" class="screen">
+                    <div class="card">
+                        <div class="filter-bar">
+                            <div class="filter-input">
+                                <input type="text" id="homeownerSearch" placeholder="Search by name or address..." onkeyup="filterHomeowners()">
+                            </div>
+                            ${currentRole === 'agency-admin' ? `
+                                <div class="filter-select">
+                                    <select id="agentFilter" onchange="filterHomeowners()">
+                                        <option value="">All Agents</option>
+                                        ${AGENTS.map(a => `<option value="${a.id}">${a.name}</option>`).join('')}
+                                    </select>
+                                </div>
+                            ` : ''}
+                            <div class="filter-select">
+                                <select id="giftedFilter" onchange="filterHomeowners()">
+                                    <option value="">All</option>
+                                    <option value="gifted">Gifted Only</option>
+                                    <option value="not-gifted">Not Gifted</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="table-wrapper">
+                            <table id="homeownersTable">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Address</th>
+                                        ${currentRole === 'agency-admin' ? '<th>Agent</th>' : ''}
+                                        <th>Plan</th>
+                                        <th>Prep Score</th>
+                                        <th>Last Active</th>
+                                        <th style="width: 80px;">Status</th>
+                                        <th style="width: 60px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="homeownersTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="pagination">
+                            <label>Show per page:</label>
+                            <select id="pageSizeSelect" onchange="updatePageSize(this.value)">
+                                <option value="10">10</option>
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                                <option value="">All</option>
+                            </select>
+                            <button class="pagination-button" onclick="previousPage()">← Previous</button>
+                            <span id="pageInfo">Page 1</span>
+                            <button class="pagination-button" onclick="nextPage()">Next →</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function filterHomeowners() {
+            currentPage = 1;
+            renderHomeownersTable();
+        }
+
+        function renderHomeownersTable() {
+            const search = document.getElementById('homeownerSearch')?.value || '';
+            const agentFilter = document.getElementById('agentFilter')?.value || '';
+            const giftedFilter = document.getElementById('giftedFilter')?.value || '';
+
+            let filtered = HOMEOWNERS.filter(h => {
+                const matchSearch = h.name.toLowerCase().includes(search.toLowerCase()) ||
+                                  h.address.toLowerCase().includes(search.toLowerCase());
+                const matchAgent = !agentFilter || h.agentId === agentFilter;
+                const matchGifted = !giftedFilter || (giftedFilter === 'gifted' ? h.gifted : !h.gifted);
+                return matchSearch && matchAgent && matchGifted;
+            });
+
+            const pageSize = currentPageSize || filtered.length;
+            const start = (currentPage - 1) * pageSize;
+            const paginated = filtered.slice(start, start + pageSize);
+            const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+
+            const tbody = document.getElementById('homeownersTableBody');
+            tbody.innerHTML = paginated.map(h => `
+                <tr onclick="showHomeownerDetail('${h.id}')">
+                    <td><strong>${h.name}</strong></td>
+                    <td>${h.address}</td>
+                    ${currentRole === 'agency-admin' ? `<td>${getAgentName(h.agentId)}</td>` : ''}
+                    <td><span class="badge badge-primary">${h.plan}</span></td>
+                    <td><span class="badge ${getPrepScoreBadgeClass(h.prepScore)}">${h.prepScore}</span></td>
+                    <td>${h.lastActive}</td>
+                    <td>${h.gifted ? '<span class="badge badge-gifted">Gifted</span>' : '<span class="badge" style="background: #f0f0f0; color: #666;">Regular</span>'}</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); showHomeownerDetail('${h.id}')"><i class="fas fa-eye"></i></button></td>
+                </tr>
+            `).join('');
+
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+        }
+
+        function showHomeownerDetail(id) {
+            const hw = HOMEOWNERS.find(h => h.id === id);
+            if (!hw) return;
+
+            const body = document.getElementById('homeownerModalBody');
+            body.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <div class="text-muted">Name</div>
+                        <div class="text-bold">${hw.name}</div>
+                    </div>
+                    <div>
+                        <div class="text-muted">Address</div>
+                        <div class="text-bold">${hw.address}</div>
+                    </div>
+                    <div>
+                        <div class="text-muted">Email</div>
+                        <div class="text-bold">${hw.email}</div>
+                    </div>
+                    <div>
+                        <div class="text-muted">Phone</div>
+                        <div class="text-bold">${hw.phone}</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <div class="text-muted">Plan</div>
+                            <div class="text-bold">${hw.plan}</div>
+                        </div>
+                        <div>
+                            <div class="text-muted">Prep Score</div>
+                            <div class="text-bold">${hw.prepScore}/100</div>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <div class="text-muted">Member Since</div>
+                            <div class="text-bold">${hw.joined}</div>
+                        </div>
+                        <div>
+                            <div class="text-muted">Last Active</div>
+                            <div class="text-bold">${hw.lastActive}</div>
+                        </div>
+                    </div>
+                    ${currentRole === 'agency-admin' ? `
+                        <div>
+                            <div class="text-muted">Assigned Agent</div>
+                            <div class="text-bold">${getAgentName(hw.agentId)}</div>
+                        </div>
+                    ` : ''}
+                    <div>
+                        <div class="text-muted">Status</div>
+                        <div><span class="badge ${hw.gifted ? 'badge-gifted' : 'badge-primary'}">${hw.gifted ? 'Gifted Account' : 'Regular Account'}</span></div>
+                    </div>
+                    <div>
+                        <div class="text-muted">Recent Documents</div>
+                        <div>
+                            ${DOC_REQUESTS.filter(d => d.homeownerId === id).slice(0, 3).map(d => `
+                                <div style="font-size: 12px; padding: 8px 0; border-bottom: 1px solid var(--border);">
+                                    ${d.docType} - <span class="badge ${getStatusBadgeClass(d.status)}">${d.status}</span>
+                                </div>
+                            `).join('') || '<div style="font-size: 12px; color: var(--text-secondary);">No recent requests</div>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+            openModal('homeownerModal');
+        }
+
+        function updatePageSize(size) {
+            currentPageSize = size ? parseInt(size) : HOMEOWNERS.length;
+            currentPage = 1;
+            renderHomeownersTable();
+        }
+
+        function nextPage() {
+            const pageSize = currentPageSize || HOMEOWNERS.length;
+            const totalPages = Math.ceil(HOMEOWNERS.length / pageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderHomeownersTable();
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderHomeownersTable();
+            }
+        }
+
+        function renderGiftScreen() {
+            return `
+                <div id="screen-gift" class="screen">
+                    <div class="column-2">
+                        <div class="card">
+                            <h3 class="card-title" style="margin-bottom: 20px;">Gift HomeHub Account</h3>
+                            <form onsubmit="submitGift(event)">
+                                <div class="form-group">
+                                    <label for="giftName">Homeowner Name</label>
+                                    <input type="text" id="giftName" placeholder="John Smith" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="giftEmail">Email Address</label>
+                                    <input type="email" id="giftEmail" placeholder="john@email.com" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="giftPhone">Phone</label>
+                                    <input type="tel" id="giftPhone" placeholder="(555) 000-0000" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="giftAddress">Property Address</label>
+                                    <input type="text" id="giftAddress" placeholder="123 Main St, City, State" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="giftPlan">Plan</label>
+                                    <select id="giftPlan" required>
+                                        <option value="">Select a plan</option>
+                                        <option value="Starter">Starter</option>
+                                        <option value="Pro">Pro</option>
+                                    </select>
+                                </div>
+                                ${currentRole === 'agency-admin' ? `
+                                    <div class="form-group">
+                                        <label for="giftAgent">Assign to Agent</label>
+                                        <select id="giftAgent" required>
+                                            <option value="">Select an agent</option>
+                                            ${AGENTS.map(a => `<option value="${a.id}">${a.name}</option>`).join('')}
+                                        </select>
+                                    </div>
+                                ` : ''}
+                                <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 10px;">
+                                    <i class="fas fa-check"></i> Confirm Gift
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="card-title" style="margin-bottom: 20px;">Quota Status</h3>
+                            <div style="display: flex; flex-direction: column; gap: 20px;">
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                        <span class="text-bold">Gifted Accounts</span>
+                                        <span class="text-bold">${HOMEOWNERS.filter(h => h.gifted).length}/${AGENCY.quota}</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar-fill" style="width: ${(HOMEOWNERS.filter(h => h.gifted).length / AGENCY.quota) * 100}%"></div>
+                                    </div>
+                                </div>
+                                <div class="stat-group">
+                                    <div class="stat-item">
+                                        <div class="stat-number">${AGENCY.quota - HOMEOWNERS.filter(h => h.gifted).length}</div>
+                                        <div class="stat-label">Remaining</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-number">${Math.round((HOMEOWNERS.filter(h => h.gifted).length / AGENCY.quota) * 100)}%</div>
+                                        <div class="stat-label">Used</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function submitGift(event) {
+            event.preventDefault();
+            const name = document.getElementById('giftName').value;
+            const email = document.getElementById('giftEmail').value;
+            const phone = document.getElementById('giftPhone').value;
+            const address = document.getElementById('giftAddress').value;
+            const plan = document.getElementById('giftPlan').value;
+            const agentId = document.getElementById('giftAgent')?.value || 'AG001';
+
+            const newHomeowner = {
+                id: 'HW' + (HOMEOWNERS.length + 1).toString().padStart(3, '0'),
+                name, email, phone,
+                address,
+                plan,
+                joined: new Date().toLocaleDateString(),
+                prepScore: 50,
+                lastActive: 'Just now',
+                gifted: true,
+                agentId,
+                status: 'Active'
+            };
+
+            HOMEOWNERS.push(newHomeowner);
+            event.target.reset();
+            toast(`Successfully gifted account to ${name}`, 'success');
+            goToScreen('homeowners');
+            renderAllScreens();
+            renderSidebarNav();
+        }
+
+        function renderDocumentsScreen() {
+            return `
+                <div id="screen-documents" class="screen">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3 class="card-title">Document Requests</h3>
+                            <button class="btn btn-primary" onclick="openModal('newDocModal')">
+                                <i class="fas fa-plus"></i> New Request
+                            </button>
+                        </div>
+
+                        <div class="filter-tabs">
+                            <div class="filter-tab ${currentFilter === 'all' ? 'active' : ''}" onclick="setDocFilter('all')">All</div>
+                            <div class="filter-tab ${currentFilter === 'pending' ? 'active' : ''}" onclick="setDocFilter('pending')">Pending</div>
+                            <div class="filter-tab ${currentFilter === 'fulfilled' ? 'active' : ''}" onclick="setDocFilter('fulfilled')">Fulfilled</div>
+                            <div class="filter-tab ${currentFilter === 'expired' ? 'active' : ''}" onclick="setDocFilter('expired')">Expired</div>
+                        </div>
+
+                        <div class="table-wrapper">
+                            <table id="docsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Homeowner</th>
+                                        <th>Agent</th>
+                                        <th>Document Type</th>
+                                        <th>Status</th>
+                                        <th style="width: 60px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="docsTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function setDocFilter(filter) {
+            currentFilter = filter;
+            renderDocsTable();
+            document.querySelectorAll('.filter-tab').forEach((tab, i) => {
+                const filters = ['all', 'pending', 'fulfilled', 'expired'];
+                tab.classList.toggle('active', filters[i] === filter);
+            });
+        }
+
+        function renderDocsTable() {
+            let filtered = DOC_REQUESTS;
+            if (currentFilter !== 'all') {
+                filtered = DOC_REQUESTS.filter(d => d.status.toLowerCase() === currentFilter);
+            }
+
+            const tbody = document.getElementById('docsTableBody');
+            tbody.innerHTML = filtered.map(d => `
+                <tr onclick="showDocRequestDetail('${d.id}')">
+                    <td>${d.requested}</td>
+                    <td><strong>${d.homeowner}</strong></td>
+                    <td>${d.agent}</td>
+                    <td>${d.docType}</td>
+                    <td><span class="badge ${getStatusBadgeClass(d.status)}">${d.status}</span></td>
+                    <td><button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); showDocRequestDetail('${d.id}')"><i class="fas fa-eye"></i></button></td>
+                </tr>
+            `).join('');
+        }
+
+        function showDocRequestDetail(id) {
+            const doc = DOC_REQUESTS.find(d => d.id === id);
+            if (!doc) return;
+
+            const body = document.getElementById('docRequestModalBody');
+            body.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <div class="text-muted">Document Type</div>
+                        <div class="text-bold">${doc.docType}</div>
+                    </div>
+                    <div>
+                        <div class="text-muted">Homeowner</div>
+                        <div class="text-bold">${doc.homeowner}</div>
+                    </div>
+                    <div>
+                        <div class="text-muted">Agent</div>
+                        <div class="text-bold">${doc.agent}</div>
+                    </div>
+                    <div>
+                        <div class="text-muted">Requested Date</div>
+                        <div class="text-bold">${doc.requested}</div>
+                    </div>
+                    <div>
+                        <div class="text-muted">Status</div>
+                        <div><span class="badge ${getStatusBadgeClass(doc.status)}">${doc.status}</span></div>
+                    </div>
+                    ${doc.notes ? `
+                        <div>
+                            <div class="text-muted">Notes</div>
+                            <div>${doc.notes}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            openModal('docRequestModal');
+        }
+
+        function submitNewDocRequest() {
+            const homeownerId = document.getElementById('docHomeownerSelect').value;
+            const docType = document.getElementById('docTypeSelect').value;
+            const notes = document.getElementById('docNotes').value;
+
+            if (!homeownerId || !docType) {
+                toast('Please fill in all required fields', 'warning');
+                return;
+            }
+
+            const homeowner = HOMEOWNERS.find(h => h.id === homeownerId);
+            const agent = AGENTS.find(a => a.id === homeowner.agentId);
+
+            const newDoc = {
+                id: 'DR' + (DOC_REQUESTS.length + 1).toString().padStart(3, '0'),
+                homeownerId,
+                homeowner: homeowner.name,
+                agentId: homeowner.agentId,
+                agent: agent.name,
+                docType,
+                requested: new Date().toISOString().split('T')[0],
+                status: 'Pending',
+                notes
+            };
+
+            DOC_REQUESTS.push(newDoc);
+            closeModal('newDocModal');
+            document.getElementById('docHomeownerSelect').value = '';
+            document.getElementById('docTypeSelect').value = '';
+            document.getElementById('docNotes').value = '';
+            toast(`Document request created for ${homeowner.name}`, 'success');
+            setDocFilter('all');
+        }
+
+        function renderPerformanceScreen() {
+            const gifted = HOMEOWNERS.filter(h => h.gifted).length;
+            const avgPrepScore = Math.round(HOMEOWNERS.reduce((sum, h) => sum + h.prepScore, 0) / HOMEOWNERS.length);
+            const docCompleted = DOC_REQUESTS.filter(d => d.status === 'Fulfilled').length;
+            const agentRank = 3;
+            const totalAgencies = 150;
+
+            if (currentRole === 'single-agent') {
+                return `
+                    <div id="screen-performance" class="screen">
+                        <div class="card">
+                            <h3 class="card-title" style="margin-bottom: 20px;">Your Performance</h3>
+                            <div class="kpi-grid">
+                                <div class="kpi-card">
+                                    <div class="kpi-label">Gifted MTD</div>
+                                    <div class="kpi-value">${gifted}</div>
+                                </div>
+                                <div class="kpi-card">
+                                    <div class="kpi-label">Avg Prep Score</div>
+                                    <div class="kpi-value">${avgPrepScore}</div>
+                                </div>
+                                <div class="kpi-card">
+                                    <div class="kpi-label">Activity Streak</div>
+                                    <div class="kpi-value">12</div>
+                                    <div class="kpi-subtext">days</div>
+                                </div>
+                                <div class="kpi-card">
+                                    <div class="kpi-label">Reviews Completed</div>
+                                    <div class="kpi-value">${docCompleted}</div>
+                                </div>
+                                <div class="kpi-card">
+                                    <div class="kpi-label">Leaderboard Rank</div>
+                                    <div class="kpi-value">#${agentRank}</div>
+                                    <div class="kpi-subtext">of ${totalAgencies}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card" style="margin-top: 30px;">
+                            <h3 class="card-title" style="margin-bottom: 20px;">Gifted Accounts (Last 6 Months)</h3>
+                            <div style="display: flex; align-items: flex-end; gap: 8px; height: 200px; margin: 20px 0;">
+                                ${[2, 3, 4, 3, 5, gifted].map((v, i) => `
+                                    <div style="flex: 1; background: var(--primary); border-radius: 4px; height: ${(v / 5) * 100}%; opacity: ${0.6 + (i * 0.08)};" title="${v} gifted"></div>
+                                `).join('')}
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); margin-top: 10px;">
+                                <span>Dec</span><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div id="screen-performance" class="screen">
+                        <div class="card">
+                            <h3 class="card-title" style="margin-bottom: 20px;">Agency Performance</h3>
+                            <div class="kpi-grid">
+                                <div class="kpi-card">
+                                    <div class="kpi-label">Total Gifted</div>
+                                    <div class="kpi-value">${gifted}</div>
+                                    <div class="kpi-subtext">${gifted}/${AGENCY.quota}</div>
+                                </div>
+                                <div class="kpi-card">
+                                    <div class="kpi-label">Avg Prep Score</div>
+                                    <div class="kpi-value">${avgPrepScore}</div>
+                                </div>
+                                <div class="kpi-card">
+                                    <div class="kpi-label">Activation Rate</div>
+                                    <div class="kpi-value">${AGENCY.activation}%</div>
+                                </div>
+                                <div class="kpi-card">
+                                    <div class="kpi-label">Pending Docs</div>
+                                    <div class="kpi-value">${DOC_REQUESTS.filter(d => d.status === 'Pending').length}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card" style="margin-top: 30px;">
+                            <h3 class="card-title" style="margin-bottom: 20px;">Agent Leaderboard</h3>
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Rank</th>
+                                            <th>Agent Name</th>
+                                            <th>Homeowners</th>
+                                            <th>Gifted</th>
+                                            <th>Avg Prep</th>
+                                            <th>Activity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${AGENTS.map((a, i) => `
+                                            <tr>
+                                                <td><strong>#${i + 1}</strong></td>
+                                                <td>${a.name}</td>
+                                                <td>${a.homeowners}</td>
+                                                <td>${a.gifted}</td>
+                                                <td><span class="badge ${getPrepScoreBadgeClass(a.prepScore)}">${a.prepScore}</span></td>
+                                                <td><span class="badge ${getActivityBadgeClass(a.activity)}">${a.activity}</span></td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderMessagesScreen() {
+            return `
+                <div id="screen-messages" class="screen">
+                    <div class="card" style="display: grid; grid-template-columns: 300px 1fr; gap: 20px; min-height: 500px;">
+                        <div style="border-right: 1px solid var(--border); display: flex; flex-direction: column;">
+                            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                                <div class="filter-tab ${currentMessageTab === 'inbox' ? 'active' : ''}" onclick="switchMessageTab('inbox')" style="flex: 1; border: none; border-bottom: 2px solid transparent;">Inbox</div>
+                                <div class="filter-tab ${currentMessageTab === 'sent' ? 'active' : ''}" onclick="switchMessageTab('sent')" style="flex: 1; border: none; border-bottom: 2px solid transparent;">Sent</div>
+                            </div>
+                            <div id="messageList" style="flex: 1; overflow-y: auto;"></div>
+                            <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="openModal('composeModal')">
+                                <i class="fas fa-pencil"></i> Compose
+                            </button>
+                        </div>
+
+                        <div id="messagePreview" style="display: flex; flex-direction: column; gap: 15px;">
+                            <p style="color: var(--text-secondary);">Select a message to view</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function switchMessageTab(tab) {
+            currentMessageTab = tab;
+            renderMessagesScreen();
+            renderAllScreens();
+            renderMessageList();
+        }
+
+        function renderMessageList() {
+            const filtered = MESSAGES.filter(m => m.type === currentMessageTab);
+            const list = document.getElementById('messageList');
+            list.innerHTML = filtered.map(m => `
+                <div onclick="showMessagePreview('${m.id}')" style="padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; background: ${!m.read ? 'var(--bg-secondary)' : 'transparent'}; transition: background 0.2s;">
+                    <div style="display: flex; align-items: flex-start; gap: 10px;">
+                        <div style="width: 8px; height: 8px; border-radius: 50%; background: ${!m.read ? 'var(--primary)' : 'transparent'}; margin-top: 5px; flex-shrink: 0;"></div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 600; font-size: 12px; color: var(--text);">${m.from}</div>
+                            <div style="font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${m.subject}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showMessagePreview(id) {
+            const msg = MESSAGES.find(m => m.id === id);
+            if (!msg) return;
+
+            msg.read = true;
+            updateNotificationBadge();
+            renderSidebarNav();
+
+            const preview = document.getElementById('messagePreview');
+            preview.innerHTML = `
+                <div>
+                    <h3 style="margin-bottom: 5px;">${msg.subject}</h3>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 15px;">
+                        From: <strong>${msg.from}</strong> | ${msg.date}
+                    </div>
+                </div>
+                <div style="background: var(--bg-secondary); padding: 15px; border-radius: 8px; line-height: 1.6;">
+                    ${msg.body}
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="openModal('composeModal')">
+                        <i class="fas fa-reply"></i> Reply
+                    </button>
+                    <button class="btn btn-secondary" onclick="deleteMessage('${id}')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            `;
+        }
+
+        function deleteMessage(id) {
+            MESSAGES = MESSAGES.filter(m => m.id !== id);
+            updateNotificationBadge();
+            document.getElementById('messagePreview').innerHTML = '<p style="color: var(--text-secondary);">Select a message to view</p>';
+            toast('Message deleted', 'info');
+            renderMessageList();
+        }
+
+        function submitMessage() {
+            const to = document.getElementById('composeTo').value;
+            const subject = document.getElementById('composeSubject').value;
+            const body = document.getElementById('composeBody').value;
+
+            if (!to || !subject || !body) {
+                toast('Please fill in all fields', 'warning');
+                return;
+            }
+
+            const newMsg = {
+                id: 'MSG' + (MESSAGES.length + 1).toString().padStart(3, '0'),
+                from: 'Agency',
+                to: to,
+                subject,
+                body,
+                date: new Date().toISOString().split('T')[0],
+                read: true,
+                type: 'sent'
+            };
+
+            MESSAGES.push(newMsg);
+            closeModal('composeModal');
+            document.getElementById('composeTo').value = '';
+            document.getElementById('composeSubject').value = '';
+            document.getElementById('composeBody').value = '';
+            toast('Message sent successfully', 'success');
+        }
+
+        function renderSettingsScreen() {
+            return `
+                <div id="screen-settings" class="screen">
+                    <div class="column-2">
+                        <div class="card">
+                            <h3 class="card-title" style="margin-bottom: 20px;">Profile Settings</h3>
+                            <div class="form-group">
+                                <label for="settingsName">Full Name</label>
+                                <input type="text" id="settingsName" value="Jennifer Caldwell">
+                            </div>
+                            <div class="form-group">
+                                <label for="settingsEmail">Email Address</label>
+                                <input type="email" id="settingsEmail" value="j.caldwell@coastalshield.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="settingsPhone">Phone</label>
+                                <input type="tel" id="settingsPhone" value="(910) 555-0142">
+                            </div>
+                            <div class="form-group">
+                                <label for="settingsTitle">Title</label>
+                                <input type="text" id="settingsTitle" value="${currentRole === 'single-agent' ? 'Insurance Agent' : 'Agency Principal'}">
+                            </div>
+                            <button class="btn btn-primary" style="width: 100%;" onclick="saveProfile()">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="card-title" style="margin-bottom: 20px;">Notification Preferences</h3>
+                            <div style="display: flex; flex-direction: column; gap: 15px;">
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                    <input type="checkbox" checked>
+                                    <span>Email for gifted confirmations</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                    <input type="checkbox" checked>
+                                    <span>SMS for doc request updates</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                    <input type="checkbox" checked>
+                                    <span>Weekly performance report</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                    <input type="checkbox" checked>
+                                    <span>Homeowner activity alerts</span>
+                                </label>
+                            </div>
+                            <button class="btn btn-primary" style="width: 100%; margin-top: 20px;" onclick="saveNotifications()">
+                                <i class="fas fa-save"></i> Save Preferences
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title" style="margin-bottom: 20px;">Portal Preferences</h3>
+                        <div class="form-group">
+                            <label for="settingsTheme">Theme</label>
+                            <select id="settingsTheme">
+                                <option value="light">Light</option>
+                                <option value="dark">Dark</option>
+                                <option value="auto">Auto (system preference)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="settingsPageSize">Default Page Size</label>
+                            <select id="settingsPageSize">
+                                <option value="10">10 items</option>
+                                <option value="25" selected>25 items</option>
+                                <option value="50">50 items</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="settingsLanding">Default Landing Screen</label>
+                            <select id="settingsLanding">
+                                <option value="dashboard" selected>Dashboard</option>
+                                <option value="homeowners">My Homeowners</option>
+                                <option value="messages">Messages</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%;" onclick="savePortalPrefs()">
+                            <i class="fas fa-save"></i> Save Preferences
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function saveProfile() {
+            toast('Profile updated successfully', 'success');
+        }
+
+        function saveNotifications() {
+            toast('Notification preferences saved', 'success');
+        }
+
+        function savePortalPrefs() {
+            const pageSize = document.getElementById('settingsPageSize').value;
+            currentPageSize = parseInt(pageSize);
+            toast('Portal preferences saved', 'success');
+        }
+
+        function renderAgentsScreen() {
+            return `
+                <div id="screen-agents" class="screen">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3 class="card-title">My Agents</h3>
+                            <button class="btn btn-primary" onclick="openModal('addAgentModal')">
+                                <i class="fas fa-plus"></i> Add Agent
+                            </button>
+                        </div>
+
+                        <div class="filter-input" style="margin-bottom: 20px;">
+                            <input type="text" id="agentSearch" placeholder="Search agents..." onkeyup="filterAgents()">
+                        </div>
+
+                        <div class="table-wrapper">
+                            <table id="agentsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Homeowners</th>
+                                        <th>Gifted MTD</th>
+                                        <th>Prep Score</th>
+                                        <th>Activity</th>
+                                        <th>Last Login</th>
+                                        <th style="width: 120px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="agentsTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="pagination">
+                            <label>Show per page:</label>
+                            <select id="agentPageSize" onchange="updateAgentPageSize(this.value)">
+                                <option value="10">10</option>
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function filterAgents() {
+            renderAgentsTable();
+        }
+
+        function renderAgentsTable() {
+            const search = document.getElementById('agentSearch')?.value || '';
+            const filtered = AGENTS.filter(a =>
+                a.name.toLowerCase().includes(search.toLowerCase()) ||
+                a.email.toLowerCase().includes(search.toLowerCase())
+            );
+
+            const tbody = document.getElementById('agentsTableBody');
+            tbody.innerHTML = filtered.map(a => `
+                <tr>
+                    <td><strong>${a.name}</strong></td>
+                    <td>${a.email}</td>
+                    <td>${a.phone}</td>
+                    <td>${a.homeowners}</td>
+                    <td>${a.gifted}</td>
+                    <td><span class="badge ${getPrepScoreBadgeClass(a.prepScore)}">${a.prepScore}</span></td>
+                    <td><span class="badge ${getActivityBadgeClass(a.activity)}">${a.activity}</span></td>
+                    <td>${a.lastLogin}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="showAgentDetail('${a.id}')" title="View">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-secondary" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" title="Remove">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showAgentDetail(id) {
+            const agent = AGENTS.find(a => a.id === id);
+            if (!agent) return;
+
+            const assignedHomeowners = HOMEOWNERS.filter(h => h.agentId === id);
+            const body = document.getElementById('agentDetailModalBody');
+            body.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <div class="text-muted">Name</div>
+                            <div class="text-bold">${agent.name}</div>
+                        </div>
+                        <div>
+                            <div class="text-muted">Email</div>
+                            <div class="text-bold">${agent.email}</div>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <div class="text-muted">Phone</div>
+                            <div class="text-bold">${agent.phone}</div>
+                        </div>
+                        <div>
+                            <div class="text-muted">Role</div>
+                            <div class="text-bold">${agent.role}</div>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                        <div style="text-align: center;">
+                            <div class="stat-number">${agent.homeowners}</div>
+                            <div class="stat-label">Homeowners</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div class="stat-number">${agent.gifted}</div>
+                            <div class="stat-label">Gifted</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div class="stat-number">${agent.prepScore}</div>
+                            <div class="stat-label">Avg Prep</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div class="stat-number">${agent.docRequests}</div>
+                            <div class="stat-label">Doc Requests</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-muted">Assigned Homeowners</div>
+                        <div style="margin-top: 10px;">
+                            ${assignedHomeowners.length > 0 ? `
+                                <div style="font-size: 12px;">
+                                    ${assignedHomeowners.map(h => `
+                                        <div style="padding: 8px 0; border-bottom: 1px solid var(--border);">${h.name}</div>
+                                    `).join('')}
+                                </div>
+                            ` : '<div style="color: var(--text-secondary); font-size: 12px;">No homeowners assigned</div>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+            openModal('agentDetailModal');
+        }
+
+        function submitAddAgent() {
+            const name = document.getElementById('agentName').value;
+            const email = document.getElementById('agentEmail').value;
+            const phone = document.getElementById('agentPhone').value;
+            const role = document.getElementById('agentRole').value;
+
+            if (!name || !email || !phone) {
+                toast('Please fill in all required fields', 'warning');
+                return;
+            }
+
+            const newAgent = {
+                id: 'AG' + (AGENTS.length + 1).toString().padStart(3, '0'),
+                name,
+                email,
+                phone,
+                homeowners: 0,
+                gifted: 0,
+                docRequests: 0,
+                prepScore: 70,
+                activity: 'Medium',
+                lastLogin: 'Never',
+                status: 'Active',
+                role
+            };
+
+            AGENTS.push(newAgent);
+            closeModal('addAgentModal');
+            document.getElementById('agentName').value = '';
+            document.getElementById('agentEmail').value = '';
+            document.getElementById('agentPhone').value = '';
+            toast(`Agent ${name} added successfully`, 'success');
+            renderAllScreens();
+            renderSidebarNav();
+        }
+
+        function updateAgentPageSize(size) {
+            renderAgentsTable();
+        }
+
+        function renderAgencyOverviewScreen() {
+            const planFeatures = ['Unlimited homeowner accounts', 'Priority support', 'Custom branding', 'Advanced analytics', 'API access'];
+
+            return `
+                <div id="screen-agency-overview" class="screen">
+                    <div class="column-2">
+                        <div class="card">
+                            <h3 class="card-title" style="margin-bottom: 20px;">Plan Details</h3>
+                            <div style="display: flex; flex-direction: column; gap: 15px;">
+                                <div>
+                                    <div class="text-muted">Current Plan</div>
+                                    <div class="text-bold" style="font-size: 18px;">${AGENCY.plan}</div>
+                                </div>
+                                <div>
+                                    <div class="text-muted">Plan Type</div>
+                                    <div class="text-bold">Multi-Agent Enterprise</div>
+                                </div>
+                                <div>
+                                    <div class="text-muted">Monthly Price</div>
+                                    <div class="text-bold" style="font-size: 18px;">$199/month</div>
+                                </div>
+                                <div>
+                                    <div class="text-muted">Included Features</div>
+                                    <ul style="margin-top: 10px; margin-left: 20px;">
+                                        ${planFeatures.map(f => `<li style="font-size: 13px; margin: 5px 0;">${f}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="card-title" style="margin-bottom: 20px;">Quota Status</h3>
+                            <div style="display: flex; flex-direction: column; gap: 15px;">
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                        <span class="text-bold">Gifted Accounts</span>
+                                        <span>${HOMEOWNERS.filter(h => h.gifted).length}/${AGENCY.quota}</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar-fill" style="width: ${(HOMEOWNERS.filter(h => h.gifted).length / AGENCY.quota) * 100}%"></div>
+                                    </div>
+                                </div>
+                                <div style="background: var(--bg-secondary); padding: 15px; border-radius: 8px; text-align: center;">
+                                    <div style="font-size: 24px; font-weight: 700; color: var(--primary);">${AGENCY.quota - HOMEOWNERS.filter(h => h.gifted).length}</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">accounts remaining</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title" style="margin-bottom: 20px;">Billing Information</h3>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px;">
+                            <div>
+                                <div class="text-muted">Monthly Recurring Revenue</div>
+                                <div class="text-bold" style="font-size: 20px;">$${AGENCY.mrr}</div>
+                            </div>
+                            <div>
+                                <div class="text-muted">Next Invoice Date</div>
+                                <div class="text-bold">June 12, 2026</div>
+                            </div>
+                            <div>
+                                <div class="text-muted">Payment Method</div>
+                                <div class="text-bold">Visa ****4242</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="toast('Update payment method', 'info')">
+                            <i class="fas fa-credit-card"></i> Update Payment Method
+                        </button>
+                    </div>
+
+                    <div class="card" style="margin-top: 30px;">
+                        <h3 class="card-title" style="margin-bottom: 20px;">Agency Information</h3>
+                        <form style="display: flex; flex-direction: column; gap: 15px;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="agencyName">Agency Name</label>
+                                    <input type="text" id="agencyName" value="${AGENCY.name}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="agencyCity">City</label>
+                                    <input type="text" id="agencyCity" value="${AGENCY.city}">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="agencyContact">Contact Name</label>
+                                    <input type="text" id="agencyContact" value="${AGENCY.contact}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="agencyPhone">Phone</label>
+                                    <input type="tel" id="agencyPhone" value="${AGENCY.phone}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="agencyEmail">Email</label>
+                                <input type="email" id="agencyEmail" value="${AGENCY.email}">
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveAgencyInfo()">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        function saveAgencyInfo() {
+            toast('Agency information updated', 'success');
+        }
+
+        // ===== INITIALIZATION =====
+        function init() {
+            // Set up role switcher
+            document.getElementById('roleSelect').addEventListener('change', (e) => {
+                currentRole = e.target.value;
+                currentPage = 1;
+                goToScreen('dashboard');
+                renderAllScreens();
+                renderSidebarNav();
+                updateNotificationBadge();
+            });
+
+            // Set up theme toggle
+            document.getElementById('themeToggle').addEventListener('click', () => {
+                const html = document.documentElement;
+                const isDark = html.getAttribute('data-theme') === 'dark';
+                html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            });
+
+            // Close modals when clicking overlay
+            document.querySelectorAll('.modal-overlay').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.remove('active');
+                    }
+                });
+            });
+
+            // Populate doc homeowner dropdown
+            const docSelect = document.getElementById('docHomeownerSelect');
+            if (docSelect) {
+                HOMEOWNERS.forEach(h => {
+                    const option = document.createElement('option');
+                    option.value = h.id;
+                    option.textContent = h.name;
+                    docSelect.appendChild(option);
+                });
+            }
+
+            // Initial render
+            renderAllScreens();
+            renderSidebarNav();
+            updateNotificationBadge();
+            renderHomeownersTable();
+            renderDocsTable();
+            renderMessageList();
+            renderAgentsTable();
+        }
+
+        // Start app
+        init();
+    </script>
+</body>
+</html>

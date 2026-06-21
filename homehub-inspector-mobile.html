@@ -1,0 +1,3510 @@
+<!--
+================================================================================
+HomeHub Application Suite - homehub-inspector-mobile.html
+================================================================================
+
+TITLE: Homehub Inspector Mobile
+PURPOSE: Home inspector interface for property assessments and reporting
+LAST UPDATED: 2026-05-16
+
+This HTML file is part of the HomeHub platform - a comprehensive property
+management system for homeowners. Single-page application with vanilla JS,
+responsive design, and dark mode support.
+
+================================================================================
+STRUCTURE: <style> CSS | <body> HTML | <script> JavaScript
+================================================================================
+
+CSS VARIABLES: --blue, --green, --orange, --gold (+ light/dark variants)
+RESPONSIVE: Mobile (<768px) | Tablet (768px) | Desktop (1024px+)
+DARK MODE: [data-theme="dark"] selector overrides CSS variables
+
+Key Components:
+  • Sidebar/Navigation (fixed 280px, collapsible on mobile)
+  • Responsive grid/flexbox layouts
+  • Card-based UI components
+  • Modal overlays for forms
+  • Dynamic JavaScript interactions
+
+================================================================================
+QUICK REFERENCE
+================================================================================
+
+CSS Customization:
+  1. Update color variables in :root and [data-theme="dark"]
+  2. Modify font-size and padding for spacing
+  3. Adjust media queries for different breakpoints
+
+JavaScript Patterns:
+  • DOM selection: querySelector, querySelectorAll
+  • Events: addEventListener, event delegation
+  • Storage: localStorage for persistent settings
+  • DOM updates: innerHTML, classList, setAttribute
+
+Testing:
+  ✓ Responsive design (test all breakpoints)
+  ✓ Dark mode toggle
+  ✓ Keyboard navigation
+  ✓ Button/form interactions
+  ✓ Cross-browser compatibility
+
+================================================================================
+For detailed documentation, see sections marked with === throughout the file
+================================================================================
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HomeHub – Inspector Mobile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #E8EDF5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .phone {
+      width: 390px;
+      height: 844px;
+      background: #F8FAFC;
+      border-radius: 44px;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.25), 0 0 0 10px #1a1a2e, 0 0 0 12px #2d2d4e;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .status-bar {
+      background: white;
+      padding: 14px 24px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #1E293B;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .status-bar .notch {
+      width: 100px;
+      height: 26px;
+      background: #1a1a2e;
+      border-radius: 0 0 18px 18px;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .status-icons { display: flex; gap: 6px; align-items: center; }
+
+    .screen-container {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: none;
+      flex-direction: column;
+      background: #F8FAFC;
+      scrollbar-width: none;
+    }
+
+    .screen::-webkit-scrollbar { display: none; }
+    .screen.active { display: flex; }
+
+    .bottom-nav {
+      background: white;
+      border-top: 1px solid #E2E8F0;
+      display: flex;
+      padding: 8px 0 20px;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      padding: 4px 0;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .nav-item i { font-size: 18px; color: #94A3B8; transition: all 0.2s; }
+    .nav-item span { font-size: 9px; color: #94A3B8; font-weight: 500; transition: all 0.2s; }
+    .nav-item.active i, .nav-item.active span { color: #1F3A5F; }
+
+    :root {
+      --blue: #1F3A5F;
+      --blue-dark: #1A3150;
+      --blue-light: #E0F0EA;
+      --orange: #FF9500;
+      --green: #27A570;
+      --red: #C94949;
+      --text: #1E293B;
+      --text-secondary: #64748B;
+      --border: #E2E8F0;
+      --bg: #F8FAFC;
+    }
+
+    .page-header {
+      background: white;
+      padding: 16px 20px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .page-header h2 { font-size: 17px; font-weight: 700; color: var(--text); }
+
+    .back-btn {
+      width: 34px; height: 34px;
+      background: var(--blue-light);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      border: none;
+      color: var(--blue);
+      font-size: 15px;
+    }
+
+    .scroll-content { padding: 16px 20px 24px; flex: 1; overflow-y: auto; }
+
+    /* Dashboard */
+    .dash-header {
+      background: linear-gradient(135deg, #1A3150, #1F3A5F);
+      padding: 20px 20px 28px;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .dash-greeting { font-size: 13px; opacity: 0.8; margin-bottom: 2px; }
+    .dash-name { font-size: 20px; font-weight: 800; margin-bottom: 18px; }
+
+    .quick-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      padding: 0 20px;
+      margin-top: -22px;
+      gap: 10px;
+      z-index: 10;
+      position: relative;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 14px;
+      padding: 12px 10px;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .stat-card:active { transform: scale(0.95); }
+    .stat-val { font-size: 17px; font-weight: 800; color: var(--text); }
+    .stat-lbl { font-size: 10px; color: var(--text-secondary); margin-top: 2px; font-weight: 500; }
+
+    .section-title { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; padding: 16px 20px 8px; }
+
+    .action-card {
+      background: white;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      border: 2px solid var(--border);
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+
+    .action-card:hover { border-color: var(--blue); }
+    .action-card:active { transform: scale(0.98); background: var(--blue-light); border-color: var(--blue); }
+    .action-card i { font-size: 24px; color: var(--blue); }
+    .action-card-title { font-size: 13px; font-weight: 700; color: var(--text); }
+    .action-card-subtitle { font-size: 11px; color: var(--text-secondary); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      text-decoration: none;
+      width: 100%;
+    }
+
+    .btn-primary { background: var(--blue); color: white; }
+    .btn-primary:active { background: var(--blue-dark); }
+    .btn-secondary { background: var(--blue-light); color: var(--blue); }
+    .btn-secondary:active { background: #C8E4DD; }
+    .btn-danger { background: var(--red); color: white; }
+
+    /* Setup Assist Specific */
+    .setup-assist-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+    .setup-header {
+      background: white;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .setup-progress-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .setup-progress-fill {
+      height: 100%;
+      background: var(--blue);
+      transition: width 0.3s;
+    }
+
+    .setup-section-name { font-size: 12px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; }
+    .setup-title { font-size: 16px; font-weight: 700; color: var(--text); margin-top: 6px; }
+
+    .setup-content { padding: 20px; flex: 1; overflow-y: auto; }
+
+    .setup-card {
+      background: white;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+
+    .setup-section-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; display: block; }
+    .form-hint { font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; display: block; }
+
+    .input-field {
+      width: 100%;
+      padding: 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      transition: all 0.2s;
+    }
+
+    .input-field:focus { outline: none; border-color: var(--blue); background: white; }
+
+    .radio-group, .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .radio-btn, .checkbox-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: white;
+    }
+
+    .radio-btn:active, .checkbox-btn:active { background: var(--blue-light); }
+
+    .radio-btn input, .checkbox-btn input {
+      cursor: pointer;
+      width: 18px;
+      height: 18px;
+      accent-color: var(--blue);
+    }
+
+    .radio-label, .checkbox-label {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .photo-upload {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      background: #F5F9F8;
+      transition: all 0.2s;
+      margin-bottom: 12px;
+    }
+
+    .photo-upload:active { background: var(--blue-light); border-color: var(--blue); }
+    .photo-upload i { font-size: 28px; color: var(--blue); margin-bottom: 8px; display: block; }
+    .photo-upload p { font-size: 12px; color: var(--text); font-weight: 600; }
+    .photo-upload span { font-size: 11px; color: var(--text-secondary); display: block; margin-top: 4px; }
+
+    .photo-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .photo-item {
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .photo-remove {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 24px;
+      height: 24px;
+      background: var(--red);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .sticky-footer {
+      position: sticky;
+      bottom: 0;
+      background: white;
+      border-top: 1px solid var(--border);
+      padding: 12px 20px 20px;
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .sticky-footer button {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: none;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-footer-back {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-footer-back:active { background: var(--blue-light); }
+
+    .btn-footer-next {
+      background: var(--blue);
+      color: white;
+    }
+
+    .btn-footer-next:active { background: var(--blue-dark); }
+
+    .warning-box {
+      background: #FEF2F2;
+      border: 1.5px solid #FECACA;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .warning-box i { color: var(--red); font-size: 16px; flex-shrink: 0; }
+    .warning-box p { font-size: 12px; color: var(--text); line-height: 1.4; }
+
+    .success-box {
+      background: #ECFDF5;
+      border: 1.5px solid #86EFAC;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .success-box i { color: var(--green); font-size: 32px; display: block; margin-bottom: 8px; }
+    .success-box p { font-size: 13px; color: var(--text); font-weight: 600; }
+
+    .disclaimer-text {
+      font-size: 11px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      background: #F5F9F8;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+      border-left: 3px solid var(--blue);
+    }
+
+    .review-summary {
+      background: white;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 3px solid var(--blue);
+    }
+
+    .review-summary.incomplete { border-left-color: var(--orange); }
+    .review-summary-label { font-size: 12px; font-weight: 600; color: var(--text); }
+    .review-summary-value { font-size: 12px; color: var(--text-secondary); }
+
+    .section-item {
+      background: white;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 3px solid var(--green);
+    }
+
+    .section-item.incomplete { border-left-color: var(--orange); }
+    .section-item-title { font-size: 12px; font-weight: 600; color: var(--text); }
+    .section-item-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #ECFDF5;
+      color: var(--green);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .section-item.incomplete .section-item-badge {
+      background: #FEF2F2;
+      color: var(--red);
+    }
+
+    .multi-system-list {
+      background: white;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+
+    .system-entry {
+      background: #F5F9F8;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 3px solid var(--blue);
+    }
+
+    .system-entry-info { flex: 1; }
+    .system-entry-name { font-size: 12px; font-weight: 600; color: var(--text); }
+    .system-entry-details { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+    .system-entry-remove {
+      width: 28px;
+      height: 28px;
+      background: #FEF2F2;
+      border: none;
+      border-radius: 6px;
+      color: var(--red);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .add-system-btn {
+      background: var(--blue-light);
+      color: var(--blue);
+      border: 1.5px solid var(--blue-light);
+      padding: 12px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.2s;
+    }
+
+    .add-system-btn:active { background: white; }
+
+    .landing-card {
+      background: white;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      border: 2px solid var(--border);
+      transition: all 0.2s;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .landing-card:hover { border-color: var(--blue); }
+    .landing-card:active { background: var(--blue-light); border-color: var(--blue); }
+    .landing-card i { font-size: 20px; color: var(--blue); margin-top: 2px; flex-shrink: 0; }
+    .landing-card-content { flex: 1; }
+    .landing-card-title { font-size: 13px; font-weight: 700; color: var(--text); }
+    .landing-card-desc { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span>9:41</span>
+      <div class="notch"></div>
+      <div class="status-icons">
+        <i class="fas fa-wifi"></i>
+        <i class="fas fa-battery-full"></i>
+      </div>
+    </div>
+
+    <!-- Screen Container -->
+    <div class="screen-container">
+      <!-- Dashboard Screen -->
+      <div class="screen active" id="dashboardScreen">
+        <div class="dash-header">
+          <div class="dash-greeting">Good Morning,</div>
+          <div class="dash-name">Alex Rivera</div>
+        </div>
+
+        <div class="quick-stats">
+          <div class="stat-card">
+            <div class="stat-val">8</div>
+            <div class="stat-lbl">Properties</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val">12</div>
+            <div class="stat-lbl">Setups</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val">5</div>
+            <div class="stat-lbl">In Progress</div>
+          </div>
+        </div>
+
+        <div class="scroll-content">
+          <div class="section-title">Quick Actions</div>
+
+          <!-- Setup Assist Card -->
+          <div class="action-card" onclick="goToScreen('setupLandingScreen')">
+            <i class="fas fa-home"></i>
+            <div class="action-card-title">Setup Assist</div>
+            <div class="action-card-subtitle">Capture a homeowner's systems, rooms, and key asset details.</div>
+          </div>
+
+          <div class="action-card" onclick="goToScreen('propertiesScreen')">
+            <i class="fas fa-list"></i>
+            <div class="action-card-title">My Properties</div>
+            <div class="action-card-subtitle">View all assigned properties and their status.</div>
+          </div>
+
+          <div class="action-card" onclick="goToScreen('profileScreen')">
+            <i class="fas fa-user"></i>
+            <div class="action-card-title">My Profile</div>
+            <div class="action-card-subtitle">Verify credentials and manage account settings.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Setup Assist Landing Screen -->
+      <div class="screen" id="setupLandingScreen">
+        <div class="page-header">
+          <button class="back-btn" onclick="goToScreen('dashboardScreen')">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <h2>Setup Assist</h2>
+        </div>
+
+        <div class="scroll-content">
+          <div class="setup-card">
+            <p style="font-size: 13px; color: var(--text); line-height: 1.5; margin-bottom: 16px;">
+              Use this guided walkthrough to build the homeowner's digital home profile. This captures asset details and photos only. <strong>It is not a home inspection or condition report.</strong>
+            </p>
+          </div>
+
+          <div class="landing-card" onclick="goToScreen('newPropertyScreen')">
+            <i class="fas fa-plus-circle"></i>
+            <div class="landing-card-content">
+              <div class="landing-card-title">Start New Setup</div>
+              <div class="landing-card-desc">Begin documenting a new property.</div>
+            </div>
+          </div>
+
+          <div class="landing-card" onclick="showExistingProperties()">
+            <i class="fas fa-clock"></i>
+            <div class="landing-card-content">
+              <div class="landing-card-title">Resume Existing Setup</div>
+              <div class="landing-card-desc">Continue a setup you started earlier.</div>
+            </div>
+          </div>
+
+          <div class="landing-card" onclick="goToScreen('scanQRScreen')">
+            <i class="fas fa-qrcode"></i>
+            <div class="landing-card-content">
+              <div class="landing-card-title">Scan Property QR</div>
+              <div class="landing-card-desc">Scan a HomeHub property code.</div>
+            </div>
+          </div>
+
+          <div class="landing-card" onclick="showExistingProperties()">
+            <i class="fas fa-building"></i>
+            <div class="landing-card-content">
+              <div class="landing-card-title">Select Assigned Property</div>
+              <div class="landing-card-desc">Choose from your assigned properties.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- New Property Manual Entry Screen -->
+      <div class="screen" id="newPropertyScreen">
+        <div class="page-header">
+          <button class="back-btn" onclick="goToScreen('setupLandingScreen')">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <h2>New Property</h2>
+        </div>
+
+        <div class="scroll-content">
+          <div class="setup-card">
+            <p style="font-size: 13px; color: var(--text); line-height: 1.5; margin-bottom: 16px;">
+              Enter the property details to begin a new Setup Assist.
+            </p>
+          </div>
+
+          <div class="setup-card">
+            <div class="form-group">
+              <label class="form-label">Property Address</label>
+              <input type="text" class="input-field" id="newPropAddress" placeholder="e.g., 123 Main Street, City, State 12345">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Homeowner Name</label>
+              <input type="text" class="input-field" id="newPropOwner" placeholder="e.g., John Smith">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Property Type (Optional)</label>
+              <select class="input-field" id="newPropType">
+                <option value="">Select property type...</option>
+                <option value="single-family">Single Family Home</option>
+                <option value="condo">Condo</option>
+                <option value="townhouse">Townhouse</option>
+                <option value="multi-family">Multi-Family</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Year Built (Optional)</label>
+              <input type="number" class="input-field" id="newPropYear" placeholder="e.g., 1998" min="1800" max="2024">
+            </div>
+          </div>
+        </div>
+
+        <div class="sticky-footer">
+          <button class="btn-footer-back" onclick="goToScreen('setupLandingScreen')">Back</button>
+          <button class="btn-footer-next" onclick="startNewPropertySetup()">Continue</button>
+        </div>
+      </div>
+
+      <!-- Existing Properties Selection Screen -->
+      <div class="screen" id="existingPropertiesScreen">
+        <div class="page-header">
+          <button class="back-btn" onclick="goToScreen('setupLandingScreen')">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <h2>Select Property</h2>
+        </div>
+
+        <div class="scroll-content">
+          <div class="setup-card" style="background: #FFF3CD; border-left: 3px solid #FF9500; margin-bottom: 16px;">
+            <p style="font-size: 12px; color: #333; margin: 0;">Click any property card below to begin Setup Assist for that property.</p>
+          </div>
+          <button type="button" id="prop-001-btn" style="width: 100%; background: white; border: none; border-radius: 14px; padding: 16px; margin-bottom: 12px; text-align: left; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.07); transition: all 0.2s; font-family: inherit;" onmouseover="this.style.background='#F0F0F0'" onmouseout="this.style.background='white'">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0; pointer-events: none;">
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: var(--text);">2847 Birch Lane</div>
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">Sarah Johnson</div>
+              </div>
+              <div style="font-size: 10px; font-weight: 600; background: var(--blue-light); color: var(--blue); padding: 3px 8px; border-radius: 6px;">Not Started</div>
+            </div>
+          </button>
+
+          <button type="button" id="prop-002-btn" style="width: 100%; background: white; border: none; border-radius: 14px; padding: 16px; margin-bottom: 12px; text-align: left; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.07); transition: all 0.2s; font-family: inherit;" onmouseover="this.style.background='#F0F0F0'" onmouseout="this.style.background='white'">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0; pointer-events: none;">
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: var(--text);">156 Oak Avenue</div>
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">Michael Chen</div>
+              </div>
+              <div style="font-size: 10px; font-weight: 600; background: var(--orange); color: white; padding: 3px 8px; border-radius: 6px; opacity: 0.8;">In Progress</div>
+            </div>
+          </button>
+
+          <button type="button" id="prop-003-btn" style="width: 100%; background: white; border: none; border-radius: 14px; padding: 16px; margin-bottom: 12px; text-align: left; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.07); transition: all 0.2s; font-family: inherit;" onmouseover="this.style.background='#F0F0F0'" onmouseout="this.style.background='white'">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0; pointer-events: none;">
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: var(--text);">421 Maple Drive</div>
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">Jennifer Martinez</div>
+              </div>
+              <div style="font-size: 10px; font-weight: 600; background: var(--green); color: white; padding: 3px 8px; border-radius: 6px;">Completed</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Existing Properties Selection Screen (end) -->
+
+      <!-- QR Code Scanner Screen -->
+      <div class="screen" id="scanQRScreen">
+        <div class="page-header">
+          <button class="back-btn" onclick="goToScreen('setupLandingScreen')">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <h2>Scan Property QR</h2>
+        </div>
+
+        <div class="scroll-content">
+          <div class="setup-card">
+            <p style="font-size: 13px; color: var(--text); line-height: 1.5; margin-bottom: 16px;">
+              Point your camera at the HomeHub QR code sticker to automatically load the property and begin Setup Assist.
+            </p>
+          </div>
+
+          <div class="setup-card">
+            <div id="qr-video-container" style="width: 100%; aspect-ratio: 1; background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; position: relative;">
+              <video id="qr-video" style="width: 100%; height: 100%; object-fit: cover;"></video>
+              <div id="qr-scanner-overlay" style="position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.3);">
+                <div style="width: 80%; aspect-ratio: 1; border: 2px solid #FF9500; border-radius: 8px; box-shadow: inset 0 0 20px rgba(255, 149, 0, 0.3);"></div>
+              </div>
+              <div id="qr-scanner-ready" style="color: white; text-align: center; display: none;">
+                <i class="fas fa-camera" style="font-size: 48px; margin-bottom: 12px; display: block;"></i>
+                <p>Camera access is required to scan QR codes.</p>
+              </div>
+            </div>
+
+            <div id="qr-error" style="background: #FEF2F2; border: 1.5px solid #FECACA; border-radius: 10px; padding: 12px; margin-bottom: 16px; display: none;">
+              <div style="display: flex; gap: 10px;">
+                <i class="fas fa-exclamation-circle" style="color: var(--red); flex-shrink: 0;"></i>
+                <p id="qr-error-text" style="font-size: 12px; color: var(--text); margin: 0; line-height: 1.4;"></p>
+              </div>
+            </div>
+
+            <div id="qr-result" style="background: #ECFDF5; border: 1.5px solid #86EFAC; border-radius: 10px; padding: 14px; margin-bottom: 16px; display: none;">
+              <div style="display: flex; gap: 10px; align-items: flex-start;">
+                <i class="fas fa-check-circle" style="color: var(--green); flex-shrink: 0; margin-top: 2px;"></i>
+                <div>
+                  <p id="qr-result-text" style="font-size: 12px; color: var(--text); margin: 0 0 8px 0; font-weight: 600;"></p>
+                  <button class="btn" style="margin: 0; padding: 8px 12px; font-size: 12px;" id="qr-proceed-btn">Proceed to Verification</button>
+                </div>
+              </div>
+            </div>
+
+            <div style="background: #F5F9F8; border-radius: 10px; padding: 12px; margin-bottom: 16px;">
+              <p style="font-size: 11px; color: var(--text-secondary); margin: 0; line-height: 1.5;">
+                <strong>Don't have a QR code?</strong><br>
+                Go back to Setup Assist landing and select "Start New Setup" or "Select Assigned Property" instead.
+              </p>
+            </div>
+          </div>
+
+          <div class="setup-card">
+            <div class="form-group">
+              <label class="form-label">Or Enter QR Code Manually</label>
+              <input type="text" class="input-field" id="manual-qr-input" placeholder="Paste QR code data here">
+            </div>
+            <button class="btn btn-primary" onclick="processManualQRInput()">Process Code</button>
+          </div>
+        </div>
+
+        <div class="sticky-footer">
+          <button class="btn-footer-back" onclick="stopQRScanner(); goToScreen('setupLandingScreen')">Back</button>
+        </div>
+      </div>
+
+      <!-- Professional Verification Screen -->
+      <div class="screen" id="verificationScreen">
+        <div class="page-header">
+          <button class="back-btn" onclick="goToScreen('setupLandingScreen')">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <h2>Verification</h2>
+        </div>
+
+        <div class="scroll-content">
+          <div class="setup-card">
+            <div class="setup-section-title">
+              <i class="fas fa-user-check"></i>
+              Professional Information
+            </div>
+
+            <div style="background: #F5F9F8; border-radius: 10px; padding: 12px; margin-bottom: 16px;">
+              <div style="margin-bottom: 12px;">
+                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Name</div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--text); margin-top: 2px;">Alex Rivera</div>
+              </div>
+              <div style="margin-bottom: 12px;">
+                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Company</div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--text); margin-top: 2px;">HomeFirst Inspections</div>
+              </div>
+              <div style="margin-bottom: 12px;">
+                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">License Type</div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--text); margin-top: 2px;">Licensed Home Inspector</div>
+              </div>
+              <div style="margin-bottom: 0;">
+                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">License #</div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--text); margin-top: 2px;">CA-HI-2024-0847</div>
+              </div>
+            </div>
+
+            <div class="warning-box">
+              <i class="fas fa-exclamation-triangle"></i>
+              <p><strong>Insurance Verification Required</strong><br>Your professional liability insurance must be verified before submitting completed setups.</p>
+            </div>
+          </div>
+
+          <div class="setup-card">
+            <div class="form-group">
+              <label class="checkbox-btn">
+                <input type="checkbox" id="confirmProfessional" onchange="updateVerificationState()">
+                <span class="checkbox-label">I confirm I am completing this Setup Assist as a licensed and insured professional and understand this is asset documentation only, not an inspection report.</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="sticky-footer">
+          <button class="btn-footer-back" onclick="goToScreen('propertiesSelectScreen')">Back</button>
+          <button class="btn-footer-next" id="verifyBtn" disabled onclick="goToScreen('propertyConfirmScreen')">Continue</button>
+        </div>
+      </div>
+
+      <!-- Property Confirmation Screen -->
+      <div class="screen" id="propertyConfirmScreen">
+        <div class="page-header">
+          <button class="back-btn" onclick="goToScreen('verificationScreen')">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <h2>Property Details</h2>
+        </div>
+
+        <div class="scroll-content">
+          <div class="setup-card">
+            <div style="background: linear-gradient(135deg, #1A3150, #1F3A5F); color: white; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+              <div style="font-size: 11px; opacity: 0.8;">Property Address</div>
+              <div style="font-size: 16px; font-weight: 700; margin-top: 4px;" id="propAddr">2847 Birch Lane</div>
+              <div style="font-size: 12px; opacity: 0.8; margin-top: 6px;">Owner: <span id="propOwner">Sarah Johnson</span></div>
+            </div>
+
+            <div style="background: #F5F9F8; border-radius: 10px; padding: 12px; margin-bottom: 16px;">
+              <div style="margin-bottom: 10px;">
+                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Property ID</div>
+                <div style="font-size: 12px; font-weight: 600; color: var(--text); margin-top: 2px;" id="propId">prop-001</div>
+              </div>
+              <div style="margin-bottom: 10px;">
+                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Setup Status</div>
+                <div style="font-size: 12px; font-weight: 600; color: var(--text); margin-top: 2px;" id="setupStatus">Not Started</div>
+              </div>
+              <div>
+                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Last Updated</div>
+                <div style="font-size: 12px; font-weight: 600; color: var(--text); margin-top: 2px;" id="lastUpdated">Never</div>
+              </div>
+            </div>
+
+            <div class="disclaimer-text">
+              <strong>Setup Assist</strong> is designed to document home systems, components, photos, and related records for homeowner organization. It is <strong>not a home inspection</strong>, condition assessment, code compliance review, warranty verification, insurance inspection, or repair recommendation.
+            </div>
+          </div>
+        </div>
+
+        <div class="sticky-footer">
+          <button class="btn-footer-back" onclick="goToScreen('verificationScreen')">Back</button>
+          <button class="btn-footer-next" onclick="startWalkthrough()">Start Walkthrough</button>
+        </div>
+      </div>
+
+      <!-- Section: Core Property Profile -->
+      <div class="screen" id="section-1-corePropertyScreen">
+        <div class="setup-header">
+          <div class="setup-progress-bar">
+            <div class="setup-progress-fill" style="width: 7.7%;"></div>
+          </div>
+          <div class="setup-section-name">Section 1 of 13</div>
+          <div class="setup-title">Core Property Profile</div>
+        </div>
+
+        <div class="setup-content">
+          <div class="setup-card">
+            <div class="form-group">
+              <label class="form-label">Property Type</label>
+              <div class="radio-group">
+                <label class="radio-btn">
+                  <input type="radio" name="propType1" value="single-family" onchange="saveSetupDraft()">
+                  <span class="radio-label">Single Family Home</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="propType1" value="condo">
+                  <span class="radio-label">Condo</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="propType1" value="townhouse">
+                  <span class="radio-label">Townhouse</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="propType1" value="unknown">
+                  <span class="radio-label">Unknown</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Year Built</label>
+              <input type="number" class="input-field" id="core-yearBuilt" placeholder="e.g., 1998" onchange="saveSetupDraft()" min="1800" max="2024">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Approximate Square Footage</label>
+              <input type="number" class="input-field" id="core-sqft" placeholder="e.g., 2,400" onchange="saveSetupDraft()" min="0">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Number of Stories</label>
+              <div class="radio-group">
+                <label class="radio-btn">
+                  <input type="radio" name="stories" value="1" onchange="saveSetupDraft()">
+                  <span class="radio-label">1 Story</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="stories" value="2" onchange="saveSetupDraft()">
+                  <span class="radio-label">2 Stories</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="stories" value="3+" onchange="saveSetupDraft()">
+                  <span class="radio-label">3+ Stories</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="stories" value="unknown" onchange="saveSetupDraft()">
+                  <span class="radio-label">Unknown</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Foundation Type</label>
+              <div class="radio-group">
+                <label class="radio-btn">
+                  <input type="radio" name="foundation" value="slab" onchange="saveSetupDraft()">
+                  <span class="radio-label">Slab</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="foundation" value="crawlspace" onchange="saveSetupDraft()">
+                  <span class="radio-label">Crawlspace</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="foundation" value="basement" onchange="saveSetupDraft()">
+                  <span class="radio-label">Basement</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="foundation" value="pier" onchange="saveSetupDraft()">
+                  <span class="radio-label">Pier</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="foundation" value="unknown" onchange="saveSetupDraft()">
+                  <span class="radio-label">Unknown</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Garage</label>
+              <div class="radio-group">
+                <label class="radio-btn">
+                  <input type="radio" name="garage" value="none" onchange="saveSetupDraft()">
+                  <span class="radio-label">None</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="garage" value="attached" onchange="saveSetupDraft()">
+                  <span class="radio-label">Attached</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="garage" value="detached" onchange="saveSetupDraft()">
+                  <span class="radio-label">Detached</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="garage" value="carport" onchange="saveSetupDraft()">
+                  <span class="radio-label">Carport</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Exterior Photos</label>
+              <div class="photo-upload" onclick="document.getElementById('extPhotoInput').click()">
+                <i class="fas fa-camera"></i>
+                <p>Add exterior photos</p>
+                <span>Front, rear, left, right sides</span>
+              </div>
+              <input type="file" id="extPhotoInput" accept="image/*" style="display:none" multiple onchange="handlePhotoUpload(this, 'exteriorPhotos')">
+              <div class="photo-gallery" id="exteriorPhotos"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sticky-footer">
+          <button class="btn-footer-back" onclick="goToScreen('propertyConfirmScreen')">Back</button>
+          <button class="btn-footer-next" onclick="nextSection(1)">Next</button>
+        </div>
+      </div>
+
+      <!-- Section: Roof Asset Details -->
+      <div class="screen" id="section-2-roofScreen">
+        <div class="setup-header">
+          <div class="setup-progress-bar">
+            <div class="setup-progress-fill" style="width: 15.4%;"></div>
+          </div>
+          <div class="setup-section-name">Section 2 of 13</div>
+          <div class="setup-title">Roof Asset Details</div>
+        </div>
+
+        <div class="setup-content">
+          <div class="setup-card">
+            <div class="form-group">
+              <label class="form-label">Roof Material</label>
+              <div class="radio-group">
+                <label class="radio-btn">
+                  <input type="radio" name="roofMaterial" value="asphalt" onchange="updateRoofUI()">
+                  <span class="radio-label">Asphalt Shingle</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="roofMaterial" value="metal" onchange="updateRoofUI()">
+                  <span class="radio-label">Metal</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="roofMaterial" value="tile" onchange="updateRoofUI()">
+                  <span class="radio-label">Tile</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="roofMaterial" value="flat" onchange="updateRoofUI()">
+                  <span class="radio-label">Flat/Low Slope</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="roofMaterial" value="other" onchange="updateRoofUI()">
+                  <span class="radio-label">Other</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="roofMaterial" value="unknown" onchange="updateRoofUI()">
+                  <span class="radio-label">Unknown</span>
+                </label>
+              </div>
+            </div>
+
+            <div id="asphaltStyleGroup" style="display:none;">
+              <div class="form-group">
+                <label class="form-label">Asphalt Shingle Style</label>
+                <div class="radio-group">
+                  <label class="radio-btn">
+                    <input type="radio" name="shingleStyle" value="architectural">
+                    <span class="radio-label">Architectural</span>
+                  </label>
+                  <label class="radio-btn">
+                    <input type="radio" name="shingleStyle" value="3-tab">
+                    <span class="radio-label">3-Tab</span>
+                  </label>
+                  <label class="radio-btn">
+                    <input type="radio" name="shingleStyle" value="designer">
+                    <span class="radio-label">Designer/Premium</span>
+                  </label>
+                  <label class="radio-btn">
+                    <input type="radio" name="shingleStyle" value="unknown">
+                    <span class="radio-label">Unknown</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Manufacturer</label>
+              <select class="input-field" id="roofManufacturer" onchange="saveSetupDraft()">
+                <option value="">Select manufacturer...</option>
+                <option value="gaf">GAF</option>
+                <option value="owens-corning">Owens Corning</option>
+                <option value="certainteed">CertainTeed</option>
+                <option value="atlas">Atlas</option>
+                <option value="iko">IKO</option>
+                <option value="tamko">Tamko</option>
+                <option value="other">Other</option>
+                <option value="unknown">Unknown</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Product/Color (if known)</label>
+              <input type="text" class="input-field" id="roofProduct" placeholder="e.g., Timberline HD - Charcoal" onchange="saveSetupDraft()">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Approximate Install Year</label>
+              <input type="number" class="input-field" id="roofInstallYear" placeholder="e.g., 2015" onchange="saveSetupDraft()" min="1800" max="2024">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Roof Photos</label>
+              <div class="photo-upload" onclick="document.getElementById('roofPhotoInput').click()">
+                <i class="fas fa-camera"></i>
+                <p>Add roof photos</p>
+                <span>Overview, shingles close-up, labels</span>
+              </div>
+              <input type="file" id="roofPhotoInput" accept="image/*" style="display:none" multiple onchange="handlePhotoUpload(this, 'roofPhotos')">
+              <div class="photo-gallery" id="roofPhotos"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Warranty Document (Optional)</label>
+              <div class="photo-upload" onclick="document.getElementById('roofWarrantyInput').click()">
+                <i class="fas fa-file-pdf"></i>
+                <p>Upload warranty</p>
+                <span>PDF or image of warranty document</span>
+              </div>
+              <input type="file" id="roofWarrantyInput" accept=".pdf,image/*" style="display:none" onchange="handleDocUpload(this, 'roofWarranty')">
+              <div id="roofWarrantyName" style="font-size: 12px; color: var(--text); margin-top: 8px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sticky-footer">
+          <button class="btn-footer-back" onclick="previousSection(2)">Back</button>
+          <button class="btn-footer-next" onclick="nextSection(2)">Next</button>
+        </div>
+      </div>
+
+      <!-- Section: HVAC Systems -->
+      <div class="screen" id="section-3-hvacScreen">
+        <div class="setup-header">
+          <div class="setup-progress-bar">
+            <div class="setup-progress-fill" style="width: 23.1%;"></div>
+          </div>
+          <div class="setup-section-name">Section 3 of 13</div>
+          <div class="setup-title">HVAC Systems</div>
+        </div>
+
+        <div class="setup-content">
+          <div class="setup-card">
+            <div class="multi-system-list" id="hvacList"></div>
+            <button class="add-system-btn" onclick="showHVACForm()">
+              <i class="fas fa-plus"></i> Add HVAC System
+            </button>
+          </div>
+
+          <div class="setup-card" id="hvacFormCard" style="display:none;">
+            <div class="setup-section-title">
+              <i class="fas fa-cog"></i>
+              Add HVAC System
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">System Location</label>
+              <select class="input-field" id="hvacLocation">
+                <option value="">Select location...</option>
+                <option value="main">Main Floor</option>
+                <option value="upstairs">Upstairs</option>
+                <option value="attic">Attic</option>
+                <option value="crawlspace">Crawlspace</option>
+                <option value="garage">Garage</option>
+                <option value="exterior">Exterior Unit</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">System Type</label>
+              <select class="input-field" id="hvacType">
+                <option value="">Select type...</option>
+                <option value="central-ac">Central AC</option>
+                <option value="heat-pump">Heat Pump</option>
+                <option value="furnace">Furnace</option>
+                <option value="mini-split">Mini Split</option>
+                <option value="package">Package Unit</option>
+                <option value="other">Other</option>
+                <option value="unknown">Unknown</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Manufacturer</label>
+              <input type="text" class="input-field" id="hvacMfg" placeholder="e.g., Carrier, Trane">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Model Number</label>
+              <input type="text" class="input-field" id="hvacModel" placeholder="e.g., 24ACA...">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Serial Number</label>
+              <input type="text" class="input-field" id="hvacSerial" placeholder="e.g., 123456...">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Install Year (if known)</label>
+              <input type="number" class="input-field" id="hvacYear" placeholder="e.g., 2010" min="1900" max="2024">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Fuel/Source</label>
+              <div class="radio-group">
+                <label class="radio-btn">
+                  <input type="radio" name="hvacFuel" value="electric">
+                  <span class="radio-label">Electric</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="hvacFuel" value="gas">
+                  <span class="radio-label">Gas</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="hvacFuel" value="propane">
+                  <span class="radio-label">Propane</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="hvacFuel" value="oil">
+                  <span class="radio-label">Oil</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="hvacFuel" value="unknown">
+                  <span class="radio-label">Unknown</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Filter Size (if visible)</label>
+              <input type="text" class="input-field" id="hvacFilter" placeholder="e.g., 16x25x1">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">System Photos</label>
+              <div class="photo-upload" onclick="document.getElementById('hvacPhotoInput').click()">
+                <i class="fas fa-camera"></i>
+                <p>Add system photos</p>
+                <span>Unit overview, data plate, thermostat</span>
+              </div>
+              <input type="file" id="hvacPhotoInput" accept="image/*" style="display:none" multiple onchange="handlePhotoUpload(this, 'hvacPhotos')">
+              <div class="photo-gallery" id="hvacPhotos"></div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 16px;">
+              <button class="btn-footer-back" style="flex: 1; padding: 12px;" onclick="hideHVACForm()">Cancel</button>
+              <button class="btn-footer-next" style="flex: 1; padding: 12px;" onclick="addHVACSystem()">Add System</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sticky-footer">
+          <button class="btn-footer-back" onclick="previousSection(3)">Back</button>
+          <button class="btn-footer-next" onclick="nextSection(3)">Next</button>
+        </div>
+      </div>
+
+      <!-- Section: Water Heater -->
+      <div class="screen" id="section-4-waterHeaterScreen">
+        <div class="setup-header">
+          <div class="setup-progress-bar">
+            <div class="setup-progress-fill" style="width: 30.8%;"></div>
+          </div>
+          <div class="setup-section-name">Section 4 of 13</div>
+          <div class="setup-title">Water Heater</div>
+        </div>
+
+        <div class="setup-content">
+          <div class="setup-card">
+            <div class="multi-system-list" id="whList"></div>
+            <button class="add-system-btn" onclick="showWHForm()">
+              <i class="fas fa-plus"></i> Add Water Heater
+            </button>
+          </div>
+
+          <div class="setup-card" id="whFormCard" style="display:none;">
+            <div class="setup-section-title">
+              <i class="fas fa-droplet"></i>
+              Add Water Heater
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Type</label>
+              <div class="radio-group">
+                <label class="radio-btn">
+                  <input type="radio" name="whType" value="tank">
+                  <span class="radio-label">Tank</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="whType" value="tankless">
+                  <span class="radio-label">Tankless</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="whType" value="hybrid">
+                  <span class="radio-label">Hybrid</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="whType" value="other">
+                  <span class="radio-label">Other</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="whType" value="unknown">
+                  <span class="radio-label">Unknown</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Manufacturer</label>
+              <input type="text" class="input-field" id="whMfg" placeholder="e.g., Rheem, AO Smith">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Model Number</label>
+              <input type="text" class="input-field" id="whModel" placeholder="e.g., XYZ...">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Serial Number</label>
+              <input type="text" class="input-field" id="whSerial" placeholder="e.g., 123456...">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Capacity (if visible)</label>
+              <select class="input-field" id="whCapacity" onchange="updateWHCapacityUI()">
+                <option value="">Select capacity...</option>
+                <option value="20 gallons">20 gallons</option>
+                <option value="30 gallons">30 gallons</option>
+                <option value="50 gallons">50 gallons</option>
+                <option value="70 gallons">70 gallons</option>
+                <option value="80 gallons">80 gallons</option>
+                <option value="other">Other (specify)</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="whCapacityOtherGroup" style="display:none;">
+              <label class="form-label">Specify Capacity</label>
+              <input type="text" class="input-field" id="whCapacityOther" placeholder="e.g., 100 gallons">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Install Year (if known)</label>
+              <input type="number" class="input-field" id="whYear" placeholder="e.g., 2015" min="1900" max="2024">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Fuel Source</label>
+              <div class="radio-group">
+                <label class="radio-btn">
+                  <input type="radio" name="whFuel" value="electric">
+                  <span class="radio-label">Electric</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="whFuel" value="gas">
+                  <span class="radio-label">Gas</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="whFuel" value="propane">
+                  <span class="radio-label">Propane</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="whFuel" value="other">
+                  <span class="radio-label">Other</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="whFuel" value="unknown">
+                  <span class="radio-label">Unknown</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Location</label>
+              <select class="input-field" id="whLocation">
+                <option value="">Select location...</option>
+                <option value="garage">Garage</option>
+                <option value="utility">Utility Closet</option>
+                <option value="attic">Attic</option>
+                <option value="crawlspace">Crawlspace</option>
+                <option value="basement">Basement</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Water Heater Photos</label>
+              <div class="photo-upload" onclick="document.getElementById('whPhotoInput').click()">
+                <i class="fas fa-camera"></i>
+                <p>Add water heater photos</p>
+                <span>Unit overview, data plate</span>
+              </div>
+              <input type="file" id="whPhotoInput" accept="image/*" style="display:none" multiple onchange="handlePhotoUpload(this, 'whPhotos')">
+              <div class="photo-gallery" id="whPhotos"></div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 16px;">
+              <button class="btn-footer-back" style="flex: 1; padding: 12px;" onclick="hideWHForm()">Cancel</button>
+              <button class="btn-footer-next" style="flex: 1; padding: 12px;" onclick="addWaterHeater()">Add Water Heater</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sticky-footer">
+          <button class="btn-footer-back" onclick="previousSection(4)">Back</button>
+          <button class="btn-footer-next" onclick="nextSection(4)">Next</button>
+        </div>
+      </div>
+
+      <!-- Section: Electrical Panel -->
+      <div class="screen" id="section-5-electricalScreen">
+        <div class="setup-header">
+          <div class="setup-progress-bar">
+            <div class="setup-progress-fill" style="width: 38.5%;"></div>
+          </div>
+          <div class="setup-section-name">Section 5 of 13</div>
+          <div class="setup-title">Electrical Panel</div>
+        </div>
+
+        <div class="setup-content">
+          <div class="setup-card">
+            <div class="form-group">
+              <label class="form-label">Panel Location</label>
+              <input type="text" class="input-field" id="panelLocation" placeholder="e.g., Garage, basement, exterior" onchange="saveSetupDraft()">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Manufacturer</label>
+              <select class="input-field" id="panelMfg" onchange="saveSetupDraft()">
+                <option value="">Select manufacturer...</option>
+                <option value="square-d">Square D</option>
+                <option value="siemens">Siemens</option>
+                <option value="eaton">Eaton</option>
+                <option value="ge">GE</option>
+                <option value="cutler">Cutler-Hammer</option>
+                <option value="other">Other</option>
+                <option value="unknown">Unknown</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Main Amperage (if visible)</label>
+              <input type="text" class="input-field" id="panelAmp" placeholder="e.g., 200 Amps" onchange="saveSetupDraft()">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Panel Type (if known)</label>
+              <input type="text" class="input-field" id="panelType" placeholder="e.g., Main breaker panel" onchange="saveSetupDraft()">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Subpanels Present?</label>
+              <div class="radio-group">
+                <label class="radio-btn">
+                  <input type="radio" name="subpanels" value="yes" onchange="updateSubpanelUI()">
+                  <span class="radio-label">Yes</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="subpanels" value="no" onchange="updateSubpanelUI()">
+                  <span class="radio-label">No</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="subpanels" value="unknown" onchange="updateSubpanelUI()">
+                  <span class="radio-label">Unknown</span>
+                </label>
+              </div>
+            </div>
+
+            <div id="subpanelGroup" style="display:none;">
+              <div class="multi-system-list" id="subpanelList"></div>
+              <button class="add-system-btn" onclick="showSubpanelForm()">
+                <i class="fas fa-plus"></i> Add Subpanel
+              </button>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Electrical Panel Photos</label>
+              <div class="photo-upload" onclick="document.getElementById('panelPhotoInput').click()">
+                <i class="fas fa-camera"></i>
+                <p>Add panel photos</p>
+                <span>Main panel exterior, label, breaker directory</span>
+              </div>
+              <input type="file" id="panelPhotoInput" accept="image/*" style="display:none" multiple onchange="handlePhotoUpload(this, 'panelPhotos')">
+              <div class="photo-gallery" id="panelPhotos"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sticky-footer">
+          <button class="btn-footer-back" onclick="previousSection(5)">Back</button>
+          <button class="btn-footer-next" onclick="nextSection(5)">Next</button>
+        </div>
+      </div>
+
+      <!-- Section: Water System -->
+      <div class="screen" id="section-6-waterScreen">
+        <div class="setup-header">
+          <div class="setup-progress-bar">
+            <div class="setup-progress-fill" style="width: 46.2%;"></div>
+          </div>
+          <div class="setup-section-name">Section 6 of 13</div>
+          <div class="setup-title">Water System</div>
+        </div>
+
+        <div class="setup-content">
+          <div class="setup-card">
+            <div class="form-group">
+              <label class="form-label">Water Source</label>
+              <div class="radio-group">
+                <label class="radio-btn">
+                  <input type="radio" name="waterSource" value="municipal" onchange="updateWaterUI()">
+                  <span class="radio-label">Municipal</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="waterSource" value="well" onchange="updateWaterUI()">
+                  <span class="radio-label">Well</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="waterSource" value="unknown" onchange="updateWaterUI()">
+                  <span class="radio-label">Unknown</span>
+                </label>
+              </div>
+            </div>
+
+            <div id="municipalGroup" style="display:none;">
+              <div class="form-group">
+                <label class="form-label">Meter Location</label>
+                <input type="text" class="input-field" id="meterLocation" placeholder="e.g., Front yard, side of house" onchange="saveSetupDraft()">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Main Shutoff Location</label>
+                <input type="text" class="input-field" id="shutoffLocation" placeholder="e.g., Garage, utility closet" onchange="saveSetupDraft()">
+              </div>
+            </div>
+
+            <div id="wellGroup" style="display:none;">
+              <div class="form-group">
+                <label class="form-label">Well Pump Location (if known)</label>
+                <input type="text" class="input-field" id="pumpLocation" placeholder="e.g., Basement, crawlspace" onchange="saveSetupDraft()">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Pressure Tank Manufacturer (if visible)</label>
+                <input type="text" class="input-field" id="tankMfg" placeholder="e.g., Watts, Amtrol" onchange="saveSetupDraft()">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Pressure Tank Model/Serial</label>
+                <input type="text" class="input-field" id="tankModel" placeholder="e.g., WX-202" onchange="saveSetupDraft()">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Water Treatment Present?</label>
+                <div class="radio-group">
+                  <label class="radio-btn">
+                    <input type="radio" name="waterTreatment" value="yes">
+                    <span class="radio-label">Yes (Filtration/Softener)</span>
+                  </label>
+                  <label class="radio-btn">
+                    <input type="radio" name="waterTreatment" value="no">
+                    <span class="radio-label">No</span>
+                  </label>
+                  <label class="radio-btn">
+                    <input type="radio" name="waterTreatment" value="unknown">
+                    <span class="radio-label">Unknown</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Water System Photos</label>
+                <div class="photo-upload" onclick="document.getElementById('waterPhotoInput').click()">
+                  <i class="fas fa-camera"></i>
+                  <p>Add water system photos</p>
+                  <span>Pressure tank, pump, treatment equipment</span>
+                </div>
+                <input type="file" id="waterPhotoInput" accept="image/*" style="display:none" multiple onchange="handlePhotoUpload(this, 'waterPhotos')">
+                <div class="photo-gallery" id="waterPhotos"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sticky-footer">
+          <button class="btn-footer-back" onclick="previousSection(6)">Back</button>
+          <button class="btn-footer-next" onclick="nextSection(6)">Next</button>
+        </div>
+      </div>
+
+      <!-- Section: Septic/Sewer -->
+      <div class="screen" id="section-7-septicScreen">
+        <div class="setup-header">
+          <div class="setup-progress-bar">
+            <div class="setup-progress-fill" style="width: 53.8%;"></div>
+          </div>
+          <div class="setup-section-name">Section 7 of 13</div>
+          <div class="setup-title">Septic / Sewer</div>
+        </div>
+
+        <div class="setup-content">
+          <div class="setup-card">
+            <div class="form-group">
+              <label class="form-label">Wastewater System</label>
+              <div class="radio-group">
+                <label class="radio-btn">
+                  <input type="radio" name="wastewater" value="municipal" onchange="updateSepticUI()">
+                  <span class="radio-label">Municipal Sewer</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="wastewater" value="septic" onchange="updateSepticUI()">
+                  <span class="radio-label">Septic</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="wastewater" value="unknown" onchange="updateSepticUI()">
+                  <span class="radio-label">Unknown</span>
+                </label>
+              </div>
+            </div>
+
+            <div id="septicGroup" style="display:none;">
+              <div class="form-group">
+                <label class="form-label">Tank Location (if known)</label>
+                <input type="text" class="input-field" id="tankLocation" placeholder="e.g., Backyard, side property" onchange="saveSetupDraft()">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Last Pump Date (if known)</label>
+                <input type="date" class="input-field" id="lastPumpDate" onchange="saveSetupDraft()">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Septic Documents (Optional)</label>
+                <div class="photo-upload" onclick="document.getElementById('septicDocInput').click()">
+                  <i class="fas fa-file"></i>
+                  <p>Upload septic documents</p>
+                  <span>Permits, maintenance records, diagrams</span>
+                </div>
+                <input type="file" id="septicDocInput" accept=".pdf,image/*" style="display:none" onchange="handleDocUpload(this, 'septicDocs')">
+                <div id="septicDocName" style="font-size: 12px; color: var(--text); margin-top: 8px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sticky-footer">
+          <button class="btn-footer-back" onclick="previousSection(7)">Back</button>
+          <button class="btn-footer-next" onclick="nextSection(7)">Next</button>
+        </div>
+      </div>
+
+      <!-- Section: Appliances -->
+      <div class="screen" id="section-8-appliancesScreen">
+        <div class="setup-header">
+          <div class="setup-progress-bar">
+            <div class="setup-progress-fill" style="width: 61.5%;"></div>
+          </div>
+          <div class="setup-section-name">Section 8 of 13</div>
+          <div class="setup-title">Appliances</div>
+        </div>
+
+        <div class="setup-content">
+          <div class="setup-card">
+            <div class="multi-system-list" id="applianceList"></div>
+            <button class="add-system-btn" onclick="showApplianceForm()">
+              <i class="fas fa-plus"></i> Add Appliance
+            </button>
+          </div>
+
+          <div class="setup-card" id="applianceFormCard" style="display:none;">
+            <div class="setup-section-title">
+              <i class="fas fa-plug"></i>
+              Add Appliance
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Appliance Type</label>
+              <select class="input-field" id="applianceType">
+                <option value="">Select appliance...</option>
+                <option value="refrigerator">Refrigerator</option>
+                <option value="dishwasher">Dishwasher</option>
+                <option value="range">Range/Oven</option>
+                <option value="microwave">Microwave</option>
+                <option value="washer">Washer</option>
+                <option value="dryer">Dryer</option>
+                <option value="freezer">Freezer</option>
+                <option value="disposal">Garbage Disposal</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Manufacturer</label>
+              <input type="text" class="input-field" id="appMfg" placeholder="e.g., LG, Samsung, GE">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Model Number</label>
+              <input type="text" class="input-field" id="appModel" placeholder="e.g., LRMVS3006S">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Serial Number</label>
+              <input type="text" class="input-field" id="appSerial" placeholder="e.g., 123456789">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Purchase/Install Year</label>
+              <input type="number" class="input-field" id="appYear" placeholder="e.g., 2018" min="1900" max="2024">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Location</label>
+              <input type="text" class="input-field" id="appLocation" placeholder="e.g., Kitchen, laundry room">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Appliance Photos</label>
+              <div class="photo-upload" onclick="document.getElementById('appPhotoInput').click()">
+                <i class="fas fa-camera"></i>
+                <p>Add appliance photos</p>
+                <span>Overview, data plate, label</span>
+              </div>
+              <input type="file" id="appPhotoInput" accept="image/*" style="display:none" multiple onchange="handlePhotoUpload(this, 'appPhotos')">
+              <div class="photo-gallery" id="appPhotos"></div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 16px;">
+              <button class="btn-footer-back" style="flex: 1; padding: 12px;" onclick="hideApplianceForm()">Cancel</button>
+              <button class="btn-footer-next" style="flex: 1; padding: 12px;" onclick="addAppliance()">Add Appliance</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sticky-footer">
+          <button class="btn-footer-back" onclick="previousSection(8)">Back</button>
+          <button class="btn-footer-next" onclick="nextSection(8)">Next</button>
+        </div>
+      </div>
+
+      <!-- Section: Rooms -->
+      <div class="screen" id="section-9-roomsScreen">
+        <div class="setup-header">
+          <div class="setup-progress-bar">
+            <div class="setup-progress-fill" style="width: 69.2%;"></div>
+          </div>
+          <div class="setup-section-name">Section 9 of 13</div>
+          <div class="setup-title">Rooms</div>
+        </div>
+
+        <div class="setup-content">
+          <div class="setup-card">
+            <div class="multi-system-list" id="roomList"></div>
+            <button class="add-system-btn" onclick="showRoomForm()">
+              <i class="fas fa-plus"></i> Add Room
+            </button>
+          </div>
+
+          <div class="setup-card" id="roomFormCard" style="display:none;">
+            <div class="setup-section-title">
+              <i class="fas fa-door-open"></i>
+              Add Room
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Room Name</label>
+              <input type="text" class="input-field" id="roomName" placeholder="e.g., Master Bedroom">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Room Type</label>
+              <select class="input-field" id="roomType">
+                <option value="">Select type...</option>
+                <option value="kitchen">Kitchen</option>
+                <option value="living">Living Room</option>
+                <option value="dining">Dining Room</option>
+                <option value="bedroom">Bedroom</option>
+                <option value="bathroom">Bathroom</option>
+                <option value="laundry">Laundry</option>
+                <option value="garage">Garage</option>
+                <option value="office">Office</option>
+                <option value="basement">Basement</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Floor/Level</label>
+              <div class="radio-group">
+                <label class="radio-btn">
+                  <input type="radio" name="roomFloor" value="main">
+                  <span class="radio-label">Main</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="roomFloor" value="upstairs">
+                  <span class="radio-label">Upstairs</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="roomFloor" value="basement">
+                  <span class="radio-label">Basement</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="roomFloor" value="other">
+                  <span class="radio-label">Other</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Room Photos</label>
+              <div class="photo-upload" onclick="document.getElementById('roomPhotoInput').click()">
+                <i class="fas fa-camera"></i>
+                <p>Add room photos</p>
+                <span>Wide room photo, optional additional views</span>
+              </div>
+              <input type="file" id="roomPhotoInput" accept="image/*" style="display:none" multiple onchange="handlePhotoUpload(this, 'roomPhotos')">
+              <div class="photo-gallery" id="roomPhotos"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Paint Color/Brand (Optional)</label>
+              <input type="text" class="input-field" id="roomPaint" placeholder="e.g., Benjamin Moore - Soft Blue">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Flooring Type (Optional)</label>
+              <input type="text" class="input-field" id="roomFlooring" placeholder="e.g., Oak hardwood, ceramic tile">
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 16px;">
+              <button class="btn-footer-back" style="flex: 1; padding: 12px;" onclick="hideRoomForm()">Cancel</button>
+              <button class="btn-footer-next" style="flex: 1; padding: 12px;" onclick="addRoom()">Add Room</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sticky-footer">
+          <button class="btn-footer-back" onclick="previousSection(9)">Back</button>
+          <button class="btn-footer-next" onclick="nextSection(9)">Next</button>
+        </div>
+      </div>
+
+      <!-- Section: Optional Documents -->
+      <div class="screen" id="section-10-documentsScreen">
+        <div class="setup-header">
+          <div class="setup-progress-bar">
+            <div class="setup-progress-fill" style="width: 76.9%;"></div>
+          </div>
+          <div class="setup-section-name">Section 10 of 13</div>
+          <div class="setup-title">Optional Documents</div>
+        </div>
+
+        <div class="setup-content">
+          <div class="setup-card">
+            <div class="form-group">
+              <label class="form-label">Upload Property Documents</label>
+              <div class="photo-upload" onclick="document.getElementById('generalDocInput').click()">
+                <i class="fas fa-file-pdf"></i>
+                <p>Add documents</p>
+                <span>Inspection reports, warranties, manuals, permits, etc.</span>
+              </div>
+              <input type="file" id="generalDocInput" accept=".pdf,image/*" style="display:none" multiple onchange="handleDocUpload(this, 'generalDocs')">
+            </div>
+
+            <div id="documentList" class="multi-system-list"></div>
+          </div>
+        </div>
+
+        <div class="sticky-footer">
+          <button class="btn-footer-back" onclick="previousSection(10)">Back</button>
+          <button class="btn-footer-next" onclick="nextSection(10)">Next</button>
+        </div>
+      </div>
+
+      <!-- Section: Known Notes -->
+      <div class="screen" id="section-11-notesScreen">
+        <div class="setup-header">
+          <div class="setup-progress-bar">
+            <div class="setup-progress-fill" style="width: 84.6%;"></div>
+          </div>
+          <div class="setup-section-name">Section 11 of 13</div>
+          <div class="setup-title">Known Notes</div>
+        </div>
+
+        <div class="setup-content">
+          <div class="setup-card">
+            <div class="disclaimer-text">
+              Use this section only for <strong>factual notes</strong> shared by the homeowner or visible labels/documents. <strong>Do not enter inspection findings, repair recommendations, or condition opinions.</strong>
+            </div>
+
+            <div class="multi-system-list" id="notesList"></div>
+
+            <div class="form-group">
+              <label class="form-label">Add a Note</label>
+              <textarea class="input-field" id="newNote" placeholder="e.g., Roof replaced in 2015, homeowner mentioned..." style="min-height: 80px; resize: vertical;"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Source of Note</label>
+              <div class="radio-group">
+                <label class="radio-btn">
+                  <input type="radio" name="noteSource" value="homeowner">
+                  <span class="radio-label">Homeowner-Provided</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="noteSource" value="document">
+                  <span class="radio-label">Document-Provided</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="noteSource" value="label">
+                  <span class="radio-label">Label/Data Plate</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="noteSource" value="other">
+                  <span class="radio-label">Other</span>
+                </label>
+              </div>
+            </div>
+
+            <button class="btn" style="margin-top: 12px;" onclick="addNote()">Add Note</button>
+          </div>
+        </div>
+
+        <div class="sticky-footer">
+          <button class="btn-footer-back" onclick="previousSection(11)">Back</button>
+          <button class="btn-footer-next" onclick="nextSection(11)">Next</button>
+        </div>
+      </div>
+
+      <!-- Section: QR Code Placement -->
+      <div class="screen" id="section-12-qrScreen">
+        <div class="setup-header">
+          <div class="setup-progress-bar">
+            <div class="setup-progress-fill" style="width: 92.3%;"></div>
+          </div>
+          <div class="setup-section-name">Section 12 of 13</div>
+          <div class="setup-title">QR Code Placement</div>
+        </div>
+
+        <div class="setup-content">
+          <div class="setup-card">
+            <div class="form-group">
+              <label class="form-label">Was QR Sticker Placed?</label>
+              <div class="radio-group">
+                <label class="radio-btn">
+                  <input type="radio" name="qrPlaced" value="yes" onchange="updateQRUI()">
+                  <span class="radio-label">Yes</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="qrPlaced" value="no" onchange="updateQRUI()">
+                  <span class="radio-label">No</span>
+                </label>
+                <label class="radio-btn">
+                  <input type="radio" name="qrPlaced" value="not-available" onchange="updateQRUI()">
+                  <span class="radio-label">Not Available</span>
+                </label>
+              </div>
+            </div>
+
+            <div id="qrLocationGroup" style="display:none;">
+              <div class="form-group">
+                <label class="form-label">Placement Location</label>
+                <select class="input-field" id="qrLocation" onchange="updateQRLocationUI()">
+                  <option value="">Select location...</option>
+                  <option value="panel">Electrical Panel</option>
+                  <option value="garage">Garage</option>
+                  <option value="utility">Utility Room</option>
+                  <option value="cabinet">Inside Cabinet</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div class="form-group" id="qrLocationOtherGroup" style="display:none;">
+                <label class="form-label">Specify Location</label>
+                <input type="text" class="input-field" id="qrLocationOther" placeholder="e.g., Front door frame, Inside meter box">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">QR Placement Photo (Optional)</label>
+                <div class="photo-upload" onclick="document.getElementById('qrPhotoInput').click()">
+                  <i class="fas fa-camera"></i>
+                  <p>Photo of QR code placement</p>
+                  <span>Shows where the sticker was placed</span>
+                </div>
+                <input type="file" id="qrPhotoInput" accept="image/*" style="display:none" onchange="handlePhotoUpload(this, 'qrPhotos')">
+                <div class="photo-gallery" id="qrPhotos"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sticky-footer">
+          <button class="btn-footer-back" onclick="previousSection(12)">Back</button>
+          <button class="btn-footer-next" onclick="nextSection(12)">Next</button>
+        </div>
+      </div>
+
+      <!-- Section: Review & Submit -->
+      <div class="screen" id="section-13-reviewScreen">
+        <div class="setup-header">
+          <div class="setup-progress-bar">
+            <div class="setup-progress-fill" style="width: 100%;"></div>
+          </div>
+          <div class="setup-section-name">Section 13 of 13</div>
+          <div class="setup-title">Review & Submit</div>
+        </div>
+
+        <div class="setup-content">
+          <div class="setup-card">
+            <h3 style="font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 16px;">Setup Summary</h3>
+            <div id="reviewSummary"></div>
+          </div>
+
+          <div class="setup-card">
+            <div class="disclaimer-text" style="margin-bottom: 0;">
+              <i class="fas fa-check" style="color: var(--blue); margin-right: 8px;"></i>
+              <strong>Final Confirmation</strong><br><br>
+              I confirm this Setup Assist record is <strong>asset documentation only</strong> and does not represent a home inspection, condition assessment, code review, or repair recommendation.
+            </div>
+
+            <div class="form-group" style="margin-top: 16px;">
+              <label class="checkbox-btn">
+                <input type="checkbox" id="finalConfirm" onchange="updateReviewState()">
+                <span class="checkbox-label">I understand and agree to this confirmation</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="sticky-footer">
+          <button class="btn-footer-back" onclick="previousSection(13)">Back</button>
+          <button class="btn-footer-next" id="submitBtn" disabled onclick="submitSetup()">Submit Home Profile</button>
+        </div>
+      </div>
+
+      <!-- Success Screen -->
+      <div class="screen" id="successScreen">
+        <div class="scroll-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 20px;">
+          <div class="success-box">
+            <i class="fas fa-check-circle"></i>
+            <p style="margin-bottom: 8px; font-size: 16px;">Setup Assist Complete</p>
+            <p style="font-size: 12px; color: var(--text-secondary); margin: 0;">The home profile has been updated and is now available in the homeowner's HomeHub account.</p>
+          </div>
+
+          <div style="margin-top: 32px; width: 100%;">
+            <button class="btn btn-primary" style="margin-bottom: 10px;" onclick="viewPropertySummary()">View Property Summary</button>
+            <button class="btn btn-secondary" style="margin-bottom: 10px;" onclick="goToScreen('dashboardScreen')">Return to Dashboard</button>
+            <button class="btn btn-secondary" onclick="goToScreen('setupLandingScreen')">Start Another Setup</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Property Summary Screen -->
+      <div class="screen" id="propertySummaryScreen">
+        <div class="page-header">
+          <button class="back-btn" onclick="goToScreen('successScreen')">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <h2>Property Summary</h2>
+        </div>
+
+        <div class="scroll-content" id="summaryContent" style="padding-top: 16px;">
+          <!-- Summary will be populated by JavaScript -->
+        </div>
+
+        <div style="padding: 16px 20px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px;">
+          <button class="btn btn-secondary" style="flex: 1;" onclick="goToScreen('dashboardScreen')">Return to Dashboard</button>
+          <button class="btn btn-primary" style="flex: 1;" onclick="goToScreen('setupLandingScreen')">Start Another Setup</button>
+        </div>
+      </div>
+
+      <!-- Properties List Screen -->
+      <div class="screen" id="propertiesScreen">
+        <div class="page-header">
+          <button class="back-btn" onclick="goToScreen('dashboardScreen')">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <h2>My Properties</h2>
+        </div>
+
+        <div class="scroll-content">
+          <div class="setup-card" style="cursor: default;">
+            <div style="font-size: 13px; color: var(--text); margin-bottom: 16px;">
+              You have 3 assigned properties. Click any to begin Setup Assist.
+            </div>
+          </div>
+
+          <button type="button" onclick="selectPropertyForSetup('prop-001', '2847 Birch Lane', 'Sarah Johnson')" style="width: 100%; background: white; border: 2px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 12px; text-align: left; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.07); transition: all 0.2s; font-family: inherit;" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0; pointer-events: none;">
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: var(--text);">2847 Birch Lane</div>
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">Sarah Johnson</div>
+              </div>
+              <div style="font-size: 10px; font-weight: 600; background: var(--blue-light); color: var(--blue); padding: 3px 8px; border-radius: 6px;">Not Started</div>
+            </div>
+          </button>
+
+          <button type="button" onclick="selectPropertyForSetup('prop-002', '156 Oak Avenue', 'Michael Chen')" style="width: 100%; background: white; border: 2px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 12px; text-align: left; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.07); transition: all 0.2s; font-family: inherit;" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0; pointer-events: none;">
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: var(--text);">156 Oak Avenue</div>
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">Michael Chen</div>
+              </div>
+              <div style="font-size: 10px; font-weight: 600; background: var(--orange); color: white; padding: 3px 8px; border-radius: 6px; opacity: 0.8;">In Progress</div>
+            </div>
+          </button>
+
+          <button type="button" onclick="selectPropertyForSetup('prop-003', '421 Maple Drive', 'Jennifer Martinez')" style="width: 100%; background: white; border: 2px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 12px; text-align: left; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.07); transition: all 0.2s; font-family: inherit;" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0; pointer-events: none;">
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: var(--text);">421 Maple Drive</div>
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">Jennifer Martinez</div>
+              </div>
+              <div style="font-size: 10px; font-weight: 600; background: var(--green); color: white; padding: 3px 8px; border-radius: 6px;">Completed</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Profile Screen -->
+      <div class="screen" id="profileScreen">
+        <div class="page-header">
+          <button class="back-btn" onclick="goToScreen('dashboardScreen')">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <h2>My Profile</h2>
+        </div>
+
+        <div class="scroll-content">
+          <div class="setup-card">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--orange), var(--green)); color: white; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto; margin-bottom: 12px;">
+                <i class="fas fa-user"></i>
+              </div>
+              <div style="font-size: 16px; font-weight: 700; color: var(--text);">Alex Rivera</div>
+              <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">alex.rivera@homefirst.com</div>
+            </div>
+          </div>
+
+          <div class="setup-card">
+            <div class="setup-section-title">
+              <i class="fas fa-briefcase"></i>
+              Professional Information
+            </div>
+
+            <div style="background: #F5F9F8; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+              <div style="margin-bottom: 12px;">
+                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Company</div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--text); margin-top: 4px;" id="profileCompany">HomeFirst Inspections</div>
+              </div>
+              <div style="margin-bottom: 12px;">
+                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Professional Type</div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--text); margin-top: 4px;" id="profileType">Licensed Home Inspector</div>
+              </div>
+              <div style="margin-bottom: 12px;">
+                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">License Number</div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--text); margin-top: 4px;" id="profileLicense">CA-HI-2024-0847</div>
+              </div>
+              <div>
+                <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">License Expiration</div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--text); margin-top: 4px;" id="profileExpiration">June 15, 2026</div>
+              </div>
+            </div>
+
+            <div class="warning-box">
+              <i class="fas fa-check-circle" style="color: var(--green);"></i>
+              <p><strong>License & Insurance Verified</strong><br>Your credentials are current and verified in the HomeHub system.</p>
+            </div>
+          </div>
+
+          <div class="setup-card">
+            <div class="setup-section-title">
+              <i class="fas fa-edit"></i>
+              Edit Profile
+            </div>
+
+            <button class="btn btn-secondary" style="margin-bottom: 10px; width: 100%;" onclick="toggleEditMode()">
+              <i class="fas fa-pencil-alt"></i>
+              Edit Information
+            </button>
+
+            <div id="editFormContainer" style="display: none;">
+              <div class="form-group">
+                <label class="form-label">Company Name</label>
+                <input type="text" class="input-field" id="editCompany" placeholder="Company name">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Professional Type</label>
+                <select class="input-field" id="editType">
+                  <option value="">Select type...</option>
+                  <option value="Home Inspector">Home Inspector</option>
+                  <option value="Appraiser">Appraiser</option>
+                  <option value="Real Estate Agent">Real Estate Agent</option>
+                  <option value="Contractor">Contractor</option>
+                  <option value="Other Professional">Other Professional</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">License Number</label>
+                <input type="text" class="input-field" id="editLicense" placeholder="License number">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">License Expiration Date</label>
+                <input type="date" class="input-field" id="editExpiration">
+              </div>
+
+              <div style="display: flex; gap: 10px; margin-top: 16px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="toggleEditMode()">Cancel</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="saveProfileChanges()">Save Changes</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="setup-card">
+            <div class="setup-section-title">
+              <i class="fas fa-cog"></i>
+              Account Settings
+            </div>
+
+            <button class="btn btn-secondary" style="margin-bottom: 10px; width: 100%;">
+              <i class="fas fa-key"></i>
+              Change Password
+            </button>
+
+            <button class="btn btn-secondary" style="margin-bottom: 10px; width: 100%;">
+              <i class="fas fa-bell"></i>
+              Notification Settings
+            </button>
+
+            <button class="btn btn-secondary" style="margin-bottom: 10px; width: 100%;">
+              <i class="fas fa-lock"></i>
+              Privacy & Security
+            </button>
+
+            <button class="btn btn-danger" style="width: 100%;">
+              <i class="fas fa-sign-out-alt"></i>
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+      <div class="nav-item active" onclick="goToScreen('dashboardScreen')">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+      </div>
+      <div class="nav-item" onclick="goToScreen('propertiesScreen')">
+        <i class="fas fa-building"></i>
+        <span>Properties</span>
+      </div>
+      <div class="nav-item" onclick="goToScreen('setupLandingScreen')">
+        <i class="fas fa-clipboard-list"></i>
+        <span>Setup</span>
+      </div>
+      <div class="nav-item" onclick="goToScreen('profileScreen')">
+        <i class="fas fa-user"></i>
+        <span>Profile</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========== MOCK API LAYER ==========
+    // These functions simulate backend API calls using localStorage
+
+    const API = {
+      // Save setup draft to localStorage
+      saveSetupDraft: function(propertyId, setupData) {
+        const key = `setup_draft_${propertyId}`;
+        const existingData = JSON.parse(localStorage.getItem(key) || '{}');
+        const merged = { ...existingData, ...setupData, lastSaved: new Date().toISOString() };
+        localStorage.setItem(key, JSON.stringify(merged));
+        console.log('Draft saved:', propertyId, merged);
+        return { success: true, data: merged };
+      },
+
+      // Load setup draft from localStorage
+      loadSetupDraft: function(propertyId) {
+        const key = `setup_draft_${propertyId}`;
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : null;
+      },
+
+      // Submit completed setup
+      submitSetup: function(propertyId, setupData) {
+        const key = `setup_completed_${propertyId}`;
+        const submission = {
+          ...setupData,
+          propertyId,
+          submittedAt: new Date().toISOString(),
+          status: 'completed'
+        };
+        localStorage.setItem(key, JSON.stringify(submission));
+        // Remove draft
+        localStorage.removeItem(`setup_draft_${propertyId}`);
+        console.log('Setup submitted:', propertyId, submission);
+        return { success: true, setupId: `setup_${propertyId}_${Date.now()}` };
+      },
+
+      // Mock photo upload (would send to backend)
+      uploadSetupPhoto: function(propertyId, section, photo) {
+        console.log(`Photo uploaded for ${propertyId}, section ${section}:`, photo);
+        // In production, this would upload to S3 or similar
+        return { success: true, photoId: `photo_${Date.now()}`, url: URL.createObjectURL(photo) };
+      },
+
+      // Mock document upload
+      uploadSetupDocument: function(propertyId, docType, doc) {
+        console.log(`Document uploaded for ${propertyId}, type ${docType}:`, doc);
+        // In production, this would upload to S3 or similar
+        return { success: true, docId: `doc_${Date.now()}`, url: URL.createObjectURL(doc) };
+      }
+    };
+
+    // ========== APP STATE ==========
+    let currentProperty = {
+      id: null,
+      address: null,
+      owner: null,
+      setupData: {}
+    };
+
+    const sections = [
+      'section-1-corePropertyScreen',
+      'section-2-roofScreen',
+      'section-3-hvacScreen',
+      'section-4-waterHeaterScreen',
+      'section-5-electricalScreen',
+      'section-6-waterScreen',
+      'section-7-septicScreen',
+      'section-8-appliancesScreen',
+      'section-9-roomsScreen',
+      'section-10-documentsScreen',
+      'section-11-notesScreen',
+      'section-12-qrScreen',
+      'section-13-reviewScreen'
+    ];
+
+    let systemStorage = {
+      hvacSystems: [],
+      waterHeaters: [],
+      appliances: [],
+      rooms: [],
+      notes: [],
+      documents: []
+    };
+
+    // ========== NAVIGATION ==========
+    function goToScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+
+      // Update nav
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      if (screenId === 'dashboardScreen' || screenId === 'propertiesScreen') {
+        document.querySelectorAll('.nav-item')[screenId === 'dashboardScreen' ? 0 : 1].classList.add('active');
+      }
+
+      // Start QR scanner if navigating to scan QR screen
+      if (screenId === 'scanQRScreen') {
+        // Reset UI
+        document.getElementById('qr-error').style.display = 'none';
+        document.getElementById('qr-result').style.display = 'none';
+        document.getElementById('qr-scanner-overlay').style.display = 'flex';
+        document.getElementById('manual-qr-input').value = '';
+        // Start scanner
+        setTimeout(() => {
+          startQRScanner();
+        }, 100);
+      }
+    }
+
+    function showExistingProperties() {
+      // Show properties with existing/in-progress/completed setups
+      goToScreen('existingPropertiesScreen');
+    }
+
+    function selectPropertyForSetup(propId, address, owner) {
+      // User clicked on a property card in the selection screen
+      // Initialize setup and move to verification screen
+      console.log('selectPropertyForSetup called:', propId, address, owner);
+      currentProperty = { id: propId, address, owner, setupData: {} };
+      const existing = API.loadSetupDraft(propId);
+      if (existing) {
+        currentProperty.setupData = existing;
+      }
+      console.log('About to call goToScreen with verificationScreen');
+      goToScreen('verificationScreen');
+      console.log('goToScreen completed');
+    }
+
+    function startNewPropertySetup() {
+      // User entered a new property manually
+      const address = document.getElementById('newPropAddress').value;
+      const owner = document.getElementById('newPropOwner').value;
+
+      if (!address || !owner) {
+        alert('Please fill in Property Address and Homeowner Name');
+        return;
+      }
+
+      // Generate a unique property ID for this new property
+      const newPropId = 'new_' + Date.now();
+
+      console.log('startNewPropertySetup called:', newPropId, address, owner);
+      currentProperty = {
+        id: newPropId,
+        address,
+        owner,
+        setupData: {},
+        isNew: true
+      };
+
+      goToScreen('verificationScreen');
+    }
+
+    function initializeSetup(propId, address, owner) {
+      // Legacy/alternative entry point - same flow as selectPropertyForSetup
+      selectPropertyForSetup(propId, address, owner);
+    }
+
+    // ========== VERIFICATION SCREEN ==========
+    function updateVerificationState() {
+      const checked = document.getElementById('confirmProfessional').checked;
+      document.getElementById('verifyBtn').disabled = !checked;
+    }
+
+    // ========== PROPERTY CONFIRMATION ==========
+    function startWalkthrough() {
+      document.getElementById('propAddr').textContent = currentProperty.address;
+      document.getElementById('propOwner').textContent = currentProperty.owner;
+      document.getElementById('propId').textContent = currentProperty.id;
+      goToScreen('section-1-corePropertyScreen');
+    }
+
+    // ========== FORM HANDLING ==========
+    function saveSetupDraft() {
+      const formData = captureFormData();
+      currentProperty.setupData = { ...currentProperty.setupData, ...formData };
+      API.saveSetupDraft(currentProperty.id, currentProperty.setupData);
+    }
+
+    function captureFormData() {
+      const data = {};
+      // Capture all form inputs
+      document.querySelectorAll('input, select, textarea').forEach(el => {
+        if (el.id && el.value) {
+          if (el.type === 'checkbox' || el.type === 'radio') {
+            if (el.checked) data[el.name || el.id] = el.value;
+          } else {
+            data[el.id] = el.value;
+          }
+        }
+      });
+      return data;
+    }
+
+    // ========== PHOTO UPLOAD ==========
+    function handlePhotoUpload(input, containerId) {
+      const container = document.getElementById(containerId);
+      for (let file of input.files) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const photoItem = document.createElement('div');
+          photoItem.className = 'photo-item';
+          photoItem.innerHTML = `
+            <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+            <div class="photo-remove" onclick="this.parentElement.remove()">✕</div>
+          `;
+          container.appendChild(photoItem);
+
+          // Mock API call
+          API.uploadSetupPhoto(currentProperty.id, containerId, file);
+        };
+        reader.readAsDataURL(file);
+      }
+      input.value = '';
+    }
+
+    // ========== DOCUMENT UPLOAD ==========
+    function handleDocUpload(input, containerId) {
+      const file = input.files[0];
+      if (file) {
+        const displayId = containerId + 'Name';
+        const displayEl = document.getElementById(displayId);
+        if (displayEl) {
+          displayEl.textContent = '✓ ' + file.name;
+          displayEl.style.color = 'var(--green)';
+        }
+        API.uploadSetupDocument(currentProperty.id, containerId, file);
+      }
+      input.value = '';
+    }
+
+    // ========== SECTION NAVIGATION ==========
+    function nextSection(currentNum) {
+      saveSetupDraft();
+      if (currentNum < sections.length) {
+        goToScreen(sections[currentNum]);
+      }
+    }
+
+    function previousSection(currentNum) {
+      saveSetupDraft();
+      if (currentNum > 1) {
+        goToScreen(sections[currentNum - 2]);
+      }
+    }
+
+    // ========== ROOF SECTION ==========
+    function updateRoofUI() {
+      const material = document.querySelector('input[name="roofMaterial"]:checked')?.value;
+      document.getElementById('asphaltStyleGroup').style.display = material === 'asphalt' ? 'block' : 'none';
+    }
+
+    // ========== HVAC SECTION ==========
+    function showHVACForm() {
+      document.getElementById('hvacFormCard').style.display = 'block';
+    }
+
+    function hideHVACForm() {
+      document.getElementById('hvacFormCard').style.display = 'none';
+      clearHVACForm();
+    }
+
+    function clearHVACForm() {
+      document.getElementById('hvacLocation').value = '';
+      document.getElementById('hvacType').value = '';
+      document.getElementById('hvacMfg').value = '';
+      document.getElementById('hvacModel').value = '';
+      document.getElementById('hvacSerial').value = '';
+      document.getElementById('hvacYear').value = '';
+      document.getElementById('hvacFilter').value = '';
+      document.getElementById('hvacPhotos').innerHTML = '';
+      document.querySelectorAll('input[name="hvacFuel"]').forEach(r => r.checked = false);
+    }
+
+    function addHVACSystem() {
+      const system = {
+        location: document.getElementById('hvacLocation').value,
+        type: document.getElementById('hvacType').value,
+        mfg: document.getElementById('hvacMfg').value,
+        model: document.getElementById('hvacModel').value,
+        serial: document.getElementById('hvacSerial').value,
+        year: document.getElementById('hvacYear').value,
+        fuel: document.querySelector('input[name="hvacFuel"]:checked')?.value,
+        filter: document.getElementById('hvacFilter').value
+      };
+
+      if (system.location && system.type) {
+        systemStorage.hvacSystems.push(system);
+        renderHVACList();
+        hideHVACForm();
+        saveSetupDraft();
+      } else {
+        alert('Please fill in Location and Type');
+      }
+    }
+
+    function renderHVACList() {
+      const listEl = document.getElementById('hvacList');
+      listEl.innerHTML = '';
+      systemStorage.hvacSystems.forEach((sys, idx) => {
+        const entry = document.createElement('div');
+        entry.className = 'system-entry';
+        entry.innerHTML = `
+          <div class="system-entry-info">
+            <div class="system-entry-name">${sys.location} - ${sys.type}</div>
+            <div class="system-entry-details">${sys.mfg} ${sys.model || ''}</div>
+          </div>
+          <button class="system-entry-remove" onclick="removeHVACSystem(${idx})">×</button>
+        `;
+        listEl.appendChild(entry);
+      });
+    }
+
+    function removeHVACSystem(idx) {
+      systemStorage.hvacSystems.splice(idx, 1);
+      renderHVACList();
+      saveSetupDraft();
+    }
+
+    function loadExistingSetup() {
+      alert('Resume functionality: Load most recent draft');
+    }
+
+    // ========== WATER HEATER SECTION ==========
+    function showWHForm() {
+      document.getElementById('whFormCard').style.display = 'block';
+    }
+
+    function hideWHForm() {
+      document.getElementById('whFormCard').style.display = 'none';
+      clearWHForm();
+    }
+
+    function clearWHForm() {
+      document.getElementById('whMfg').value = '';
+      document.getElementById('whModel').value = '';
+      document.getElementById('whSerial').value = '';
+      document.getElementById('whCapacity').value = '';
+      document.getElementById('whCapacityOther').value = '';
+      document.getElementById('whCapacityOtherGroup').style.display = 'none';
+      document.getElementById('whYear').value = '';
+      document.getElementById('whLocation').value = '';
+      document.getElementById('whPhotos').innerHTML = '';
+      document.querySelectorAll('input[name="whType"]').forEach(r => r.checked = false);
+      document.querySelectorAll('input[name="whFuel"]').forEach(r => r.checked = false);
+    }
+
+    function addWaterHeater() {
+      const capacitySelect = document.getElementById('whCapacity').value;
+      let capacity = capacitySelect;
+
+      // If "Other" is selected, use the custom input value
+      if (capacitySelect === 'other') {
+        capacity = document.getElementById('whCapacityOther').value;
+        if (!capacity) {
+          alert('Please specify the capacity');
+          return;
+        }
+      }
+
+      const wh = {
+        type: document.querySelector('input[name="whType"]:checked')?.value,
+        mfg: document.getElementById('whMfg').value,
+        model: document.getElementById('whModel').value,
+        serial: document.getElementById('whSerial').value,
+        capacity: capacity,
+        year: document.getElementById('whYear').value,
+        fuel: document.querySelector('input[name="whFuel"]:checked')?.value,
+        location: document.getElementById('whLocation').value
+      };
+
+      if (wh.type && wh.mfg) {
+        systemStorage.waterHeaters.push(wh);
+        renderWHList();
+        hideWHForm();
+        saveSetupDraft();
+      } else {
+        alert('Please fill in Type and Manufacturer');
+      }
+    }
+
+    function renderWHList() {
+      const listEl = document.getElementById('whList');
+      listEl.innerHTML = '';
+      systemStorage.waterHeaters.forEach((wh, idx) => {
+        const entry = document.createElement('div');
+        entry.className = 'system-entry';
+        entry.innerHTML = `
+          <div class="system-entry-info">
+            <div class="system-entry-name">${wh.type} - ${wh.mfg}</div>
+            <div class="system-entry-details">${wh.capacity || 'Unknown capacity'}</div>
+          </div>
+          <button class="system-entry-remove" onclick="removeWaterHeater(${idx})">×</button>
+        `;
+        listEl.appendChild(entry);
+      });
+    }
+
+    function removeWaterHeater(idx) {
+      systemStorage.waterHeaters.splice(idx, 1);
+      renderWHList();
+      saveSetupDraft();
+    }
+
+    // ========== ELECTRICAL PANEL SECTION ==========
+    function updateSubpanelUI() {
+      const choice = document.querySelector('input[name="subpanels"]:checked')?.value;
+      document.getElementById('subpanelGroup').style.display = choice === 'yes' ? 'block' : 'none';
+    }
+
+    function showSubpanelForm() {
+      alert('Subpanel form coming soon');
+    }
+
+    // ========== WATER HEATER CAPACITY UI ==========
+    function updateWHCapacityUI() {
+      const capacity = document.getElementById('whCapacity').value;
+      const otherGroup = document.getElementById('whCapacityOtherGroup');
+      if (capacity === 'other') {
+        otherGroup.style.display = 'block';
+      } else {
+        otherGroup.style.display = 'none';
+        document.getElementById('whCapacityOther').value = '';
+      }
+    }
+
+    // ========== WATER SYSTEM SECTION ==========
+    function updateWaterUI() {
+      const source = document.querySelector('input[name="waterSource"]:checked')?.value;
+      document.getElementById('municipalGroup').style.display = source === 'municipal' ? 'block' : 'none';
+      document.getElementById('wellGroup').style.display = source === 'well' ? 'block' : 'none';
+    }
+
+    // ========== SEPTIC SECTION ==========
+    function updateSepticUI() {
+      const wastewater = document.querySelector('input[name="wastewater"]:checked')?.value;
+      document.getElementById('septicGroup').style.display = wastewater === 'septic' ? 'block' : 'none';
+    }
+
+    // ========== APPLIANCES SECTION ==========
+    function showApplianceForm() {
+      document.getElementById('applianceFormCard').style.display = 'block';
+    }
+
+    function hideApplianceForm() {
+      document.getElementById('applianceFormCard').style.display = 'none';
+      clearApplianceForm();
+    }
+
+    function clearApplianceForm() {
+      document.getElementById('applianceType').value = '';
+      document.getElementById('appMfg').value = '';
+      document.getElementById('appModel').value = '';
+      document.getElementById('appSerial').value = '';
+      document.getElementById('appYear').value = '';
+      document.getElementById('appLocation').value = '';
+      document.getElementById('appPhotos').innerHTML = '';
+    }
+
+    function addAppliance() {
+      const app = {
+        type: document.getElementById('applianceType').value,
+        mfg: document.getElementById('appMfg').value,
+        model: document.getElementById('appModel').value,
+        serial: document.getElementById('appSerial').value,
+        year: document.getElementById('appYear').value,
+        location: document.getElementById('appLocation').value
+      };
+
+      if (app.type && app.mfg) {
+        systemStorage.appliances.push(app);
+        renderApplianceList();
+        hideApplianceForm();
+        saveSetupDraft();
+      } else {
+        alert('Please fill in Type and Manufacturer');
+      }
+    }
+
+    function renderApplianceList() {
+      const listEl = document.getElementById('applianceList');
+      listEl.innerHTML = '';
+      systemStorage.appliances.forEach((app, idx) => {
+        const entry = document.createElement('div');
+        entry.className = 'system-entry';
+        entry.innerHTML = `
+          <div class="system-entry-info">
+            <div class="system-entry-name">${app.type} - ${app.mfg}</div>
+            <div class="system-entry-details">${app.location || 'Unknown location'}</div>
+          </div>
+          <button class="system-entry-remove" onclick="removeAppliance(${idx})">×</button>
+        `;
+        listEl.appendChild(entry);
+      });
+    }
+
+    function removeAppliance(idx) {
+      systemStorage.appliances.splice(idx, 1);
+      renderApplianceList();
+      saveSetupDraft();
+    }
+
+    // ========== ROOMS SECTION ==========
+    function showRoomForm() {
+      document.getElementById('roomFormCard').style.display = 'block';
+    }
+
+    function hideRoomForm() {
+      document.getElementById('roomFormCard').style.display = 'none';
+      clearRoomForm();
+    }
+
+    function clearRoomForm() {
+      document.getElementById('roomName').value = '';
+      document.getElementById('roomType').value = '';
+      document.getElementById('roomPaint').value = '';
+      document.getElementById('roomFlooring').value = '';
+      document.getElementById('roomPhotos').innerHTML = '';
+      document.querySelectorAll('input[name="roomFloor"]').forEach(r => r.checked = false);
+    }
+
+    function addRoom() {
+      const room = {
+        name: document.getElementById('roomName').value,
+        type: document.getElementById('roomType').value,
+        floor: document.querySelector('input[name="roomFloor"]:checked')?.value,
+        paint: document.getElementById('roomPaint').value,
+        flooring: document.getElementById('roomFlooring').value
+      };
+
+      if (room.name && room.type) {
+        systemStorage.rooms.push(room);
+        renderRoomList();
+        hideRoomForm();
+        saveSetupDraft();
+      } else {
+        alert('Please fill in Name and Type');
+      }
+    }
+
+    function renderRoomList() {
+      const listEl = document.getElementById('roomList');
+      listEl.innerHTML = '';
+      systemStorage.rooms.forEach((room, idx) => {
+        const entry = document.createElement('div');
+        entry.className = 'system-entry';
+        entry.innerHTML = `
+          <div class="system-entry-info">
+            <div class="system-entry-name">${room.name}</div>
+            <div class="system-entry-details">${room.type}</div>
+          </div>
+          <button class="system-entry-remove" onclick="removeRoom(${idx})">×</button>
+        `;
+        listEl.appendChild(entry);
+      });
+    }
+
+    function removeRoom(idx) {
+      systemStorage.rooms.splice(idx, 1);
+      renderRoomList();
+      saveSetupDraft();
+    }
+
+    // ========== NOTES SECTION ==========
+    function addNote() {
+      const noteText = document.getElementById('newNote').value;
+      const source = document.querySelector('input[name="noteSource"]:checked')?.value;
+
+      if (noteText && source) {
+        systemStorage.notes.push({ text: noteText, source });
+        renderNotesList();
+        document.getElementById('newNote').value = '';
+        document.querySelectorAll('input[name="noteSource"]').forEach(r => r.checked = false);
+        saveSetupDraft();
+      } else {
+        alert('Please fill in Note and Source');
+      }
+    }
+
+    function renderNotesList() {
+      const listEl = document.getElementById('notesList');
+      listEl.innerHTML = '';
+      systemStorage.notes.forEach((note, idx) => {
+        const entry = document.createElement('div');
+        entry.className = 'system-entry';
+        entry.innerHTML = `
+          <div class="system-entry-info">
+            <div class="system-entry-name" style="word-break: break-word;">${note.text}</div>
+            <div class="system-entry-details">Source: ${note.source}</div>
+          </div>
+          <button class="system-entry-remove" onclick="removeNote(${idx})">×</button>
+        `;
+        listEl.appendChild(entry);
+      });
+    }
+
+    function removeNote(idx) {
+      systemStorage.notes.splice(idx, 1);
+      renderNotesList();
+      saveSetupDraft();
+    }
+
+    // ========== QR SECTION ==========
+    function updateQRUI() {
+      const placed = document.querySelector('input[name="qrPlaced"]:checked')?.value;
+      document.getElementById('qrLocationGroup').style.display = placed === 'yes' ? 'block' : 'none';
+    }
+
+    function updateQRLocationUI() {
+      const location = document.getElementById('qrLocation').value;
+      const otherGroup = document.getElementById('qrLocationOtherGroup');
+      if (location === 'other') {
+        otherGroup.style.display = 'block';
+      } else {
+        otherGroup.style.display = 'none';
+        document.getElementById('qrLocationOther').value = '';
+      }
+    }
+
+    // ========== QR CODE SCANNER ==========
+    let qrScannerActive = false;
+    let qrScannerIntervalId = null;
+
+    function startQRScanner() {
+      const video = document.getElementById('qr-video');
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      qrScannerActive = true;
+
+      // Request camera access
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      }).then(stream => {
+        video.srcObject = stream;
+        video.onloadedmetadata = () => {
+          video.play();
+          // Start scanning loop
+          qrScannerIntervalId = setInterval(() => {
+            if (!qrScannerActive) return;
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, canvas.width, canvas.height);
+
+            if (code) {
+              console.log('QR Code found:', code.data);
+              processQRCode(code.data);
+              stopQRScanner();
+            }
+          }, 300);
+        };
+      }).catch(err => {
+        console.error('Camera access denied:', err);
+        showQRError('Camera access denied. Please check your browser permissions.');
+        document.getElementById('qr-scanner-ready').style.display = 'flex';
+      });
+    }
+
+    function stopQRScanner() {
+      qrScannerActive = false;
+      if (qrScannerIntervalId) {
+        clearInterval(qrScannerIntervalId);
+        qrScannerIntervalId = null;
+      }
+      const video = document.getElementById('qr-video');
+      if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+      }
+    }
+
+    function showQRError(message) {
+      document.getElementById('qr-error').style.display = 'block';
+      document.getElementById('qr-error-text').textContent = message;
+      document.getElementById('qr-result').style.display = 'none';
+    }
+
+    function hideQRError() {
+      document.getElementById('qr-error').style.display = 'none';
+    }
+
+    function processQRCode(qrData) {
+      console.log('Processing QR code:', qrData);
+
+      // Expected format: prop-001:2847 Birch Lane:Sarah Johnson
+      // or just: prop-001
+      const parts = qrData.split(':');
+      const propId = parts[0];
+
+      // Try to find this property in our known properties
+      const knownProperties = {
+        'prop-001': { address: '2847 Birch Lane', owner: 'Sarah Johnson' },
+        'prop-002': { address: '156 Oak Avenue', owner: 'Michael Chen' },
+        'prop-003': { address: '421 Maple Drive', owner: 'Jennifer Martinez' }
+      };
+
+      const property = knownProperties[propId];
+      if (property) {
+        currentProperty = {
+          id: propId,
+          address: property.address,
+          owner: property.owner,
+          setupData: {},
+          scannedFromQR: true
+        };
+
+        // Load any existing draft
+        const existing = API.loadSetupDraft(propId);
+        if (existing) {
+          currentProperty.setupData = existing;
+        }
+
+        // Show success message
+        document.getElementById('qr-result').style.display = 'block';
+        document.getElementById('qr-result-text').textContent = `Found: ${property.address} (${property.owner})`;
+        document.getElementById('qr-scanner-overlay').style.display = 'none';
+        hideQRError();
+
+        // Wire up the proceed button
+        document.getElementById('qr-proceed-btn').onclick = function() {
+          goToScreen('verificationScreen');
+        };
+      } else {
+        showQRError(`Property "${propId}" not found in system. Please verify the QR code or use manual entry.`);
+        document.getElementById('qr-scanner-overlay').style.display = 'none';
+        // Restart scanner
+        setTimeout(() => {
+          document.getElementById('qr-scanner-overlay').style.display = 'flex';
+          startQRScanner();
+        }, 2000);
+      }
+    }
+
+    function processManualQRInput() {
+      const input = document.getElementById('manual-qr-input').value.trim();
+      if (!input) {
+        showQRError('Please enter QR code data');
+        return;
+      }
+      processQRCode(input);
+    }
+
+    // ========== REVIEW & SUBMIT ==========
+    function generateReviewSummary() {
+      const summary = `
+        <div class="section-item">
+          <div class="section-item-title">Core Property Profile</div>
+          <div class="section-item-badge">✓ Complete</div>
+        </div>
+        <div class="section-item">
+          <div class="section-item-title">Roof Asset Details</div>
+          <div class="section-item-badge">✓ Complete</div>
+        </div>
+        <div class="section-item">
+          <div class="section-item-title">HVAC Systems</div>
+          <div class="section-item-badge">${systemStorage.hvacSystems.length} added</div>
+        </div>
+        <div class="section-item">
+          <div class="section-item-title">Water Heaters</div>
+          <div class="section-item-badge">${systemStorage.waterHeaters.length} added</div>
+        </div>
+        <div class="section-item">
+          <div class="section-item-title">Electrical Panel</div>
+          <div class="section-item-badge">✓ Complete</div>
+        </div>
+        <div class="section-item">
+          <div class="section-item-title">Water System</div>
+          <div class="section-item-badge">✓ Complete</div>
+        </div>
+        <div class="section-item">
+          <div class="section-item-title">Septic / Sewer</div>
+          <div class="section-item-badge">✓ Complete</div>
+        </div>
+        <div class="section-item">
+          <div class="section-item-title">Appliances</div>
+          <div class="section-item-badge">${systemStorage.appliances.length} added</div>
+        </div>
+        <div class="section-item">
+          <div class="section-item-title">Rooms</div>
+          <div class="section-item-badge">${systemStorage.rooms.length} added</div>
+        </div>
+        <div class="section-item">
+          <div class="section-item-title">Documents</div>
+          <div class="section-item-badge">${systemStorage.documents.length} uploaded</div>
+        </div>
+        <div class="section-item">
+          <div class="section-item-title">Known Notes</div>
+          <div class="section-item-badge">${systemStorage.notes.length} added</div>
+        </div>
+      `;
+      document.getElementById('reviewSummary').innerHTML = summary;
+    }
+
+    function updateReviewState() {
+      const checked = document.getElementById('finalConfirm').checked;
+      document.getElementById('submitBtn').disabled = !checked;
+    }
+
+    function submitSetup() {
+      const allData = {
+        ...currentProperty.setupData,
+        systemStorage
+      };
+
+      const result = API.submitSetup(currentProperty.id, allData);
+      if (result.success) {
+        goToScreen('successScreen');
+      }
+    }
+
+    function viewPropertySummary() {
+      // Populate the summary screen with all collected data
+      const summaryContent = document.getElementById('summaryContent');
+      const data = currentProperty.setupData;
+
+      let html = `
+        <!-- Property Header -->
+        <div style="background: var(--blue); color: white; padding: 16px; border-radius: 14px; margin-bottom: 20px;">
+          <div style="font-size: 12px; opacity: 0.8; margin-bottom: 4px;">Property</div>
+          <div style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">${currentProperty.address || 'N/A'}</div>
+          <div style="font-size: 12px; opacity: 0.9;">Owner: ${currentProperty.owner || 'N/A'}</div>
+        </div>
+
+        <!-- Core Property Profile -->
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-home" style="color: var(--blue);"></i> Core Property Profile
+          </div>
+          <div style="background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border);">
+            ${data.propertyType ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Type:</span><span style="font-weight: 600;">${data.propertyType}</span></div>` : ''}
+            ${data.yearBuilt ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Year Built:</span><span style="font-weight: 600;">${data.yearBuilt}</span></div>` : ''}
+            ${data.squareFootage ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Square Footage:</span><span style="font-weight: 600;">${data.squareFootage.toLocaleString()} sq ft</span></div>` : ''}
+            ${data.stories ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Stories:</span><span style="font-weight: 600;">${data.stories}</span></div>` : ''}
+            ${data.foundation ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Foundation:</span><span style="font-weight: 600;">${data.foundation}</span></div>` : ''}
+            ${data.garage ? `<div style="padding: 12px 16px; display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Garage:</span><span style="font-weight: 600;">${data.garage}</span></div>` : ''}
+          </div>
+        </div>
+
+        <!-- Roof Asset -->
+        ${data.roofMaterial ? `
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-home" style="color: var(--blue);"></i> Roof Asset
+          </div>
+          <div style="background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border);">
+            <div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Material:</span><span style="font-weight: 600;">${data.roofMaterial}</span></div>
+            ${data.roofStyle ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Style:</span><span style="font-weight: 600;">${data.roofStyle}</span></div>` : ''}
+            ${data.roofAge ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Age:</span><span style="font-weight: 600;">${data.roofAge} years</span></div>` : ''}
+            ${data.roofManufacturer ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Manufacturer:</span><span style="font-weight: 600;">${data.roofManufacturer}</span></div>` : ''}
+            ${data.roofModel ? `<div style="padding: 12px 16px; display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Model:</span><span style="font-weight: 600;">${data.roofModel}</span></div>` : ''}
+          </div>
+        </div>
+        ` : ''}
+
+        <!-- HVAC Systems -->
+        ${systemStorage.hvacSystems.length > 0 ? `
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-wind" style="color: var(--blue);"></i> HVAC Systems (${systemStorage.hvacSystems.length})
+          </div>
+          ${systemStorage.hvacSystems.map((hvac, idx) => `
+          <div style="background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 10px;">
+            <div style="padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--blue-light); font-weight: 600; color: var(--blue);">Unit ${idx + 1}</div>
+            ${hvac.type ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Type:</span><span style="font-weight: 600;">${hvac.type}</span></div>` : ''}
+            ${hvac.manufacturer ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Manufacturer:</span><span style="font-weight: 600;">${hvac.manufacturer}</span></div>` : ''}
+            ${hvac.model ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Model:</span><span style="font-weight: 600;">${hvac.model}</span></div>` : ''}
+            ${hvac.serialNumber ? `<div style="padding: 12px 16px; display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Serial:</span><span style="font-weight: 600;">${hvac.serialNumber}</span></div>` : ''}
+          </div>
+          `).join('')}
+        </div>
+        ` : ''}
+
+        <!-- Water Heater -->
+        ${systemStorage.waterHeaters.length > 0 ? `
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-droplet" style="color: var(--blue);"></i> Water Heater(s) (${systemStorage.waterHeaters.length})
+          </div>
+          ${systemStorage.waterHeaters.map((wh, idx) => `
+          <div style="background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 10px;">
+            <div style="padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--blue-light); font-weight: 600; color: var(--blue);">Unit ${idx + 1}</div>
+            ${wh.type ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Type:</span><span style="font-weight: 600;">${wh.type}</span></div>` : ''}
+            ${wh.capacity ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Capacity:</span><span style="font-weight: 600;">${wh.capacity}</span></div>` : ''}
+            ${wh.manufacturer ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Manufacturer:</span><span style="font-weight: 600;">${wh.manufacturer}</span></div>` : ''}
+            ${wh.model ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Model:</span><span style="font-weight: 600;">${wh.model}</span></div>` : ''}
+            ${wh.serialNumber ? `<div style="padding: 12px 16px; display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Serial:</span><span style="font-weight: 600;">${wh.serialNumber}</span></div>` : ''}
+          </div>
+          `).join('')}
+        </div>
+        ` : ''}
+
+        <!-- Electrical Panel -->
+        ${data.electricalPanel ? `
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-bolt" style="color: var(--blue);"></i> Electrical Panel
+          </div>
+          <div style="background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border);">
+            <div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Type:</span><span style="font-weight: 600;">${data.electricalPanel}</span></div>
+            ${data.electricalAmperage ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Amperage:</span><span style="font-weight: 600;">${data.electricalAmperage}</span></div>` : ''}
+            ${data.electricalManufacturer ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Manufacturer:</span><span style="font-weight: 600;">${data.electricalManufacturer}</span></div>` : ''}
+            ${data.electricalModel ? `<div style="padding: 12px 16px; display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Model:</span><span style="font-weight: 600;">${data.electricalModel}</span></div>` : ''}
+          </div>
+        </div>
+        ` : ''}
+
+        <!-- Water System -->
+        ${data.waterSystem ? `
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-water" style="color: var(--blue);"></i> Water System
+          </div>
+          <div style="background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border);">
+            <div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Source:</span><span style="font-weight: 600;">${data.waterSystem}</span></div>
+            ${data.waterPressureRegulator ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Pressure Regulator:</span><span style="font-weight: 600;">${data.waterPressureRegulator}</span></div>` : ''}
+            ${data.waterSoftener ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Water Softener:</span><span style="font-weight: 600;">${data.waterSoftener}</span></div>` : ''}
+            ${data.waterWellAge ? `<div style="padding: 12px 16px; display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Well Age:</span><span style="font-weight: 600;">${data.waterWellAge} years</span></div>` : ''}
+          </div>
+        </div>
+        ` : ''}
+
+        <!-- Septic/Sewer -->
+        ${data.septicSewer ? `
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-toilet" style="color: var(--blue);"></i> Septic/Sewer System
+          </div>
+          <div style="background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border);">
+            <div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Type:</span><span style="font-weight: 600;">${data.septicSewer}</span></div>
+            ${data.septicTankAge ? `<div style="padding: 12px 16px; display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Age:</span><span style="font-weight: 600;">${data.septicTankAge} years</span></div>` : ''}
+          </div>
+        </div>
+        ` : ''}
+
+        <!-- Appliances -->
+        ${systemStorage.appliances.length > 0 ? `
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-kitchen-set" style="color: var(--blue);"></i> Appliances (${systemStorage.appliances.length})
+          </div>
+          ${systemStorage.appliances.map((app, idx) => `
+          <div style="background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 10px;">
+            <div style="padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--blue-light); font-weight: 600; color: var(--blue);">${app.type}</div>
+            ${app.manufacturer ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Manufacturer:</span><span style="font-weight: 600;">${app.manufacturer}</span></div>` : ''}
+            ${app.model ? `<div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Model:</span><span style="font-weight: 600;">${app.model}</span></div>` : ''}
+            ${app.serialNumber ? `<div style="padding: 12px 16px; display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Serial:</span><span style="font-weight: 600;">${app.serialNumber}</span></div>` : ''}
+          </div>
+          `).join('')}
+        </div>
+        ` : ''}
+
+        <!-- Rooms -->
+        ${systemStorage.rooms.length > 0 ? `
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-door-open" style="color: var(--blue);"></i> Rooms (${systemStorage.rooms.length})
+          </div>
+          <div style="background: white; border-radius: 12px; padding: 12px 16px; border: 1px solid var(--border);">
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              ${systemStorage.rooms.map(room => `<span style="background: var(--blue-light); color: var(--blue); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;">${room}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+        ` : ''}
+
+        <!-- Documents -->
+        ${systemStorage.documents.length > 0 ? `
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-file" style="color: var(--blue);"></i> Documents (${systemStorage.documents.length})
+          </div>
+          <div style="background: white; border-radius: 12px; padding: 12px 16px; border: 1px solid var(--border);">
+            <ul style="list-style: none; padding: 0; margin: 0;">
+              ${systemStorage.documents.map(doc => `<li style="padding: 8px 0; border-bottom: 1px solid var(--border); color: var(--text-secondary); font-size: 12px;"><i class="fas fa-check-circle" style="color: var(--green); margin-right: 6px;"></i>${doc.name || 'Document'}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+        ` : ''}
+
+        <!-- Notes -->
+        ${systemStorage.notes.length > 0 ? `
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-sticky-note" style="color: var(--blue);"></i> Notes (${systemStorage.notes.length})
+          </div>
+          ${systemStorage.notes.map((note, idx) => `
+          <div style="background: white; border-radius: 12px; padding: 12px 16px; border: 1px solid var(--border); margin-bottom: 10px;">
+            <div style="color: var(--text-secondary); font-size: 11px; margin-bottom: 6px;">Note ${idx + 1}</div>
+            <div style="color: var(--text); font-size: 12px; line-height: 1.4;">${note}</div>
+          </div>
+          `).join('')}
+        </div>
+        ` : ''}
+
+        <!-- QR Code Location -->
+        ${data.qrLocation ? `
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-qrcode" style="color: var(--blue);"></i> QR Code Placement
+          </div>
+          <div style="background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border);">
+            <div style="padding: 12px 16px; display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Location:</span><span style="font-weight: 600;">${data.qrLocation}</span></div>
+            ${data.qrLocationOther ? `<div style="padding: 12px 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between;"><span style="color: var(--text-secondary);">Details:</span><span style="font-weight: 600;">${data.qrLocationOther}</span></div>` : ''}
+          </div>
+        </div>
+        ` : ''}
+
+        <!-- Completion Status -->
+        <div style="background: linear-gradient(135deg, var(--green), #1fb881); color: white; padding: 16px; border-radius: 14px; margin-bottom: 20px; text-align: center;">
+          <div style="font-size: 14px; font-weight: 700; margin-bottom: 4px;">
+            <i class="fas fa-check-circle"></i> Setup Complete
+          </div>
+          <div style="font-size: 11px; opacity: 0.9;">All property details have been successfully recorded</div>
+        </div>
+      `;
+
+      summaryContent.innerHTML = html;
+      goToScreen('propertySummaryScreen');
+    }
+
+    // ========== PROFILE MANAGEMENT ==========
+    let profileEditMode = false;
+
+    function toggleEditMode() {
+      profileEditMode = !profileEditMode;
+      const editForm = document.getElementById('editFormContainer');
+
+      if (profileEditMode) {
+        // Populate form with current values
+        document.getElementById('editCompany').value = document.getElementById('profileCompany').textContent;
+        document.getElementById('editType').value = document.getElementById('profileType').textContent;
+        document.getElementById('editLicense').value = document.getElementById('profileLicense').textContent;
+        // Convert date format for input
+        const expiration = document.getElementById('profileExpiration').textContent;
+        // Simple conversion: "June 15, 2026" -> "2026-06-15"
+        const months = { 'January': '01', 'February': '02', 'March': '03', 'April': '04', 'May': '05', 'June': '06', 'July': '07', 'August': '08', 'September': '09', 'October': '10', 'November': '11', 'December': '12' };
+        const parts = expiration.split(' ');
+        const month = months[parts[0]];
+        const day = parts[1].replace(',', '');
+        const year = parts[2];
+        document.getElementById('editExpiration').value = `${year}-${month}-${String(day).padStart(2, '0')}`;
+
+        editForm.style.display = 'block';
+      } else {
+        editForm.style.display = 'none';
+      }
+    }
+
+    function saveProfileChanges() {
+      const company = document.getElementById('editCompany').value;
+      const type = document.getElementById('editType').value;
+      const license = document.getElementById('editLicense').value;
+      const expiration = document.getElementById('editExpiration').value;
+
+      if (!company || !type || !license || !expiration) {
+        alert('Please fill in all fields');
+        return;
+      }
+
+      // Format date back to "Month Day, Year"
+      const dateObj = new Date(expiration + 'T00:00:00');
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const formattedDate = `${monthNames[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}`;
+
+      // Update profile display
+      document.getElementById('profileCompany').textContent = company;
+      document.getElementById('profileType').textContent = type;
+      document.getElementById('profileLicense').textContent = license;
+      document.getElementById('profileExpiration').textContent = formattedDate;
+
+      // Save to localStorage
+      const profileData = {
+        name: 'Alex Rivera',
+        email: 'alex.rivera@homefirst.com',
+        company,
+        type,
+        license,
+        expiration: formattedDate,
+        lastUpdated: new Date().toISOString()
+      };
+      localStorage.setItem('professional_profile', JSON.stringify(profileData));
+
+      // Close edit mode
+      profileEditMode = false;
+      document.getElementById('editFormContainer').style.display = 'none';
+
+      // Show success feedback
+      alert('Profile updated successfully!');
+    }
+
+    // ========== INITIALIZATION ==========
+    document.addEventListener('DOMContentLoaded', function() {
+      // Wire up property selection buttons
+      const prop1Btn = document.getElementById('prop-001-btn');
+      const prop2Btn = document.getElementById('prop-002-btn');
+      const prop3Btn = document.getElementById('prop-003-btn');
+
+      if (prop1Btn) {
+        prop1Btn.addEventListener('click', function() {
+          console.log('Prop 1 button clicked');
+          selectPropertyForSetup('prop-001', '2847 Birch Lane', 'Sarah Johnson');
+        });
+      }
+
+      if (prop2Btn) {
+        prop2Btn.addEventListener('click', function() {
+          console.log('Prop 2 button clicked');
+          selectPropertyForSetup('prop-002', '156 Oak Avenue', 'Michael Chen');
+        });
+      }
+
+      if (prop3Btn) {
+        prop3Btn.addEventListener('click', function() {
+          console.log('Prop 3 button clicked');
+          selectPropertyForSetup('prop-003', '421 Maple Drive', 'Jennifer Martinez');
+        });
+      }
+
+      // Initialize any other listeners
+      const reviewScreen = document.getElementById('section-13-reviewScreen');
+      if (reviewScreen) {
+        reviewScreen.addEventListener('shown', function() {
+          generateReviewSummary();
+        });
+      }
+    });
+  </script>
+</body>
+</html>

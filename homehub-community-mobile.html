@@ -1,0 +1,1331 @@
+<!--
+================================================================================
+HomeHub Application Suite - homehub-community-mobile.html
+================================================================================
+
+TITLE: Homehub Community Mobile
+PURPOSE: Community features including social interactions and shared resources
+LAST UPDATED: 2026-05-16
+
+This HTML file is part of the HomeHub platform - a comprehensive property
+management system for homeowners. Single-page application with vanilla JS,
+responsive design, and dark mode support.
+
+================================================================================
+STRUCTURE: <style> CSS | <body> HTML | <script> JavaScript
+================================================================================
+
+CSS VARIABLES: --blue, --green, --orange, --gold (+ light/dark variants)
+RESPONSIVE: Mobile (<768px) | Tablet (768px) | Desktop (1024px+)
+DARK MODE: [data-theme="dark"] selector overrides CSS variables
+
+Key Components:
+  • Sidebar/Navigation (fixed 280px, collapsible on mobile)
+  • Responsive grid/flexbox layouts
+  • Card-based UI components
+  • Modal overlays for forms
+  • Dynamic JavaScript interactions
+
+================================================================================
+QUICK REFERENCE
+================================================================================
+
+CSS Customization:
+  1. Update color variables in :root and [data-theme="dark"]
+  2. Modify font-size and padding for spacing
+  3. Adjust media queries for different breakpoints
+
+JavaScript Patterns:
+  • DOM selection: querySelector, querySelectorAll
+  • Events: addEventListener, event delegation
+  • Storage: localStorage for persistent settings
+  • DOM updates: innerHTML, classList, setAttribute
+
+Testing:
+  ✓ Responsive design (test all breakpoints)
+  ✓ Dark mode toggle
+  ✓ Keyboard navigation
+  ✓ Button/form interactions
+  ✓ Cross-browser compatibility
+
+================================================================================
+For detailed documentation, see sections marked with === throughout the file
+================================================================================
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HomeHub – Community (Homeowner)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.js">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #E8EDF5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  /* Phone frame */
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: #F8FAFC;
+    border-radius: 44px;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.25), 0 0 0 10px #1a1a2e, 0 0 0 12px #2d2d4e;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  /* Status bar */
+  .status-bar {
+    background: white;
+    padding: 14px 24px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1E293B;
+    flex-shrink: 0;
+    z-index: 100;
+  }
+  .status-bar .notch {
+    width: 100px;
+    height: 26px;
+    background: #1a1a2e;
+    border-radius: 0 0 18px 18px;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+
+  /* Screen container */
+  .screen-container {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+  .screen {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: none;
+    flex-direction: column;
+    background: #F8FAFC;
+    scrollbar-width: none;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+  .screen.active { display: flex; }
+
+  /* Bottom nav */
+  .bottom-nav {
+    background: white;
+    border-top: 1px solid #E2E8F0;
+    display: flex;
+    padding: 8px 0 20px;
+    flex-shrink: 0;
+    z-index: 100;
+  }
+  .bottom-nav.hidden { display: none; }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: all 0.2s;
+  }
+  .nav-item i { font-size: 18px; color: #94A3B8; transition: all 0.2s; }
+  .nav-item span { font-size: 9px; color: #94A3B8; font-weight: 500; transition: all 0.2s; }
+  .nav-item.active i, .nav-item.active span { color: #1F3A5F; }
+  .nav-item:hover i, .nav-item:hover span { color: #1F3A5F; }
+
+  /* Colors */
+  :root {
+    --blue: #1F3A5F;
+    --blue-dark: #1A3150;
+    --blue-light: #E0F0EA;
+    --green: #27A570;
+    --green-light: #ECFDF5;
+    --gold: #D4A574;
+    --orange: #D4A574;
+    --orange-light: #DFE9E5;
+    --red: #C94949;
+    --red-light: #FEF2F2;
+    --text: #1E293B;
+    --text-secondary: #64748B;
+    --border: #D4E8E3;
+    --card: #FFFFFF;
+    --bg: #F5F9F8;
+  }
+
+  /* Shared components */
+  .card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04);
+    overflow: hidden;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .btn-primary { background: var(--blue); color: white; width: 100%; }
+  .btn-primary:hover { background: var(--blue-dark); }
+  .btn-secondary { background: var(--blue-light); color: var(--blue); width: 100%; }
+  .btn-outline { background: transparent; color: var(--blue); border: 1.5px solid var(--blue); width: 100%; }
+  .btn-sm { padding: 8px 12px; font-size: 13px; }
+  .btn-icon { width: 40px; height: 40px; padding: 0; }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .tag-blue { background: var(--blue-light); color: var(--blue); }
+  .tag-green { background: var(--green-light); color: var(--green); }
+  .tag-orange { background: var(--orange-light); color: var(--orange); }
+  .tag-gray { background: #F1F5F9; color: #64748B; }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .section-title { font-size: 16px; font-weight: 700; color: var(--text); }
+  .see-all { font-size: 13px; font-weight: 600; color: var(--blue); cursor: pointer; }
+  .page-header {
+    background: white;
+    padding: 16px 20px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .page-header h2 { font-size: 17px; font-weight: 700; color: var(--text); }
+  .back-btn {
+    width: 34px; height: 34px;
+    background: var(--blue-light);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    border: none;
+    color: var(--blue);
+    font-size: 15px;
+  }
+  .scroll-content { padding: 16px 20px 24px; flex: 1; }
+
+  /* COMMUNITY HUB STYLES */
+  .community-hero {
+    background: linear-gradient(135deg, #1A3150, #1F3A5F);
+    padding: 20px 20px 28px;
+    color: white;
+  }
+  .community-name { font-size: 20px; font-weight: 800; margin-bottom: 2px; }
+  .community-sub { font-size: 13px; opacity: 0.75; }
+  .community-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .community-nav-card {
+    background: rgba(255,255,255,0.15);
+    border-radius: 14px;
+    padding: 14px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .community-nav-card:hover { background: rgba(255,255,255,0.25); }
+  .community-nav-icon { font-size: 20px; margin-bottom: 6px; }
+  .community-nav-label { font-size: 12px; font-weight: 600; }
+
+  /* CONTRACTOR SECTION */
+  .contractor-filters {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 12px 20px 0;
+    scrollbar-width: none;
+    margin-bottom: 12px;
+  }
+  .contractor-filters::-webkit-scrollbar { display: none; }
+  .filter-btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    border: none;
+    background: white;
+    color: var(--text-secondary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    transition: all 0.2s;
+  }
+  .filter-btn.active { background: var(--blue); color: white; }
+
+  .contractor-card {
+    background: white;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    border-left: 4px solid var(--border);
+  }
+  .contractor-card.my-contractor { border-left-color: var(--blue); }
+  .contractor-card.hoa-approved { border-left-color: var(--green); }
+  .contractor-card.preferred { border-left-color: var(--gold); }
+
+  .contractor-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .contractor-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--blue-light);
+    color: var(--blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .contractor-info { flex: 1; }
+  .contractor-name { font-size: 14px; font-weight: 700; color: var(--text); }
+  .contractor-trade { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .contractor-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .contractor-social-proof {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .social-proof-dot {
+    width: 3px;
+    height: 3px;
+    background: var(--text-secondary);
+    border-radius: 50%;
+  }
+  .contractor-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .action-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: white;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+  .action-btn:hover { border-color: var(--blue); background: var(--blue-light); }
+
+  /* GROUP DEALS */
+  .group-deal-card {
+    background: white;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    border-top: 3px solid var(--green);
+  }
+  .deal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .deal-title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .deal-status { font-size: 11px; font-weight: 600; color: var(--green); }
+  .deal-description { font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; }
+  .deal-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .deal-meta-item { display: flex; align-items: center; gap: 4px; }
+  .deal-pricing {
+    background: var(--green-light);
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--green);
+    margin-bottom: 10px;
+  }
+
+  /* MAINTENANCE CALENDAR */
+  .calendar-month { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text-secondary);
+  }
+  .calendar-day.other-month { opacity: 0.5; }
+  .calendar-day.today { background: var(--blue); color: white; }
+  .calendar-day.event { background: var(--green-light); color: var(--green); }
+
+  .reminder-card {
+    background: white;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    border-left: 4px solid var(--green);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .reminder-title { font-size: 13px; font-weight: 700; color: var(--text); }
+  .reminder-date { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .reminder-detail { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+
+  /* GUIDELINES & MATERIALS */
+  .material-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .material-card {
+    background: white;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .material-card:hover { transform: translateY(-2px); }
+  .material-visual {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+  .material-swatch {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .material-info { flex: 1; }
+  .material-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .material-code { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .material-compliance {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 8px;
+    margin-top: 6px;
+  }
+  .material-compliance.compliant { background: var(--green-light); color: var(--green); }
+  .material-compliance.check { background: #FEF3C7; color: #CA8A04; }
+
+  /* HOA CONTACTS */
+  .contact-card {
+    background: white;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .contact-role { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+  .contact-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .contact-info { font-size: 12px; color: var(--blue); margin-bottom: 4px; }
+  .contact-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .contact-action-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: white;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  /* ANNOUNCEMENTS */
+  .announcement-card {
+    background: white;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    border-top: 3px solid var(--blue);
+  }
+  .announcement-card.important { border-top-color: var(--gold); }
+  .announcement-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .announcement-title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .announcement-date { font-size: 11px; color: var(--text-secondary); }
+  .announcement-body { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
+
+  /* DETAIL SCREENS */
+  .detail-hero {
+    background: linear-gradient(135deg, #1A3150, #1F3A5F);
+    padding: 16px 20px;
+    color: white;
+  }
+  .detail-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+  .detail-sub { font-size: 13px; opacity: 0.8; }
+  .detail-header { padding: 16px 20px; background: white; border-bottom: 1px solid var(--border); }
+  .detail-body { padding: 16px 20px 24px; }
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .info-row .label { color: var(--text-secondary); }
+  .info-row .value { font-weight: 600; color: var(--text); }
+  .info-row:last-child { border-bottom: none; }
+
+  /* MODAL */
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: flex-end;
+    z-index: 1000;
+  }
+  .modal.active { display: flex; }
+  .modal-content {
+    background: white;
+    border-radius: 20px 20px 0 0;
+    max-height: 80vh;
+    overflow-y: auto;
+    width: 100%;
+    animation: slideUp 0.3s ease-out;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: white;
+  }
+  .modal-title { font-size: 16px; font-weight: 700; color: var(--text); }
+  .modal-close {
+    width: 32px;
+    height: 32px;
+    background: var(--bg);
+    border: none;
+    border-radius: 10px;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 16px;
+  }
+  .modal-body { padding: 16px 20px 24px; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="status-bar">
+    <span>9:41</span>
+    <div class="notch"></div>
+    <div class="status-icons">
+      <span>📶</span>
+      <span>🔋</span>
+    </div>
+  </div>
+
+  <div class="screen-container">
+    <!-- COMMUNITY HUB -->
+    <div id="screen-community-hub" class="screen active">
+      <div class="community-hero">
+        <div class="community-name">Oakridge Estates</div>
+        <div class="community-sub">Community Association</div>
+        <div class="community-nav">
+          <div class="community-nav-card" onclick="showScreen('screen-contractors')">
+            <div class="community-nav-icon">🔧</div>
+            <div class="community-nav-label">Contractors</div>
+          </div>
+          <div class="community-nav-card" onclick="showScreen('screen-deals')">
+            <div class="community-nav-icon">🎁</div>
+            <div class="community-nav-label">Group Deals</div>
+          </div>
+          <div class="community-nav-card" onclick="showScreen('screen-maintenance')">
+            <div class="community-nav-icon">📅</div>
+            <div class="community-nav-label">Maintenance</div>
+          </div>
+          <div class="community-nav-card" onclick="showScreen('screen-guidelines')">
+            <div class="community-nav-icon">📋</div>
+            <div class="community-nav-label">Guidelines</div>
+          </div>
+          <div class="community-nav-card" onclick="showScreen('screen-contacts')">
+            <div class="community-nav-icon">📞</div>
+            <div class="community-nav-label">Contacts</div>
+          </div>
+          <div class="community-nav-card" onclick="showScreen('screen-announcements')">
+            <div class="community-nav-icon">📢</div>
+            <div class="community-nav-label">Announcements</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scroll-content">
+        <div style="margin-bottom: 20px;">
+          <div class="section-header">
+            <div class="section-title">Highlighted</div>
+          </div>
+          <div class="group-deal-card">
+            <div class="deal-header">
+              <div class="deal-title">Spring Gutter Cleaning</div>
+              <div class="deal-status">Open</div>
+            </div>
+            <div class="deal-description">Professional gutter cleaning & maintenance with HOA discount</div>
+            <div class="deal-meta">
+              <div class="deal-meta-item">📅 April 22–29</div>
+              <div class="deal-meta-item">🏷️ $89/home</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="showScreen('screen-deal-detail')">View Deal</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <div class="section-header">
+            <div class="section-title">Quick Links</div>
+          </div>
+          <div class="announcement-card">
+            <div class="announcement-header">
+              <div class="announcement-title">Community Rules Update</div>
+              <div class="announcement-date">2 days ago</div>
+            </div>
+            <div class="announcement-body">New architectural guidelines for exterior modifications are now available in the library.</div>
+          </div>
+          <div class="announcement-card important">
+            <div class="announcement-header">
+              <div class="announcement-title">Spring Maintenance Window</div>
+              <div class="announcement-date">Today</div>
+            </div>
+            <div class="announcement-body">Pressure washing and landscaping services available through April 30.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTRACTORS -->
+    <div id="screen-contractors" class="screen">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('screen-community-hub')"><i class="fas fa-chevron-left"></i></button>
+        <h2>Contractors</h2>
+      </div>
+
+      <div class="contractor-filters">
+        <button class="filter-btn active" onclick="filterContractors('all')">All</button>
+        <button class="filter-btn" onclick="filterContractors('my-contractors')">My Contractors</button>
+        <button class="filter-btn" onclick="filterContractors('hoa-approved')">HOA Approved</button>
+      </div>
+
+      <div class="scroll-content">
+        <!-- Plumber - HOA Approved -->
+        <div class="contractor-card hoa-approved" onclick="showScreen('screen-contractor-detail')">
+          <div class="contractor-header">
+            <div class="contractor-badge">🚿</div>
+            <div class="contractor-info">
+              <div class="contractor-name">Thompson Plumbing</div>
+              <div class="contractor-trade">Plumbing & Water Systems</div>
+            </div>
+          </div>
+          <div class="contractor-tags">
+            <span class="tag tag-green">HOA Approved</span>
+            <span class="tag tag-orange">Preferred</span>
+          </div>
+          <div class="contractor-social-proof">
+            <i class="fas fa-users" style="font-size: 10px;"></i>
+            Used by 34 in your community
+          </div>
+          <div class="contractor-actions">
+            <button class="action-btn"><i class="fas fa-phone"></i> Call</button>
+            <button class="action-btn"><i class="fas fa-comment"></i> Text</button>
+          </div>
+        </div>
+
+        <!-- Electrician - My Contractor + HOA Approved -->
+        <div class="contractor-card my-contractor" onclick="showScreen('screen-contractor-detail')">
+          <div class="contractor-header">
+            <div class="contractor-badge" style="background: var(--blue-light); color: var(--blue);">⚡</div>
+            <div class="contractor-info">
+              <div class="contractor-name">Bright Electric</div>
+              <div class="contractor-trade">Electrical & Lighting</div>
+            </div>
+          </div>
+          <div class="contractor-tags">
+            <span class="tag tag-blue">My Contractor</span>
+            <span class="tag tag-green">HOA Approved</span>
+          </div>
+          <div class="contractor-social-proof">
+            <i class="fas fa-users" style="font-size: 10px;"></i>
+            Used by 28 in your community
+            <span class="social-proof-dot"></span>
+            2 jobs for you
+          </div>
+          <div class="contractor-actions">
+            <button class="action-btn"><i class="fas fa-phone"></i> Call</button>
+            <button class="action-btn"><i class="fas fa-comment"></i> Text</button>
+          </div>
+        </div>
+
+        <!-- Roofer - HOA Approved -->
+        <div class="contractor-card hoa-approved" onclick="showScreen('screen-contractor-detail')">
+          <div class="contractor-header">
+            <div class="contractor-badge" style="background: #F3E8FF; color: #9333EA;">🏠</div>
+            <div class="contractor-info">
+              <div class="contractor-name">Premier Roofing</div>
+              <div class="contractor-trade">Roofing & Gutters</div>
+            </div>
+          </div>
+          <div class="contractor-tags">
+            <span class="tag tag-green">HOA Approved</span>
+          </div>
+          <div class="contractor-social-proof">
+            <i class="fas fa-users" style="font-size: 10px;"></i>
+            Used by 41 in your community
+          </div>
+          <div class="contractor-actions">
+            <button class="action-btn"><i class="fas fa-phone"></i> Call</button>
+            <button class="action-btn"><i class="fas fa-comment"></i> Text</button>
+          </div>
+        </div>
+
+        <!-- Landscaper - Community only -->
+        <div class="contractor-card" onclick="showScreen('screen-contractor-detail')">
+          <div class="contractor-header">
+            <div class="contractor-badge" style="background: #ECFDF5; color: var(--green);">🌿</div>
+            <div class="contractor-info">
+              <div class="contractor-name">Green Spaces Co.</div>
+              <div class="contractor-trade">Landscaping & Grounds</div>
+            </div>
+          </div>
+          <div class="contractor-tags">
+            <span class="tag tag-gray">Community Recommended</span>
+          </div>
+          <div class="contractor-social-proof">
+            <i class="fas fa-users" style="font-size: 10px;"></i>
+            Used by 19 in your community
+          </div>
+          <div class="contractor-actions">
+            <button class="action-btn"><i class="fas fa-phone"></i> Call</button>
+            <button class="action-btn"><i class="fas fa-comment"></i> Text</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTRACTOR DETAIL -->
+    <div id="screen-contractor-detail" class="screen">
+      <div class="detail-hero">
+        <div style="font-size: 28px; margin-bottom: 10px;">⚡</div>
+        <div class="detail-title">Bright Electric</div>
+        <div class="detail-sub">Electrical & Lighting Services</div>
+      </div>
+
+      <div class="scroll-content">
+        <div style="margin-bottom: 16px;">
+          <div class="section-header" style="margin-bottom: 8px;">
+            <div class="section-title" style="font-size: 14px;">Status & Information</div>
+          </div>
+          <div class="info-row">
+            <span class="label">Trade</span>
+            <span class="value">Electrical</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Company</span>
+            <span class="value">Bright Electric LLC</span>
+          </div>
+          <div class="info-row">
+            <span class="label">HOA Status</span>
+            <span class="value"><span class="tag tag-green">Approved</span></span>
+          </div>
+          <div class="info-row">
+            <span class="label">Community Use</span>
+            <span class="value">28 homes</span>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <div class="section-header" style="margin-bottom: 8px;">
+            <div class="section-title" style="font-size: 14px;">Your History</div>
+          </div>
+          <div class="announcement-card" style="background: var(--green-light); border-top: none; border-left: 4px solid var(--green);">
+            <div class="announcement-title">Exterior Outlet Installation</div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Completed Dec 15, 2023</div>
+          </div>
+          <div class="announcement-card" style="background: var(--green-light); border-top: none; border-left: 4px solid var(--green);">
+            <div class="announcement-title">Kitchen Lighting Upgrade</div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Completed Aug 22, 2023</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="alert('View all jobs for this contractor')">View All Jobs (2)</button>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <div class="section-header" style="margin-bottom: 8px;">
+            <div class="section-title" style="font-size: 14px;">Contact</div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-primary btn-sm"><i class="fas fa-phone"></i> Call</button>
+            <button class="btn btn-primary btn-sm"><i class="fas fa-comment"></i> Text</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GROUP DEALS -->
+    <div id="screen-deals" class="screen">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('screen-community-hub')"><i class="fas fa-chevron-left"></i></button>
+        <h2>Group Deals</h2>
+      </div>
+
+      <div class="scroll-content">
+        <div class="group-deal-card">
+          <div class="deal-header">
+            <div class="deal-title">Spring Gutter Cleaning</div>
+            <div class="deal-status">34 Joined</div>
+          </div>
+          <div class="deal-description">Professional cleaning and inspection with debris removal</div>
+          <div class="deal-meta">
+            <div class="deal-meta-item">📅 April 22–29</div>
+            <div class="deal-meta-item">🏢 Gutterworks Inc</div>
+          </div>
+          <div class="deal-pricing">Member Price: $89 · Reg. $145</div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-primary btn-sm">Join Deal</button>
+            <button class="btn btn-secondary btn-sm">Details</button>
+          </div>
+        </div>
+
+        <div class="group-deal-card">
+          <div class="deal-header">
+            <div class="deal-title">HVAC Annual Service</div>
+            <div class="deal-status">12 Joined</div>
+          </div>
+          <div class="deal-description">Includes inspection, filter replacement, and 1-year service warranty</div>
+          <div class="deal-meta">
+            <div class="deal-meta-item">📅 May 1–15</div>
+            <div class="deal-meta-item">🏢 ClimateCare Services</div>
+          </div>
+          <div class="deal-pricing">Member Price: $179 · Reg. $249</div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-primary btn-sm">Join Deal</button>
+            <button class="btn btn-secondary btn-sm">Details</button>
+          </div>
+        </div>
+
+        <div class="group-deal-card" style="opacity: 0.6;">
+          <div class="deal-header">
+            <div class="deal-title">Pressure Washing Combo</div>
+            <div class="deal-status">Ended</div>
+          </div>
+          <div class="deal-description">Home exterior and driveway cleaning (Completed March 2024)</div>
+          <div class="deal-meta">
+            <div class="deal-meta-item">📅 Completed March 15</div>
+            <div class="deal-meta-item">✓ 78 homes</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEAL DETAIL -->
+    <div id="screen-deal-detail" class="screen">
+      <div class="detail-hero">
+        <div style="font-size: 28px; margin-bottom: 10px;">🚰</div>
+        <div class="detail-title">Spring Gutter Cleaning</div>
+        <div class="detail-sub">Group service discount</div>
+      </div>
+
+      <div class="scroll-content">
+        <div style="margin-bottom: 16px;">
+          <div class="section-header" style="margin-bottom: 8px;">
+            <div class="section-title" style="font-size: 14px;">Deal Details</div>
+          </div>
+          <div class="info-row">
+            <span class="label">Service Date</span>
+            <span class="value">April 22–29</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Provider</span>
+            <span class="value">Gutterworks Inc</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Member Price</span>
+            <span class="value" style="color: var(--green); font-weight: 800;">$89</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Regular Price</span>
+            <span class="value" style="text-decoration: line-through;">$145</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Homes Joined</span>
+            <span class="value">34</span>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <div class="section-header" style="margin-bottom: 8px;">
+            <div class="section-title" style="font-size: 14px;">What's Included</div>
+          </div>
+          <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.6;">
+            ✓ Complete gutter cleaning<br>
+            ✓ Debris removal<br>
+            ✓ Minor repairs (up to $50 value)<br>
+            ✓ Inspection report<br>
+            ✓ 30-day satisfaction guarantee
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="alert('Added to your deals! Provider will contact you soon.')">Join Deal</button>
+      </div>
+    </div>
+
+    <!-- MAINTENANCE CALENDAR -->
+    <div id="screen-maintenance" class="screen">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('screen-community-hub')"><i class="fas fa-chevron-left"></i></button>
+        <h2>Maintenance Calendar</h2>
+      </div>
+
+      <div class="scroll-content">
+        <div style="margin-bottom: 20px;">
+          <div class="calendar-month">April 2024</div>
+          <div class="calendar-grid">
+            <div style="text-align: center; font-size: 10px; color: var(--text-secondary);">S</div>
+            <div style="text-align: center; font-size: 10px; color: var(--text-secondary);">M</div>
+            <div style="text-align: center; font-size: 10px; color: var(--text-secondary);">T</div>
+            <div style="text-align: center; font-size: 10px; color: var(--text-secondary);">W</div>
+            <div style="text-align: center; font-size: 10px; color: var(--text-secondary);">T</div>
+            <div style="text-align: center; font-size: 10px; color: var(--text-secondary);">F</div>
+            <div style="text-align: center; font-size: 10px; color: var(--text-secondary);">S</div>
+            <div class="calendar-day other-month">31</div>
+            <div class="calendar-day">1</div>
+            <div class="calendar-day">2</div>
+            <div class="calendar-day">3</div>
+            <div class="calendar-day">4</div>
+            <div class="calendar-day">5</div>
+            <div class="calendar-day">6</div>
+            <div class="calendar-day">7</div>
+            <div class="calendar-day">8</div>
+            <div class="calendar-day">9</div>
+            <div class="calendar-day">10</div>
+            <div class="calendar-day">11</div>
+            <div class="calendar-day">12</div>
+            <div class="calendar-day event">13</div>
+            <div class="calendar-day">14</div>
+            <div class="calendar-day">15</div>
+            <div class="calendar-day">16</div>
+            <div class="calendar-day">17</div>
+            <div class="calendar-day event">18</div>
+            <div class="calendar-day">19</div>
+            <div class="calendar-day">20</div>
+            <div class="calendar-day event">21</div>
+            <div class="calendar-day today">22</div>
+            <div class="calendar-day">23</div>
+            <div class="calendar-day event">24</div>
+            <div class="calendar-day">25</div>
+            <div class="calendar-day">26</div>
+            <div class="calendar-day">27</div>
+            <div class="calendar-day">28</div>
+            <div class="calendar-day">29</div>
+            <div class="calendar-day">30</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <div class="section-header" style="margin-bottom: 10px;">
+            <div class="section-title" style="font-size: 14px;">Upcoming Reminders</div>
+          </div>
+          <div class="reminder-card">
+            <div class="reminder-title">Spring Gutter Cleaning Window</div>
+            <div class="reminder-date">April 22–29</div>
+            <div class="reminder-detail">HOA-approved provider available. Group deal pricing.</div>
+          </div>
+          <div class="reminder-card">
+            <div class="reminder-title">Landscape Maintenance Season</div>
+            <div class="reminder-date">April–May</div>
+            <div class="reminder-detail">Mulch refresh and seasonal planting guidelines available.</div>
+          </div>
+          <div class="reminder-card">
+            <div class="reminder-title">HVAC Spring Service</div>
+            <div class="reminder-date">May 1–15</div>
+            <div class="reminder-detail">Recommended before summer. Group deal pricing.</div>
+          </div>
+          <div class="reminder-card">
+            <div class="reminder-title">Pressure Washing</div>
+            <div class="reminder-date">May–June</div>
+            <div class="reminder-detail">Exterior maintenance and pool preparation season.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GUIDELINES & MATERIALS -->
+    <div id="screen-guidelines" class="screen">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('screen-community-hub')"><i class="fas fa-chevron-left"></i></button>
+        <h2>Guidelines & Materials</h2>
+      </div>
+
+      <div class="scroll-content">
+        <div style="margin-bottom: 20px;">
+          <div class="section-header" style="margin-bottom: 10px;">
+            <div class="section-title" style="font-size: 14px;">Approved Paint Colors</div>
+          </div>
+          <div class="material-card" onclick="showScreen('screen-material-detail')">
+            <div class="material-visual">
+              <div class="material-swatch" style="background: #2F5233;"></div>
+              <div class="material-info">
+                <div class="material-name">Heritage Green</div>
+                <div class="material-code">Sherwin-Williams SW 2816</div>
+              </div>
+            </div>
+            <span class="material-compliance compliant"><i class="fas fa-check"></i> Compliant</span>
+          </div>
+          <div class="material-card">
+            <div class="material-visual">
+              <div class="material-swatch" style="background: #FFFAF0;"></div>
+              <div class="material-info">
+                <div class="material-name">Ivory White</div>
+                <div class="material-code">Benjamin Moore HC-17</div>
+              </div>
+            </div>
+            <span class="material-compliance compliant"><i class="fas fa-check"></i> Compliant</span>
+          </div>
+          <div class="material-card">
+            <div class="material-visual">
+              <div class="material-swatch" style="background: #3D3D3D;"></div>
+              <div class="material-info">
+                <div class="material-name">Charcoal Gray</div>
+                <div class="material-code">Behr N520-7</div>
+              </div>
+            </div>
+            <span class="material-compliance compliant"><i class="fas fa-check"></i> Compliant</span>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <div class="section-header" style="margin-bottom: 10px;">
+            <div class="section-title" style="font-size: 14px;">Approved Roofing Materials</div>
+          </div>
+          <div class="material-card">
+            <div class="material-visual">
+              <div class="material-swatch" style="background: linear-gradient(135deg, #4A4A4A, #2A2A2A);"></div>
+              <div class="material-info">
+                <div class="material-name">Charcoal Asphalt Shingles</div>
+                <div class="material-code">Class A, 30-year</div>
+              </div>
+            </div>
+            <span class="material-compliance compliant"><i class="fas fa-check"></i> Approved</span>
+          </div>
+          <div class="material-card">
+            <div class="material-visual">
+              <div class="material-swatch" style="background: #B8860B;"></div>
+              <div class="material-info">
+                <div class="material-name">Architectural Shingles</div>
+                <div class="material-code">Brown tone preferred</div>
+              </div>
+            </div>
+            <span class="material-compliance check"><i class="fas fa-exclamation-circle"></i> Check First</span>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <button class="btn btn-outline">View Full Guidelines</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MATERIAL DETAIL -->
+    <div id="screen-material-detail" class="screen">
+      <div class="detail-hero">
+        <div class="detail-title">Heritage Green</div>
+        <div class="detail-sub">Paint Color Specification</div>
+      </div>
+
+      <div class="scroll-content">
+        <div style="margin-bottom: 16px;">
+          <div class="section-header" style="margin-bottom: 8px;">
+            <div class="section-title" style="font-size: 14px;">Color Swatch</div>
+          </div>
+          <div style="width: 100%; height: 120px; background: #2F5233; border-radius: 12px; margin-bottom: 12px;"></div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <div class="section-header" style="margin-bottom: 8px;">
+            <div class="section-title" style="font-size: 14px;">Specifications</div>
+          </div>
+          <div class="info-row">
+            <span class="label">Brand</span>
+            <span class="value">Sherwin-Williams</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Color Code</span>
+            <span class="value">SW 2816</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Type</span>
+            <span class="value">Exterior paint, matte finish</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Compliance</span>
+            <span class="value"><span class="tag tag-green">Approved</span></span>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <div class="section-header" style="margin-bottom: 8px;">
+            <div class="section-title" style="font-size: 14px;">Application</div>
+          </div>
+          <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.6;">
+            Suitable for exterior trim, shutters, and accent colors. Front-facing exteriors may require architectural approval. Contact the HOA before beginning work.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOA CONTACTS -->
+    <div id="screen-contacts" class="screen">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('screen-community-hub')"><i class="fas fa-chevron-left"></i></button>
+        <h2>HOA Contacts</h2>
+      </div>
+
+      <div class="scroll-content">
+        <div class="contact-card">
+          <div class="contact-role">Main Office</div>
+          <div class="contact-name">Oakridge Community Management</div>
+          <div class="contact-info">📞 (555) 123-4567</div>
+          <div class="contact-info">📧 info@oakridge-hoa.org</div>
+          <div class="contact-actions">
+            <button class="contact-action-btn"><i class="fas fa-phone"></i> Call</button>
+            <button class="contact-action-btn"><i class="fas fa-envelope"></i> Email</button>
+          </div>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-role">Property Manager</div>
+          <div class="contact-name">Sarah Mitchell</div>
+          <div class="contact-info">📞 (555) 123-4568</div>
+          <div class="contact-info">📧 sarah@oakridge-hoa.org</div>
+          <div class="contact-actions">
+            <button class="contact-action-btn"><i class="fas fa-phone"></i> Call</button>
+            <button class="contact-action-btn"><i class="fas fa-envelope"></i> Email</button>
+          </div>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-role">Architectural Review</div>
+          <div class="contact-name">Design Review Committee</div>
+          <div class="contact-info">📞 (555) 123-4569</div>
+          <div class="contact-info">📧 design@oakridge-hoa.org</div>
+          <div class="contact-info">Hours: Monday–Friday, 9am–5pm</div>
+          <div class="contact-actions">
+            <button class="contact-action-btn"><i class="fas fa-phone"></i> Call</button>
+            <button class="contact-action-btn"><i class="fas fa-envelope"></i> Email</button>
+          </div>
+        </div>
+
+        <div class="contact-card">
+          <div class="contact-role">Maintenance & Grounds</div>
+          <div class="contact-name">Community Grounds Crew</div>
+          <div class="contact-info">📞 (555) 123-4570</div>
+          <div class="contact-info">📧 maintenance@oakridge-hoa.org</div>
+          <div class="contact-actions">
+            <button class="contact-action-btn"><i class="fas fa-phone"></i> Call</button>
+            <button class="contact-action-btn"><i class="fas fa-envelope"></i> Email</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANNOUNCEMENTS -->
+    <div id="screen-announcements" class="screen">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('screen-community-hub')"><i class="fas fa-chevron-left"></i></button>
+        <h2>Announcements</h2>
+      </div>
+
+      <div class="scroll-content">
+        <div class="announcement-card important">
+          <div class="announcement-header">
+            <div class="announcement-title">Spring Maintenance Season Begins</div>
+            <div class="announcement-date">Today</div>
+          </div>
+          <div class="announcement-body">Multiple services now available through group deals. Gutter cleaning, landscaping, and HVAC service open for enrollment through April 30.</div>
+        </div>
+
+        <div class="announcement-card">
+          <div class="announcement-header">
+            <div class="announcement-title">Community Rules Update</div>
+            <div class="announcement-date">April 15</div>
+          </div>
+          <div class="announcement-body">New architectural guidelines for exterior modifications effective immediately. See Guidelines & Materials for details.</div>
+        </div>
+
+        <div class="announcement-card">
+          <div class="announcement-header">
+            <div class="announcement-title">Monthly Board Meeting</div>
+            <div class="announcement-date">April 10</div>
+          </div>
+          <div class="announcement-body">Community board meeting scheduled for April 20 at 7pm in the clubhouse. Agenda includes budget review and new landscaping plan.</div>
+        </div>
+
+        <div class="announcement-card">
+          <div class="announcement-header">
+            <div class="announcement-title">HOA Assessment Notice</div>
+            <div class="announcement-date">March 28</div>
+          </div>
+          <div class="announcement-body">Spring assessment invoice sent to all households. Payment due by May 15. Contact the office with questions.</div>
+        </div>
+
+        <div class="announcement-card">
+          <div class="announcement-header">
+            <div class="announcement-title">Contractor Approval Process</div>
+            <div class="announcement-date">March 15</div>
+          </div>
+          <div class="announcement-body">Updated contractor pre-approval list now available. Using HOA-approved contractors streamlines the approval process.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="showTab('dashboard')">
+      <i class="fas fa-home"></i>
+      <span>Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="showTab('home')">
+      <i class="fas fa-door-open"></i>
+      <span>My Home</span>
+    </div>
+    <div class="nav-item" onclick="showTab('projects')">
+      <i class="fas fa-folder"></i>
+      <span>Projects</span>
+    </div>
+    <div class="nav-item" onclick="showTab('contractors')">
+      <i class="fas fa-wrench"></i>
+      <span>Contractor</span>
+    </div>
+    <div class="nav-item active" onclick="showScreen('screen-community-hub'); setNavActive(4);">
+      <i class="fas fa-users"></i>
+      <span>Community</span>
+    </div>
+    <div class="nav-item" onclick="showTab('profile')">
+      <i class="fas fa-user"></i>
+      <span>Profile</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showScreen(screenId) {
+    const screens = document.querySelectorAll('.screen');
+    screens.forEach(s => s.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
+  }
+
+  function showTab(tab) {
+    alert(`Navigating to ${tab} tab (other tabs not built in this mockup)`);
+  }
+
+  function setNavActive(index) {
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => item.classList.remove('active'));
+    navItems[index].classList.add('active');
+  }
+
+  function filterContractors(filter) {
+    const buttons = document.querySelectorAll('.filter-btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    alert(`Filtered by: ${filter}`);
+  }
+</script>
+
+</body>
+</html>

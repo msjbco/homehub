@@ -1,0 +1,28 @@
+# HomeHub Demo — .gitignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup and experimental variants (stay in main folder only)
+*.BACKUP.html
+*.OLD.html
+*.REVERT.html
+*.UPDATED.html
+*-FIXED.html
+*-redesigned.html
+*-WITH-HOME-INSIGHTS.html
+*-WITH-INFO-POPUPS.html
+*-PRICEMATCH-REDESIGN.html
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Node (if ever used)
+node_modules/

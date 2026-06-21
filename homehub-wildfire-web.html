@@ -1,0 +1,2069 @@
+<!--
+================================================================================
+HomeHub Application Suite - homehub-wildfire-web.html
+================================================================================
+
+TITLE: Homehub Wildfire Web
+PURPOSE: Wildfire risk assessment, monitoring, and resilience planning
+LAST UPDATED: 2026-05-16
+
+This HTML file is part of the HomeHub platform - a comprehensive property
+management system for homeowners. Single-page application with vanilla JS,
+responsive design, and dark mode support.
+
+================================================================================
+STRUCTURE: <style> CSS | <body> HTML | <script> JavaScript
+================================================================================
+
+CSS VARIABLES: --blue, --green, --orange, --gold (+ light/dark variants)
+RESPONSIVE: Mobile (<768px) | Tablet (768px) | Desktop (1024px+)
+DARK MODE: [data-theme="dark"] selector overrides CSS variables
+
+Key Components:
+  • Sidebar/Navigation (fixed 280px, collapsible on mobile)
+  • Responsive grid/flexbox layouts
+  • Card-based UI components
+  • Modal overlays for forms
+  • Dynamic JavaScript interactions
+
+================================================================================
+QUICK REFERENCE
+================================================================================
+
+CSS Customization:
+  1. Update color variables in :root and [data-theme="dark"]
+  2. Modify font-size and padding for spacing
+  3. Adjust media queries for different breakpoints
+
+JavaScript Patterns:
+  • DOM selection: querySelector, querySelectorAll
+  • Events: addEventListener, event delegation
+  • Storage: localStorage for persistent settings
+  • DOM updates: innerHTML, classList, setAttribute
+
+Testing:
+  ✓ Responsive design (test all breakpoints)
+  ✓ Dark mode toggle
+  ✓ Keyboard navigation
+  ✓ Button/form interactions
+  ✓ Cross-browser compatibility
+
+================================================================================
+For detailed documentation, see sections marked with === throughout the file
+================================================================================
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wildfire Compliance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-dark: #1F3A5F;
+            --primary-blue: #2D5080;
+            --accent-orange: #FF8C42;
+            --accent-green: #27A570;
+            --accent-yellow: #FDB913;
+            --bg-light: #F8F9FA;
+            --bg-white: #FFFFFF;
+            --text-primary: #000000;
+            --text-secondary: #666666;
+            --border-light: #E8E8E8;
+            --risk-orange: #FF9500;
+            --risk-red: #EF4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+        }
+
+        .phone-frame {
+            max-width: 390px;
+            margin: 0 auto;
+            background: var(--bg-white);
+            border-radius: 40px;
+            border: 12px solid #000;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            min-height: 844px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-bar {
+            background-color: var(--bg-white);
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-header {
+            background-color: var(--bg-white);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .nav-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .nav-header-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        .nav-icon-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .content-area::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .content-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .content-area::-webkit-scrollbar-thumb {
+            background: var(--border-light);
+            border-radius: 2px;
+        }
+
+        /* SCREEN 1: WILDFIRE COMPLIANCE OVERVIEW */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Hero Card */
+        .hero-card {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-blue) 100%);
+            color: white;
+            padding: 20px 16px;
+            margin: 12px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-card::before {
+            content: '';
+            position: absolute;
+            right: -40px;
+            bottom: -40px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        .hero-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-left {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .hero-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-orange);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .hero-text h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .hero-text p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .status-badge {
+            background: var(--accent-green);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .hero-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-stat {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 2px solid var(--accent-green);
+        }
+
+        .hero-stat-label {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-bottom: 4px;
+        }
+
+        .hero-stat-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .hero-stat-detail {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        .hero-address {
+            display: flex;
+            gap: 8px;
+            font-size: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-address-icon {
+            font-size: 14px;
+        }
+
+        .hero-address-text {
+            line-height: 1.4;
+        }
+
+        .hero-footer-image {
+            width: 100%;
+            height: 80px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin-top: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Compliance Overview Section */
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 16px 16px 8px;
+            margin: 0;
+        }
+
+        .compliance-overview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 8px 16px;
+            margin-bottom: 16px;
+        }
+
+        .compliance-item {
+            text-align: center;
+        }
+
+        .compliance-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .compliance-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .compliance-status {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-green);
+        }
+
+        .compliance-status.at-risk {
+            color: var(--risk-orange);
+        }
+
+        /* Risk Area Card */
+        .risk-card {
+            background: #FFF5E6;
+            border-left: 4px solid var(--accent-orange);
+            padding: 12px 16px;
+            margin: 0 12px 16px;
+            border-radius: 8px;
+        }
+
+        .risk-card-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .risk-icon {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .risk-title {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .risk-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            margin-left: 26px;
+        }
+
+        .risk-link {
+            display: inline-flex;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--accent-orange);
+            font-weight: 600;
+            margin-left: 26px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Action Items */
+        .action-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px 0;
+            margin: 16px 0 8px;
+        }
+
+        .action-header h4 {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .view-all {
+            color: var(--accent-orange);
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .action-items {
+            padding: 0 12px 16px;
+        }
+
+        .action-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-white);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-item:active {
+            background: var(--bg-light);
+        }
+
+        .action-number {
+            width: 32px;
+            height: 32px;
+            background: var(--accent-orange);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .action-number.completed {
+            background: var(--accent-green);
+        }
+
+        .action-item-content {
+            flex: 1;
+        }
+
+        .action-item-title {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .action-item-detail {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .action-item-due {
+            color: var(--accent-orange);
+            font-weight: 600;
+        }
+
+        .action-item-complete {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        .action-arrow {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            background: var(--bg-white);
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            padding-bottom: 20px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            flex: 1;
+        }
+
+        .nav-item.active {
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        .nav-item-icon {
+            font-size: 20px;
+        }
+
+        /* SCREEN 2: CERTIFICATION DETAILS */
+        .back-button {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .cert-header-card {
+            background: var(--bg-white);
+            padding: 16px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .cert-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .cert-title {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            flex: 1;
+        }
+
+        .cert-icon {
+            width: 40px;
+            height: 40px;
+            background: #E8F5E9;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .cert-name {
+            flex: 1;
+        }
+
+        .cert-name h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .cert-name p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .cert-status-badge {
+            background: #E8F5E9;
+            color: var(--accent-green);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .cert-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            text-align: right;
+        }
+
+        /* Buttons in cert details */
+        .cert-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary-dark);
+            color: white;
+        }
+
+        .btn-primary:active {
+            background: var(--primary-blue);
+        }
+
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--text-primary);
+            border: 1px solid var(--border-light);
+        }
+
+        .btn-secondary:active {
+            background: #F0F0F0;
+        }
+
+        .btn-download {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* Tabs */
+        .tab-container {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid var(--border-light);
+            background: var(--bg-white);
+            padding: 0 16px;
+        }
+
+        .tab {
+            padding: 12px 0;
+            border: none;
+            background: none;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-right: 16px;
+            text-transform: capitalize;
+        }
+
+        .tab.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--primary-dark);
+        }
+
+        /* Compliance Requirements */
+        .requirement-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-light);
+            align-items: flex-start;
+        }
+
+        .requirement-item:last-child {
+            border-bottom: none;
+        }
+
+        .requirement-icon {
+            width: 24px;
+            height: 24px;
+            background: #E8F5E9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .requirement-content {
+            flex: 1;
+        }
+
+        .requirement-name {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .requirement-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .requirement-percent {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-green);
+            white-space: nowrap;
+        }
+
+        /* Risk Information */
+        .risk-info-container {
+            padding: 16px;
+        }
+
+        .risk-info-item {
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .risk-info-item:last-child {
+            border-bottom: none;
+        }
+
+        .risk-info-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .risk-meter {
+            background: #E0E0E0;
+            border-radius: 20px;
+            height: 8px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .risk-meter-fill {
+            height: 100%;
+            background: var(--risk-orange);
+            border-radius: 20px;
+        }
+
+        .risk-meter-fill.high {
+            width: 75%;
+        }
+
+        .risk-meter-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .risk-level-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .risk-level-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--risk-orange);
+        }
+
+        .risk-level-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--risk-orange);
+        }
+
+        .risk-zone {
+            font-size: 12px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* Insurance Benefit */
+        .benefit-box {
+            background: #E3F2FD;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .benefit-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .benefit-content {
+            flex: 1;
+        }
+
+        .benefit-title {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .benefit-amount {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 4px;
+        }
+
+        .benefit-text {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .learn-more {
+            font-size: 11px;
+            color: var(--primary-dark);
+            font-weight: 600;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+
+        /* Inspection History */
+        .history-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-icon {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .history-content {
+            flex: 1;
+        }
+
+        .history-date {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .history-detail {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .history-status {
+            background: #E8F5E9;
+            color: var(--accent-green);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Role Switcher */
+        .role-switcher-btn{width:100%;background:var(--bg-light,#F8FAFC);border:1.5px solid var(--border,#CBD5E1);border-radius:10px;padding:11px 14px;color:var(--text-secondary,#64748B);cursor:pointer;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;transition:all 0.2s;}
+        .role-switcher-btn:hover{background:var(--bg-hover,#EFF3F8);color:var(--text,#1E293B);}
+        .role-switcher-dropdown{display:none;flex-direction:column;background:var(--bg-card,#fff);border:1.5px solid var(--border,#CBD5E1);border-radius:10px;margin-top:8px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.12);}
+        .role-switcher-dropdown.open{display:flex;}
+        .role-item{display:flex;align-items:center;gap:10px;padding:11px 14px;color:var(--text-secondary,#64748B);text-decoration:none;border-bottom:1px solid var(--border-subtle,#E2E8F0);font-size:13px;font-weight:500;transition:all 0.2s;cursor:pointer;}
+        .role-item:last-child{border-bottom:none;}
+        .role-item:hover{background:var(--bg-hover,#EFF3F8);color:var(--text,#1E293B);}
+    </style>
+</head>
+<body>
+    <!-- SCREEN 1: WILDFIRE COMPLIANCE OVERVIEW -->
+    <div id="screen-overview" class="screen active">
+        <div class="phone-frame">
+            <div class="status-bar">
+                <div class="status-left">9:41</div>
+                <div class="status-right">
+                    <span>📶</span>
+                    <span>📡</span>
+                    <span>🔋</span>
+                </div>
+            </div>
+
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <div class="nav-header-title">Wildfire Compliance</div>
+                </div>
+                <div class="nav-header-right">
+                    <button class="nav-icon-btn" onclick="openNotifications()">🔔</button>
+                    <button class="nav-icon-btn" onclick="openMenu()">⋯</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- Hero Card -->
+                <div class="hero-card">
+                    <div class="hero-header">
+                        <div class="hero-left">
+                            <div class="hero-icon">🔥</div>
+                            <div class="hero-text">
+                                <h3>You're Compliant</h3>
+                                <p>Keep it up, you're protected.</p>
+                            </div>
+                        </div>
+                        <div class="status-badge">Compliant</div>
+                    </div>
+
+                    <div class="hero-body">
+                        <div class="hero-stat">
+                            <div class="hero-stat-label">Certification Status</div>
+                            <div class="hero-stat-value">Current & Valid</div>
+                            <div class="hero-stat-detail">Expires Nov 30, 2025</div>
+                        </div>
+                        <div class="hero-stat">
+                            <div class="hero-stat-label">Days Until Expiration</div>
+                            <div class="hero-stat-value">226 days</div>
+                            <div class="hero-stat-detail">Renew by Nov 30, 2025</div>
+                        </div>
+                    </div>
+
+                    <div class="hero-footer-image" style="background: linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.5)), url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAB4AZADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWm5ybnJ2eoqOkpaanqKmqsrO0tba2uLm6wsPExcbHyMnK0tPU1dbW2Nna4uPk5ebn6Onq8vP09fb2+Pn6/8QAHwEAAwEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlbaWmJmaoqOkpaanqKmqsrO0tba2uLm6wsPExcbHyMnK0tPU1dbW2Nna4uPk5ebn6Onq8vP09fb2+Pn6/9oADAMBAAIRAxEAPwD3+iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD//2Q==') center/cover; background-size: cover; background-position: center; position: relative; display: flex; align-items: flex-end; justify-content: flex-start; padding: 12px; height: 100px;">
+                        <div style="background: rgba(0,0,0,0.6); color: white; padding: 10px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                            📍 145 Heritage Lane, Sandpoint, ID 83864
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compliance Overview -->
+                <a href="#" onclick="goToScreen('certification'); return false;" style="text-decoration: none; color: inherit;">
+                    <h4 class="section-title" style="cursor: pointer; transition: opacity 0.2s; text-decoration: underline;">Compliance Overview</h4>
+                </a>
+                <div class="compliance-overview">
+                    <div class="compliance-item">
+                        <div class="compliance-icon">🌱</div>
+                        <div class="compliance-label">Defensible Space</div>
+                        <div class="compliance-status">100%</div>
+                        <div class="compliance-label" style="font-size: 10px; margin-top: 2px;">Compliant</div>
+                    </div>
+                    <div class="compliance-item">
+                        <div class="compliance-icon">🏠</div>
+                        <div class="compliance-label">Home Hardening</div>
+                        <div class="compliance-status">95%</div>
+                        <div class="compliance-label" style="font-size: 10px; margin-top: 2px;">Compliant</div>
+                    </div>
+                    <div class="compliance-item">
+                        <div class="compliance-icon">🛡️</div>
+                        <div class="compliance-label">Embers & Vents</div>
+                        <div class="compliance-status">100%</div>
+                        <div class="compliance-label" style="font-size: 10px; margin-top: 2px;">Compliant</div>
+                    </div>
+                    <div class="compliance-item">
+                        <div class="compliance-icon">📋</div>
+                        <div class="compliance-label">Documentation</div>
+                        <div class="compliance-status at-risk">Complete</div>
+                        <div class="compliance-label" style="font-size: 10px; margin-top: 2px; color: var(--accent-orange);">Up to date</div>
+                    </div>
+                </div>
+
+                <!-- Risk Card -->
+                <div class="risk-card">
+                    <div class="risk-card-header">
+                        <div class="risk-icon">🔥</div>
+                        <div class="risk-title">High Fire Risk Area</div>
+                    </div>
+                    <div class="risk-text">Your property is in a HIGH wildfire risk zone. Staying compliant may impact insurance discounts and protect your home.</div>
+                    <a class="risk-link" onclick="document.getElementById('riskMapModal').style.display='flex'; return false;">
+                        View Risk Map <span>→</span>
+                    </a>
+                </div>
+
+                <!-- Action Items -->
+                <div class="action-header">
+                    <h4>Action Items</h4>
+                    <a class="view-all" onclick="alert('View all action items')">View all</a>
+                </div>
+
+                <div class="action-items">
+                    <div class="action-item" onclick="goToScreen('action-detail-1')" style="cursor: pointer;">
+                        <div class="action-number">1</div>
+                        <div class="action-item-content">
+                            <div class="action-item-title">Trim Overhanging Branches</div>
+                            <div class="action-item-detail">Trees within 10 ft of chimney</div>
+                        </div>
+                        <div class="action-item-due">Due in 15 days →</div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-number completed">✓</div>
+                        <div class="action-item-content">
+                            <div class="action-item-title">Remove Vegetation Around Deck</div>
+                            <div class="action-item-detail">Completed Apr 18, 2025</div>
+                        </div>
+                        <div class="action-arrow">→</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <button class="nav-item active">
+                    <div class="nav-item-icon">🏠</div>
+                    <div>Dashboard</div>
+                </button>
+                <button class="nav-item" onclick="goToScreen('overview')">
+                    <div class="nav-item-icon">🏡</div>
+                    <div>My Home</div>
+                </button>
+                <button class="nav-item">
+                    <div class="nav-item-icon">📁</div>
+                    <div>Projects</div>
+                </button>
+                <button class="nav-item">
+                    <div class="nav-item-icon">👷</div>
+                    <div>Contractors</div>
+                </button>
+                <button class="nav-item">
+                    <div class="nav-item-icon">🔍</div>
+                    <div>Scan</div>
+                </button>
+                <button class="nav-item">
+                    <div class="nav-item-icon">👤</div>
+                    <div>Profile</div>
+                </button>
+            </div>
+
+            <div style="padding:12px 10px 6px">
+                <button class="role-switcher-btn" onclick="toggleRoleSwitcher(event)">
+                    <span><i class="fas fa-shuffle" style="margin-right:7px;font-size:12px"></i>Switch Role</span>
+                    <i class="fas fa-chevron-down" id="switcher-icon" style="transition:transform 0.2s;font-size:11px"></i>
+                </button>
+                <div id="role-switcher" class="role-switcher-dropdown" onclick="event.stopPropagation()">
+                    <a href="homehub-homeowner-web.html" class="role-item" onclick="navigateToRole(event, 'homehub-homeowner-web.html')"><i class="fas fa-house" style="width:18px"></i><span>Homeowner</span></a>
+                    <a href="homehub-agent-web.html" class="role-item" onclick="navigateToRole(event, 'homehub-agent-web.html')"><i class="fas fa-briefcase" style="width:18px"></i><span>RE Agent</span></a>
+                    <a href="homehub-inspector-web.html" class="role-item" onclick="navigateToRole(event, 'homehub-inspector-web.html')"><i class="fas fa-clipboard-check" style="width:18px"></i><span>Home Inspector</span></a>
+                    <a href="homehub-contractor-web.html" class="role-item" onclick="navigateToRole(event, 'homehub-contractor-web.html')"><i class="fas fa-hammer" style="width:18px"></i><span>Contractor</span></a>
+                    <a href="homehub-admin-web.html" class="role-item" onclick="navigateToRole(event, 'homehub-admin-web.html')"><i class="fas fa-gear" style="width:18px"></i><span>Admin</span></a>
+                    <a href="homehub-agency-web.html" class="role-item" onclick="navigateToRole(event, 'homehub-agency-web.html')"><i class="fas fa-building" style="width:18px"></i><span>RE Agency</span></a>
+                    <a href="homehub-NPDashboard-web.html" class="role-item" onclick="navigateToRole(event, 'homehub-NPDashboard-web.html')"><i class="fas fa-heart" style="width:18px"></i><span>NP Partner Portal</span></a>
+                    <a href="homehub-insuranceagent-web.html" class="role-item" onclick="navigateToRole(event, 'homehub-insuranceagent-web.html')"><i class="fas fa-shield-halved" style="width:18px"></i><span>Insurance Agent</span></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: CERTIFICATION DETAILS -->
+    <div id="screen-certification" class="screen active">
+        <div class="phone-frame">
+            <div class="status-bar">
+                <div class="status-left">9:41</div>
+                <div class="status-right">
+                    <span>📶</span>
+                    <span>📡</span>
+                    <span>🔋</span>
+                </div>
+            </div>
+
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <button class="back-button" onclick="goToScreen('overview')">←</button>
+                    <div class="nav-header-title">Wildfire Certification Details</div>
+                </div>
+                <div class="nav-header-right">
+                    <button class="nav-icon-btn" onclick="openNotifications()">🔔</button>
+                    <button class="nav-icon-btn" onclick="openMenu()">⋯</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- Certification Header -->
+                <div class="cert-header-card">
+                    <div class="cert-title-row">
+                        <div class="cert-title">
+                            <div class="cert-icon">🛡️</div>
+                            <div class="cert-name">
+                                <h3>Wildfire Safety Certification</h3>
+                                <p>Travis County Firewise Program</p>
+                            </div>
+                        </div>
+                        <div class="cert-status-badge">Certified</div>
+                    </div>
+
+                    <div class="cert-details">
+                        <div>
+                            <div class="detail-row">
+                                <span class="detail-label">Certificate ID</span>
+                                <span class="detail-value">TCFP-24-78821</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Certification Level</span>
+                                <span class="detail-value">Level 2</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Issue Date</span>
+                                <span class="detail-value">Nov 30, 2024</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="detail-row">
+                                <span class="detail-label">Expiration Date</span>
+                                <span class="detail-value">Nov 30, 2025</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Inspector</span>
+                                <span class="detail-value" style="cursor: pointer; color: #1F3A5F; text-decoration: underline;" onclick="goToScreen('contractor-detail-firesafe')">FireSafe Austin</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Inspection Type</span>
+                                <span class="detail-value">Annual Inspection</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cert-buttons">
+                        <button class="btn btn-primary btn-download" onclick="downloadCertificate()">
+                            <span>⬇</span> View / Download Certificate
+                        </button>
+                    </div>
+
+                    <div class="cert-buttons" style="margin-top: 8px;">
+                        <button class="btn btn-secondary" onclick="openUploadCertificateModal()">
+                            📤 Upload Certificate
+                        </button>
+                    </div>
+
+                    <div class="cert-buttons" style="margin-top: 8px;">
+                        <button class="btn btn-secondary" onclick="openShareInsuranceModal()">
+                            🛡️ Share with Insurance
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="tab-container">
+                    <button class="tab active" onclick="switchTab('requirements')">Compliance Requirements</button>
+                    <button class="tab" onclick="switchTab('risk')">Risk Information</button>
+                </div>
+
+                <!-- Tab: Compliance Requirements -->
+                <div id="tab-requirements" class="tab-content">
+                    <div class="requirement-item" onclick="goToScreen('requirement-detail-1')" style="cursor: pointer;">
+                        <div class="requirement-icon">🌱</div>
+                        <div class="requirement-content">
+                            <div class="requirement-name">Defensible Space</div>
+                            <div class="requirement-desc">100 ft around home</div>
+                        </div>
+                        <div class="requirement-percent">100% ✓</div>
+                    </div>
+                    <div class="requirement-item" onclick="goToScreen('requirement-detail-2')" style="cursor: pointer;">
+                        <div class="requirement-icon">🏠</div>
+                        <div class="requirement-content">
+                            <div class="requirement-name">Home Hardening</div>
+                            <div class="requirement-desc">Roof, siding, windows, doors</div>
+                        </div>
+                        <div class="requirement-percent">95% ✓</div>
+                    </div>
+                    <div class="requirement-item" onclick="goToScreen('requirement-detail-3')" style="cursor: pointer;">
+                        <div class="requirement-icon">🛡️</div>
+                        <div class="requirement-content">
+                            <div class="requirement-name">Embers & Vents</div>
+                            <div class="requirement-desc">Vents, eaves, screens</div>
+                        </div>
+                        <div class="requirement-percent">100% ✓</div>
+                    </div>
+                    <div class="requirement-item" onclick="goToScreen('requirement-detail-4')" style="cursor: pointer;">
+                        <div class="requirement-icon">📍</div>
+                        <div class="requirement-content">
+                            <div class="requirement-name">Access & Address</div>
+                            <div class="requirement-desc">Driveway access, address visible</div>
+                        </div>
+                        <div class="requirement-percent">100% ✓</div>
+                    </div>
+                    <div class="requirement-item" onclick="goToScreen('requirement-detail-5')" style="cursor: pointer;">
+                        <div class="requirement-icon">📋</div>
+                        <div class="requirement-content">
+                            <div class="requirement-name">Documentation</div>
+                            <div class="requirement-desc">Photos, receipts, forms</div>
+                        </div>
+                        <div class="requirement-percent">Complete ✓</div>
+                    </div>
+                </div>
+
+                <!-- Tab: Risk Information (hidden by default) -->
+                <div id="tab-risk" class="tab-content" style="display: none;">
+                    <div class="risk-info-container">
+                        <div class="risk-info-item">
+                            <div class="risk-info-label">High Risk Rating</div>
+                            <div class="risk-meter">
+                                <div class="risk-meter-fill high"></div>
+                            </div>
+                            <div class="risk-meter-label">
+                                <span>Risk Zone</span>
+                                <span style="color: var(--risk-orange); font-weight: 600;">High</span>
+                            </div>
+                        </div>
+
+                        <div class="risk-info-item">
+                            <div class="risk-info-label">Vegetation Type</div>
+                            <div class="risk-zone">Dense</div>
+                            <div class="risk-zone" style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Moderate</div>
+                        </div>
+
+                        <div class="risk-info-item">
+                            <div class="risk-info-label">Insurance Benefit</div>
+                            <div class="benefit-box">
+                                <div class="benefit-icon">🎖️</div>
+                                <div class="benefit-content">
+                                    <div class="benefit-title">Up to 15% discount</div>
+                                    <div class="benefit-amount">on homeowners insurance</div>
+                                    <div class="benefit-text">when you stay certified</div>
+                                    <div class="learn-more">Learn more →</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inspection History -->
+                <div class="action-header" style="padding-top: 16px;">
+                    <h4>Inspection History</h4>
+                    <a class="view-all" onclick="alert('View all inspections')">View all</a>
+                </div>
+
+                <div>
+                    <div class="history-item" onclick="goToScreen('inspection-detail-1')" style="cursor: pointer;">
+                        <div class="history-icon">📋</div>
+                        <div class="history-content">
+                            <div class="history-date">Nov 30, 2024</div>
+                            <div class="history-detail">Annual Inspection</div>
+                        </div>
+                        <div class="history-status">Pass</div>
+                        <div class="action-arrow">→</div>
+                    </div>
+                    <div class="history-item" onclick="goToScreen('inspection-detail-2')" style="cursor: pointer;">
+                        <div class="history-icon">📋</div>
+                        <div class="history-content">
+                            <div class="history-date">Dec 1, 2023</div>
+                            <div class="history-detail">Annual Inspection</div>
+                        </div>
+                        <div class="history-status">Pass</div>
+                        <div class="action-arrow">→</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-nav">
+                <button class="nav-item">
+                    <div class="nav-item-icon">🏠</div>
+                    <div>Dashboard</div>
+                </button>
+                <button class="nav-item">
+                    <div class="nav-item-icon">🏡</div>
+                    <div>My Home</div>
+                </button>
+                <button class="nav-item">
+                    <div class="nav-item-icon">📁</div>
+                    <div>Projects</div>
+                </button>
+                <button class="nav-item">
+                    <div class="nav-item-icon">👷</div>
+                    <div>Contractors</div>
+                </button>
+                <button class="nav-item">
+                    <div class="nav-item-icon">🔍</div>
+                    <div>Scan</div>
+                </button>
+                <button class="nav-item">
+                    <div class="nav-item-icon">👤</div>
+                    <div>Profile</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTION DETAIL SCREEN -->
+    <div id="screen-action-detail-1" class="screen">
+        <div class="phone-frame">
+            <div class="status-bar">
+                <div class="status-left">9:41</div>
+                <div class="status-right"><span>📶</span><span>📡</span><span>🔋</span></div>
+            </div>
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <button class="back-button" onclick="goToScreen('overview')">←</button>
+                    <div class="nav-header-title">Trim Branches Task</div>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="card" style="margin: 12px;">
+                    <h3 class="card-title">Trim Overhanging Branches</h3>
+                    <p style="font-size: 13px; color: #666; margin-bottom: 16px;">Trees within 10 ft of chimney</p>
+                    <div style="background: #FFF5E6; padding: 12px; border-left: 4px solid #FF8C42; border-radius: 6px; margin-bottom: 16px; font-size: 12px;">
+                        <strong>Due in 15 days</strong> - May 14, 2025
+                    </div>
+                    <h4 style="font-weight: 600; margin-bottom: 12px; font-size: 14px;">Task Details</h4>
+                    <div style="font-size: 13px; line-height: 1.6; color: #333; margin-bottom: 20px;">
+                        <p>Trim branches that hang over your roof and are within 10 feet of your chimney. This helps prevent direct contact between branches and embers during wildfire events.</p>
+                    </div>
+                    <h4 style="font-weight: 600; margin-bottom: 12px; font-size: 14px;">Checklist</h4>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="display: flex; gap: 10px; align-items: center; font-size: 13px;">
+                            <input type="checkbox" id="subtask1"> Identify all trees within 10 ft of chimney
+                        </label>
+                        <label style="display: flex; gap: 10px; align-items: center; font-size: 13px;">
+                            <input type="checkbox" id="subtask2"> Trim branches 6-10 ft from roof
+                        </label>
+                        <label style="display: flex; gap: 10px; align-items: center; font-size: 13px;">
+                            <input type="checkbox" id="subtask3"> Remove all debris from roof
+                        </label>
+                        <label style="display: flex; gap: 10px; align-items: center; font-size: 13px;">
+                            <input type="checkbox" id="subtask4"> Take before/after photos
+                        </label>
+                        <label style="display: flex; gap: 10px; align-items: center; font-size: 13px;">
+                            <input type="checkbox" id="subtask5"> Upload photos to HomeHub
+                        </label>
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 24px;" onclick="completeTask()">Complete Task</button>
+                </div>
+            </div>
+            <div class="bottom-nav">
+                <button class="nav-item" onclick="goToScreen('overview')"><div class="nav-item-icon">🏠</div><div>Dashboard</div></button>
+                <button class="nav-item"><div class="nav-item-icon">🏡</div><div>My Home</div></button>
+                <button class="nav-item"><div class="nav-item-icon">📁</div><div>Projects</div></button>
+                <button class="nav-item"><div class="nav-item-icon">👷</div><div>Contractors</div></button>
+                <button class="nav-item"><div class="nav-item-icon">🔍</div><div>Scan</div></button>
+                <button class="nav-item"><div class="nav-item-icon">👤</div><div>Profile</div></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REQUIREMENT DETAIL SCREENS -->
+    <div id="screen-requirement-detail-1" class="screen">
+        <div class="phone-frame">
+            <div class="status-bar"><div class="status-left">9:41</div><div class="status-right"><span>📶</span><span>📡</span><span>🔋</span></div></div>
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <button class="back-button" onclick="goToScreen('certification')">←</button>
+                    <div class="nav-header-title">Defensible Space</div>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="card" style="margin: 12px;">
+                    <h3 class="card-title">Defensible Space - 100 ft Zone</h3>
+                    <div style="background: #E8F5E9; padding: 12px; border-left: 4px solid #27A570; border-radius: 6px; margin-bottom: 16px; font-size: 12px;">
+                        <strong>Status: 100% Compliant ✓</strong>
+                    </div>
+                    <h4 style="font-weight: 600; margin-bottom: 8px;">Requirements Met:</h4>
+                    <ul style="font-size: 13px; color: #333; line-height: 1.8; margin-left: 16px;">
+                        <li>✓ 0-5 ft (Zone 0): All dead vegetation removed</li>
+                        <li>✓ 5-30 ft (Zone 1): Tree spacing maintained, low branches removed</li>
+                        <li>✓ 30-100 ft (Zone 2): Understory vegetation thinned</li>
+                        <li>✓ Documentation: Photos uploaded Apr 2025</li>
+                    </ul>
+                    <p style="margin-top: 16px; font-size: 12px; color: #666;">This property exceeds defensible space requirements with excellent clearance in all zones, significantly reducing fire risk.</p>
+                </div>
+            </div>
+            <div class="bottom-nav">
+                <button class="nav-item" onclick="goToScreen('overview')"><div class="nav-item-icon">🏠</div><div>Dashboard</div></button>
+                <button class="nav-item"><div class="nav-item-icon">🏡</div><div>My Home</div></button>
+                <button class="nav-item"><div class="nav-item-icon">📁</div><div>Projects</div></button>
+                <button class="nav-item"><div class="nav-item-icon">👷</div><div>Contractors</div></button>
+                <button class="nav-item"><div class="nav-item-icon">🔍</div><div>Scan</div></button>
+                <button class="nav-item"><div class="nav-item-icon">👤</div><div>Profile</div></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-requirement-detail-2" class="screen">
+        <div class="phone-frame">
+            <div class="status-bar"><div class="status-left">9:41</div><div class="status-right"><span>📶</span><span>📡</span><span>🔋</span></div></div>
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <button class="back-button" onclick="goToScreen('certification')">←</button>
+                    <div class="nav-header-title">Home Hardening</div>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="card" style="margin: 12px;">
+                    <h3 class="card-title">Home Hardening - 95% Complete</h3>
+                    <div style="background: #FEF3C7; padding: 12px; border-left: 4px solid #FF9500; border-radius: 6px; margin-bottom: 16px; font-size: 12px;">
+                        <strong>Status: 95% Compliant (Near Complete)</strong>
+                    </div>
+                    <h4 style="font-weight: 600; margin-bottom: 8px;">Completed:</h4>
+                    <ul style="font-size: 13px; color: #333; line-height: 1.8; margin-left: 16px;">
+                        <li>✓ Class A fire-rated roof installed</li>
+                        <li>✓ Ember-resistant vents upgraded</li>
+                        <li>✓ Tempered glass windows installed</li>
+                        <li>✓ Metal rain gutters</li>
+                    </ul>
+                    <h4 style="font-weight: 600; margin-bottom: 8px; margin-top: 12px;">Pending:</h4>
+                    <ul style="font-size: 13px; color: #FF9500; line-height: 1.8; margin-left: 16px;">
+                        <li>⚠ Door hardening (due May 2025)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="bottom-nav">
+                <button class="nav-item" onclick="goToScreen('overview')"><div class="nav-item-icon">🏠</div><div>Dashboard</div></button>
+                <button class="nav-item"><div class="nav-item-icon">🏡</div><div>My Home</div></button>
+                <button class="nav-item"><div class="nav-item-icon">📁</div><div>Projects</div></button>
+                <button class="nav-item"><div class="nav-item-icon">👷</div><div>Contractors</div></button>
+                <button class="nav-item"><div class="nav-item-icon">🔍</div><div>Scan</div></button>
+                <button class="nav-item"><div class="nav-item-icon">👤</div><div>Profile</div></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-requirement-detail-3" class="screen">
+        <div class="phone-frame">
+            <div class="status-bar"><div class="status-left">9:41</div><div class="status-right"><span>📶</span><span>📡</span><span>🔋</span></div></div>
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <button class="back-button" onclick="goToScreen('certification')">←</button>
+                    <div class="nav-header-title">Embers & Vents</div>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="card" style="margin: 12px;">
+                    <h3 class="card-title">Embers & Vents Protection</h3>
+                    <div style="background: #E8F5E9; padding: 12px; border-left: 4px solid #27A570; border-radius: 6px; margin-bottom: 16px; font-size: 12px;">
+                        <strong>Status: 100% Compliant ✓</strong>
+                    </div>
+                    <h4 style="font-weight: 600; margin-bottom: 8px;">Protected Areas:</h4>
+                    <ul style="font-size: 13px; color: #333; line-height: 1.8; margin-left: 16px;">
+                        <li>✓ All vents upgraded to 1/8" mesh or smaller</li>
+                        <li>✓ Attic screens 1/8" metal mesh</li>
+                        <li>✓ Eave gaps sealed with non-combustible materials</li>
+                        <li>✓ Soffit vents covered with screens</li>
+                    </ul>
+                    <p style="margin-top: 16px; font-size: 12px; color: #666;">All openings that could allow ember entry have been upgraded with fire-resistant screening, providing excellent protection.</p>
+                </div>
+            </div>
+            <div class="bottom-nav">
+                <button class="nav-item" onclick="goToScreen('overview')"><div class="nav-item-icon">🏠</div><div>Dashboard</div></button>
+                <button class="nav-item"><div class="nav-item-icon">🏡</div><div>My Home</div></button>
+                <button class="nav-item"><div class="nav-item-icon">📁</div><div>Projects</div></button>
+                <button class="nav-item"><div class="nav-item-icon">👷</div><div>Contractors</div></button>
+                <button class="nav-item"><div class="nav-item-icon">🔍</div><div>Scan</div></button>
+                <button class="nav-item"><div class="nav-item-icon">👤</div><div>Profile</div></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-requirement-detail-4" class="screen">
+        <div class="phone-frame">
+            <div class="status-bar"><div class="status-left">9:41</div><div class="status-right"><span>📶</span><span>📡</span><span>🔋</span></div></div>
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <button class="back-button" onclick="goToScreen('certification')">←</button>
+                    <div class="nav-header-title">Access & Address</div>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="card" style="margin: 12px;">
+                    <h3 class="card-title">Access & Address Visibility</h3>
+                    <div style="background: #E8F5E9; padding: 12px; border-left: 4px solid #27A570; border-radius: 6px; margin-bottom: 16px; font-size: 12px;">
+                        <strong>Status: 100% Compliant ✓</strong>
+                    </div>
+                    <h4 style="font-weight: 600; margin-bottom: 8px;">Verified:</h4>
+                    <ul style="font-size: 13px; color: #333; line-height: 1.8; margin-left: 16px;">
+                        <li>✓ Driveway wide enough for fire trucks (20+ ft)</li>
+                        <li>✓ Address clearly visible from street (reflective numbers)</li>
+                        <li>✓ Gate access maintained</li>
+                        <li>✓ Emergency turnaround area available</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="bottom-nav">
+                <button class="nav-item" onclick="goToScreen('overview')"><div class="nav-item-icon">🏠</div><div>Dashboard</div></button>
+                <button class="nav-item"><div class="nav-item-icon">🏡</div><div>My Home</div></button>
+                <button class="nav-item"><div class="nav-item-icon">📁</div><div>Projects</div></button>
+                <button class="nav-item"><div class="nav-item-icon">👷</div><div>Contractors</div></button>
+                <button class="nav-item"><div class="nav-item-icon">🔍</div><div>Scan</div></button>
+                <button class="nav-item"><div class="nav-item-icon">👤</div><div>Profile</div></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-requirement-detail-5" class="screen">
+        <div class="phone-frame">
+            <div class="status-bar"><div class="status-left">9:41</div><div class="status-right"><span>📶</span><span>📡</span><span>🔋</span></div></div>
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <button class="back-button" onclick="goToScreen('certification')">←</button>
+                    <div class="nav-header-title">Documentation</div>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="card" style="margin: 12px;">
+                    <h3 class="card-title">Required Documentation</h3>
+                    <div style="background: #E8F5E9; padding: 12px; border-left: 4px solid #27A570; border-radius: 6px; margin-bottom: 16px; font-size: 12px;">
+                        <strong>Status: Complete ✓</strong>
+                    </div>
+                    <h4 style="font-weight: 600; margin-bottom: 12px;">Uploaded Documents:</h4>
+                    <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 6px; border: 1px solid #eee;">
+                            <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">📷 Before & After Photos</div>
+                            <div style="font-size: 12px; color: #666; margin-bottom: 8px;">47 photos • 125 MB</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                                <button class="btn btn-secondary" style="padding: 6px; font-size: 11px;" onclick="viewDocument('photos')">👁️ View</button>
+                                <button class="btn btn-secondary" style="padding: 6px; font-size: 11px;" onclick="downloadDocument('photos')">⬇️ Download</button>
+                                <button class="btn btn-secondary" style="padding: 6px; font-size: 11px;" onclick="shareDocument('photos')">📤 Share</button>
+                            </div>
+                        </div>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 6px; border: 1px solid #eee;">
+                            <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">🧾 Contractor Receipts</div>
+                            <div style="font-size: 12px; color: #666; margin-bottom: 8px;">5 documents • 8.3 MB</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                                <button class="btn btn-secondary" style="padding: 6px; font-size: 11px;" onclick="viewDocument('receipts')">👁️ View</button>
+                                <button class="btn btn-secondary" style="padding: 6px; font-size: 11px;" onclick="downloadDocument('receipts')">⬇️ Download</button>
+                                <button class="btn btn-secondary" style="padding: 6px; font-size: 11px;" onclick="shareDocument('receipts')">📤 Share</button>
+                            </div>
+                        </div>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 6px; border: 1px solid #eee;">
+                            <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">📋 Inspection Reports</div>
+                            <div style="font-size: 12px; color: #666; margin-bottom: 8px;">2 documents • 4.7 MB</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                                <button class="btn btn-secondary" style="padding: 6px; font-size: 11px;" onclick="viewDocument('reports')">👁️ View</button>
+                                <button class="btn btn-secondary" style="padding: 6px; font-size: 11px;" onclick="downloadDocument('reports')">⬇️ Download</button>
+                                <button class="btn btn-secondary" style="padding: 6px; font-size: 11px;" onclick="shareDocument('reports')">📤 Share</button>
+                            </div>
+                        </div>
+                        <div style="background: #f9f9f9; padding: 12px; border-radius: 6px; border: 1px solid #eee;">
+                            <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">📜 Material Certifications</div>
+                            <div style="font-size: 12px; color: #666; margin-bottom: 8px;">4 documents • 2.1 MB</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                                <button class="btn btn-secondary" style="padding: 6px; font-size: 11px;" onclick="viewDocument('certs')">👁️ View</button>
+                                <button class="btn btn-secondary" style="padding: 6px; font-size: 11px;" onclick="downloadDocument('certs')">⬇️ Download</button>
+                                <button class="btn btn-secondary" style="padding: 6px; font-size: 11px;" onclick="shareDocument('certs')">📤 Share</button>
+                            </div>
+                        </div>
+                    </div>
+                    <p style="margin-top: 16px; font-size: 12px; color: #666;">All required documentation has been uploaded and verified. These documents support your compliance certification.</p>
+                </div>
+            </div>
+            <div class="bottom-nav">
+                <button class="nav-item" onclick="goToScreen('overview')"><div class="nav-item-icon">🏠</div><div>Dashboard</div></button>
+                <button class="nav-item"><div class="nav-item-icon">🏡</div><div>My Home</div></button>
+                <button class="nav-item"><div class="nav-item-icon">📁</div><div>Projects</div></button>
+                <button class="nav-item"><div class="nav-item-icon">👷</div><div>Contractors</div></button>
+                <button class="nav-item"><div class="nav-item-icon">🔍</div><div>Scan</div></button>
+                <button class="nav-item"><div class="nav-item-icon">👤</div><div>Profile</div></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- INSPECTION DETAIL SCREENS -->
+    <div id="screen-inspection-detail-1" class="screen">
+        <div class="phone-frame">
+            <div class="status-bar"><div class="status-left">9:41</div><div class="status-right"><span>📶</span><span>📡</span><span>🔋</span></div></div>
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <button class="back-button" onclick="goToScreen('certification')">←</button>
+                    <div class="nav-header-title">Nov 30, 2024 Inspection</div>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="card" style="margin: 12px;">
+                    <h3 class="card-title">Annual Inspection - Nov 30, 2024</h3>
+                    <div style="background: #E8F5E9; padding: 12px; border-left: 4px solid #27A570; border-radius: 6px; margin-bottom: 16px; font-size: 12px;">
+                        <strong>Result: PASS ✓</strong>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                        <div><strong style="font-size: 12px;">Inspector:</strong><br/><span style="font-size: 13px;">FireSafe Austin</span></div>
+                        <div><strong style="font-size: 12px;">Type:</strong><br/><span style="font-size: 13px;">Annual Inspection</span></div>
+                    </div>
+                    <h4 style="font-weight: 600; margin-bottom: 8px;">Findings:</h4>
+                    <ul style="font-size: 13px; color: #333; line-height: 1.8; margin-left: 16px;">
+                        <li>✓ All defensible space requirements met</li>
+                        <li>✓ Home hardening measures in place</li>
+                        <li>✓ Vent protection verified</li>
+                        <li>✓ Documentation complete</li>
+                    </ul>
+                    <p style="margin-top: 16px; font-size: 12px; color: #666; font-weight: 600;">Certification Level: Level 2 - All standards exceeded</p>
+                </div>
+            </div>
+            <div class="bottom-nav">
+                <button class="nav-item" onclick="goToScreen('overview')"><div class="nav-item-icon">🏠</div><div>Dashboard</div></button>
+                <button class="nav-item"><div class="nav-item-icon">🏡</div><div>My Home</div></button>
+                <button class="nav-item"><div class="nav-item-icon">📁</div><div>Projects</div></button>
+                <button class="nav-item"><div class="nav-item-icon">👷</div><div>Contractors</div></button>
+                <button class="nav-item"><div class="nav-item-icon">🔍</div><div>Scan</div></button>
+                <button class="nav-item"><div class="nav-item-icon">👤</div><div>Profile</div></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-inspection-detail-2" class="screen">
+        <div class="phone-frame">
+            <div class="status-bar"><div class="status-left">9:41</div><div class="status-right"><span>📶</span><span>📡</span><span>🔋</span></div></div>
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <button class="back-button" onclick="goToScreen('certification')">←</button>
+                    <div class="nav-header-title">Dec 1, 2023 Inspection</div>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="card" style="margin: 12px;">
+                    <h3 class="card-title">Annual Inspection - Dec 1, 2023</h3>
+                    <div style="background: #E8F5E9; padding: 12px; border-left: 4px solid #27A570; border-radius: 6px; margin-bottom: 16px; font-size: 12px;">
+                        <strong>Result: PASS ✓</strong>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                        <div><strong style="font-size: 12px;">Inspector:</strong><br/><span style="font-size: 13px;">FireSafe Austin</span></div>
+                        <div><strong style="font-size: 12px;">Type:</strong><br/><span style="font-size: 13px;">Annual Inspection</span></div>
+                    </div>
+                    <h4 style="font-weight: 600; margin-bottom: 8px;">Findings:</h4>
+                    <ul style="font-size: 13px; color: #333; line-height: 1.8; margin-left: 16px;">
+                        <li>✓ Defensible space compliant</li>
+                        <li>✓ Roof materials approved</li>
+                        <li>✓ Vent screening completed</li>
+                    </ul>
+                    <p style="margin-top: 16px; font-size: 12px; color: #666;">Certification Level: Level 2</p>
+                </div>
+            </div>
+            <div class="bottom-nav">
+                <button class="nav-item" onclick="goToScreen('overview')"><div class="nav-item-icon">🏠</div><div>Dashboard</div></button>
+                <button class="nav-item"><div class="nav-item-icon">🏡</div><div>My Home</div></button>
+                <button class="nav-item"><div class="nav-item-icon">📁</div><div>Projects</div></button>
+                <button class="nav-item"><div class="nav-item-icon">👷</div><div>Contractors</div></button>
+                <button class="nav-item"><div class="nav-item-icon">🔍</div><div>Scan</div></button>
+                <button class="nav-item"><div class="nav-item-icon">👤</div><div>Profile</div></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTRACTOR DETAIL SCREEN -->
+    <div id="screen-contractor-detail-firesafe" class="screen">
+        <div class="phone-frame">
+            <div class="status-bar"><div class="status-left">9:41</div><div class="status-right"><span>📶</span><span>📡</span><span>🔋</span></div></div>
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <button class="back-button" onclick="goToScreen('certification')">←</button>
+                    <div class="nav-header-title">Contractor Info</div>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="card" style="margin: 12px;">
+                    <h3 class="card-title">FireSafe Austin</h3>
+                    <p style="font-size: 13px; color: #666; margin-bottom: 12px;">Certified Wildfire Compliance Inspector</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                        <div>
+                            <div style="font-size: 11px; color: #999; text-transform: uppercase; font-weight: 600;">Phone</div>
+                            <a href="tel:+15125550147" style="font-size: 14px; font-weight: 600; color: #1F3A5F; cursor: pointer; margin-top: 4px; display: block; text-decoration: none;">+1 (512) 555-0147</a>
+                        </div>
+                        <div>
+                            <div style="font-size: 11px; color: #999; text-transform: uppercase; font-weight: 600;">Email</div>
+                            <div style="font-size: 13px; color: #1F3A5F; margin-top: 4px;">info@firesafeaustin.com</div>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px;">
+                        <button class="btn btn-primary" style="width: 100%;" onclick="makeCall()">📞 Call</button>
+                        <button class="btn btn-secondary" style="width: 100%;" onclick="openTextModal()">💬 Text</button>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                        <div>
+                            <div style="font-size: 11px; color: #999; text-transform: uppercase; font-weight: 600;">License</div>
+                            <div style="font-size: 13px; font-weight: 600;">TX-FS-2024-891</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 11px; color: #999; text-transform: uppercase; font-weight: 600;">Experience</div>
+                            <div style="font-size: 13px; font-weight: 600;">12+ years</div>
+                        </div>
+                    </div>
+                    <h4 style="font-weight: 600; margin-top: 16px; margin-bottom: 8px;">Services</h4>
+                    <ul style="font-size: 13px; color: #333; line-height: 1.8; margin-left: 16px;">
+                        <li>• Wildfire compliance inspections</li>
+                        <li>• Defensible space assessment</li>
+                        <li>• Home hardening certification</li>
+                        <li>• Emergency mitigation planning</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="bottom-nav">
+                <button class="nav-item" onclick="goToScreen('overview')"><div class="nav-item-icon">🏠</div><div>Dashboard</div></button>
+                <button class="nav-item"><div class="nav-item-icon">🏡</div><div>My Home</div></button>
+                <button class="nav-item"><div class="nav-item-icon">📁</div><div>Projects</div></button>
+                <button class="nav-item"><div class="nav-item-icon">👷</div><div>Contractors</div></button>
+                <button class="nav-item"><div class="nav-item-icon">🔍</div><div>Scan</div></button>
+                <button class="nav-item"><div class="nav-item-icon">👤</div><div>Profile</div></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RISK MAP MODAL -->
+    <div id="riskMapModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 20px; max-width: 700px; width: 95%; max-height: 85vh; overflow: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 style="font-size: 18px; font-weight: 700;">Wildfire Risk Map - Sandpoint, ID 83864</h2>
+                <button onclick="document.getElementById('riskMapModal').style.display='none'" style="background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
+            </div>
+
+            <!-- Fire Risk Map Visualization -->
+            <svg viewBox="0 0 600 450" style="width: 100%; border-radius: 8px; border: 2px solid #ddd; background: #E8F5E9;" xmlns="http://www.w3.org/2000/svg">
+                <!-- Background terrain -->
+                <rect width="600" height="450" fill="#F0F4F0"/>
+
+                <!-- Low Risk Areas (light green) -->
+                <ellipse cx="100" cy="100" rx="80" ry="70" fill="#C8E6C9" opacity="0.7"/>
+                <ellipse cx="520" cy="380" rx="90" ry="75" fill="#C8E6C9" opacity="0.7"/>
+
+                <!-- Moderate Risk Areas (yellow) -->
+                <ellipse cx="150" cy="300" rx="70" ry="80" fill="#FFE082" opacity="0.7"/>
+                <ellipse cx="450" cy="150" rx="75" ry="65" fill="#FFE082" opacity="0.7"/>
+
+                <!-- High Risk Areas (orange) -->
+                <ellipse cx="300" cy="250" rx="85" ry="90" fill="#FFB74D" opacity="0.7"/>
+
+                <!-- Very High Risk Zone (red) - around property -->
+                <circle cx="300" cy="200" r="70" fill="#EF5350" opacity="0.6"/>
+                <circle cx="300" cy="200" r="50" fill="#F44336" opacity="0.5"/>
+
+                <!-- Property marker with glow effect -->
+                <circle cx="300" cy="200" r="15" fill="none" stroke="#EF4444" stroke-width="1" opacity="0.4"/>
+                <circle cx="300" cy="200" r="10" fill="white" stroke="#1F3A5F" stroke-width="2"/>
+                <text x="300" y="250" text-anchor="middle" font-size="12" font-weight="600" fill="#1F3A5F">
+                    145 Heritage Lane
+                </text>
+
+                <!-- Title -->
+                <text x="300" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1F3A5F">
+                    Sandpoint, ID 83864
+                </text>
+            </svg>
+
+            <p style="margin-top: 12px; font-size: 11px; color: #999; text-align: center;">
+                Fire risk zone map with property location marked
+            </p>
+
+            <!-- Legend -->
+            <div style="margin-top: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <div style="width: 16px; height: 16px; background: #00AA00; border-radius: 2px;"></div>
+                    <span style="font-size: 11px; font-weight: 600;">Low Risk</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <div style="width: 16px; height: 16px; background: #FFFF00; border-radius: 2px;"></div>
+                    <span style="font-size: 11px; font-weight: 600;">Moderate</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <div style="width: 16px; height: 16px; background: #FF8800; border-radius: 2px;"></div>
+                    <span style="font-size: 11px; font-weight: 600;">High Risk</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <div style="width: 16px; height: 16px; background: #FF0000; border-radius: 2px;"></div>
+                    <span style="font-size: 11px; font-weight: 600;">Very High</span>
+                </div>
+            </div>
+
+            <p style="margin-top: 16px; font-size: 12px; color: #666; line-height: 1.6;">
+                <strong>Your Property Status:</strong> Located in a Very High Wildfire Risk Zone. This area experiences elevated fire risk due to vegetation density, terrain, and historical fire activity. Maintaining compliance with wildfire mitigation standards is essential to reduce property risk and potentially lower insurance premiums.
+            </p>
+        </div>
+    </div>
+
+    <!-- UPLOAD CERTIFICATE MODAL -->
+    <div id="uploadCertificateModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 20px; max-width: 500px; width: 90%; max-height: 80vh; overflow: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 style="font-size: 18px; font-weight: 700;">Upload Certificate</h2>
+                <button onclick="document.getElementById('uploadCertificateModal').style.display='none'" style="background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
+            </div>
+            <div style="border: 2px dashed #ddd; border-radius: 8px; padding: 30px; text-align: center; margin-bottom: 16px; background: #f9f9f9;">
+                <div style="font-size: 32px; margin-bottom: 8px;">📄</div>
+                <div style="font-weight: 600; margin-bottom: 4px;">Drag & Drop Certificate</div>
+                <div style="font-size: 12px; color: #666;">or click to browse</div>
+                <input type="file" style="display: none; width: 100%; margin-top: 12px;">
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px;">Certificate Type</label>
+                <select style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
+                    <option>Wildfire Safety Certification</option>
+                    <option>Home Hardening Certificate</option>
+                    <option>Inspection Report</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; margin-bottom: 8px;" onclick="alert('Certificate uploaded!'); document.getElementById('uploadCertificateModal').style.display='none';">Upload Certificate</button>
+            <button class="btn btn-secondary" style="width: 100%;" onclick="document.getElementById('uploadCertificateModal').style.display='none';">Cancel</button>
+        </div>
+    </div>
+
+    <!-- SHARE WITH INSURANCE MODAL -->
+    <div id="shareInsuranceModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 20px; max-width: 500px; width: 90%; max-height: 80vh; overflow: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 style="font-size: 18px; font-weight: 700;">Share with Insurance</h2>
+                <button onclick="document.getElementById('shareInsuranceModal').style.display='none'" style="background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
+            </div>
+            <div style="background: #E3F2FD; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 12px;">
+                <strong>Current Insurance:</strong> State Farm Insurance
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px;">Share Method</label>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="display: flex; gap: 8px; font-size: 13px;">
+                        <input type="radio" name="shareMethod" checked> Email to Agent
+                    </label>
+                    <label style="display: flex; gap: 8px; font-size: 13px;">
+                        <input type="radio" name="shareMethod"> Create Share Link
+                    </label>
+                </div>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px;">Include in Share</label>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="display: flex; gap: 8px; font-size: 13px;">
+                        <input type="checkbox" checked> Certificate
+                    </label>
+                    <label style="display: flex; gap: 8px; font-size: 13px;">
+                        <input type="checkbox" checked> Inspection Report
+                    </label>
+                    <label style="display: flex; gap: 8px; font-size: 13px;">
+                        <input type="checkbox"> Photos & Documentation
+                    </label>
+                </div>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; margin-bottom: 8px;" onclick="alert('Certificate shared with insurance!'); document.getElementById('shareInsuranceModal').style.display='none';">Send to Insurance</button>
+            <button class="btn btn-secondary" style="width: 100%;" onclick="document.getElementById('shareInsuranceModal').style.display='none';">Cancel</button>
+        </div>
+    </div>
+
+    <!-- NOTIFICATIONS MENU -->
+    <div id="notificationsMenu" style="display: none; position: fixed; top: 0; right: 0; width: 300px; height: 100vh; background: white; box-shadow: -2px 0 10px rgba(0,0,0,0.1); z-index: 999; padding: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 16px; font-weight: 700;">Notifications</h3>
+            <button onclick="document.getElementById('notificationsMenu').style.display='none'" style="background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
+        </div>
+        <div style="font-size: 13px; line-height: 1.6; color: #333;">
+            <div style="padding: 12px; background: #E8F5E9; border-radius: 6px; margin-bottom: 12px;">
+                <div style="font-weight: 600; margin-bottom: 4px;">Certification expires in 226 days</div>
+                <div style="font-size: 12px; color: #666;">Renew by Nov 30, 2025</div>
+            </div>
+            <div style="padding: 12px; background: #FFF5E6; border-radius: 6px; margin-bottom: 12px;">
+                <div style="font-weight: 600; margin-bottom: 4px;">Action item: Trim branches</div>
+                <div style="font-size: 12px; color: #666;">Due in 15 days</div>
+            </div>
+            <div style="padding: 12px; background: #F0F0F0; border-radius: 6px;">
+                <div style="font-weight: 600; margin-bottom: 4px;">Your property is in high risk zone</div>
+                <div style="font-size: 12px; color: #666;">Stay compliant for insurance benefits</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MENU OPTIONS -->
+    <div id="menuOptions" style="display: none; position: fixed; top: 40px; right: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 999; min-width: 200px;">
+        <button style="display: block; width: 100%; padding: 12px; text-align: left; border: none; background: none; cursor: pointer; font-size: 13px; border-bottom: 1px solid #eee;" onclick="alert('Settings'); document.getElementById('menuOptions').style.display='none';">⚙️ Settings</button>
+        <button style="display: block; width: 100%; padding: 12px; text-align: left; border: none; background: none; cursor: pointer; font-size: 13px; border-bottom: 1px solid #eee;" onclick="alert('Help & Support'); document.getElementById('menuOptions').style.display='none';">❓ Help & Support</button>
+        <button style="display: block; width: 100%; padding: 12px; text-align: left; border: none; background: none; cursor: pointer; font-size: 13px;" onclick="alert('Signed out'); document.getElementById('menuOptions').style.display='none';">🚪 Sign Out</button>
+    </div>
+
+    <!-- TEXT CONTRACTOR MODAL -->
+    <div id="textContractorModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 20px; max-width: 500px; width: 90%; max-height: 80vh; overflow: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 style="font-size: 18px; font-weight: 700;">Text FireSafe Austin</h2>
+                <button onclick="document.getElementById('textContractorModal').style.display='none'" style="background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Message</label>
+                <textarea style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: inherit; resize: vertical; height: 120px;" placeholder="Type your message..."></textarea>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; margin-bottom: 8px;" onclick="sendText()">Send Text Message</button>
+            <button class="btn btn-secondary" style="width: 100%;" onclick="document.getElementById('textContractorModal').style.display='none';">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        function goToScreen(screenName) {
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => screen.classList.remove('active'));
+            document.getElementById('screen-' + screenName).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+
+            // Remove active from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            const tabContent = document.getElementById('tab-' + tabName);
+            if (tabContent) {
+                tabContent.style.display = 'block';
+            }
+
+            // Mark tab as active
+            event.target.classList.add('active');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('riskMapModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+            }
+        });
+
+        function openNotifications() {
+            const menu = document.getElementById('notificationsMenu');
+            const options = document.getElementById('menuOptions');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            options.style.display = 'none';
+        }
+
+        function openMenu() {
+            const menu = document.getElementById('menuOptions');
+            const notifications = document.getElementById('notificationsMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            notifications.style.display = 'none';
+        }
+
+        function openUploadCertificateModal() {
+            document.getElementById('uploadCertificateModal').style.display = 'flex';
+        }
+
+        function openShareInsuranceModal() {
+            document.getElementById('shareInsuranceModal').style.display = 'flex';
+        }
+
+        function downloadCertificate() {
+            alert('Downloading certificate: Wildfire_Safety_Certification_TCFP-24-78821.pdf');
+        }
+
+        function completeTask() {
+            const subtasks = ['subtask1', 'subtask2', 'subtask3', 'subtask4', 'subtask5'];
+            const allChecked = subtasks.every(id => document.getElementById(id).checked);
+
+            if (!allChecked) {
+                alert('Please complete all subtasks before marking the task as complete.');
+                return;
+            }
+
+            alert('Task completed! Trim Overhanging Branches marked as complete.');
+            // Update the action item on the overview page
+            goToScreen('overview');
+        }
+
+        // Close menus when clicking outside
+        document.addEventListener('click', function(e) {
+            const notifications = document.getElementById('notificationsMenu');
+            const menu = document.getElementById('menuOptions');
+
+            if (!e.target.closest('.nav-icon-btn') && !e.target.closest('#notificationsMenu') && !e.target.closest('#menuOptions')) {
+                notifications.style.display = 'none';
+                menu.style.display = 'none';
+            }
+        });
+
+        function makeCall() {
+            alert('Calling FireSafe Austin at +1 (512) 555-0147...');
+        }
+
+        function openTextModal() {
+            document.getElementById('textContractorModal').style.display = 'flex';
+        }
+
+        function sendText() {
+            alert('Text message sent to FireSafe Austin!');
+            document.getElementById('textContractorModal').style.display = 'none';
+        }
+
+        function viewDocument(docType) {
+            const docNames = {
+                'photos': 'Before & After Photos',
+                'receipts': 'Contractor Receipts',
+                'reports': 'Inspection Reports',
+                'certs': 'Material Certifications'
+            };
+            alert('Opening ' + docNames[docType] + '...');
+        }
+
+        function downloadDocument(docType) {
+            const docNames = {
+                'photos': 'Before_After_Photos.zip',
+                'receipts': 'Contractor_Receipts.pdf',
+                'reports': 'Inspection_Reports.pdf',
+                'certs': 'Material_Certifications.pdf'
+            };
+            alert('Downloading ' + docNames[docType] + '...');
+        }
+
+        function shareDocument(docType) {
+            const docNames = {
+                'photos': 'Before & After Photos',
+                'receipts': 'Contractor Receipts',
+                'reports': 'Inspection Reports',
+                'certs': 'Material Certifications'
+            };
+            alert('Sharing ' + docNames[docType] + ' with insurance...');
+        }
+
+        // Theme persistence
+        (function() {
+          const params = new URLSearchParams(window.location.search);
+          const urlTheme = params.get('theme');
+          if (urlTheme === 'dark' || urlTheme === 'light') {
+            localStorage.setItem('homehub-theme', urlTheme);
+          }
+          const saved = localStorage.getItem('homehub-theme');
+          if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        })();
+
+        function navigateToRole(event, url) {
+          if (event) event.preventDefault();
+          const theme = localStorage.getItem('homehub-theme') || 'light';
+          window.location.href = url + '?theme=' + theme;
+        }
+
+        function toggleRoleSwitcher(event) {
+            if (event) event.stopPropagation();
+            const switcher = document.getElementById('role-switcher');
+            const icon = document.getElementById('switcher-icon');
+            switcher.classList.toggle('open');
+            icon.style.transform = switcher.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+        document.addEventListener('click', () => {
+            const switcher = document.getElementById('role-switcher');
+            const icon = document.getElementById('switcher-icon');
+            if (switcher && switcher.classList.contains('open')) {
+                switcher.classList.remove('open');
+                if (icon) icon.style.transform = 'rotate(0deg)';
+            }
+        });
+    </script>
+</body>
+</html>

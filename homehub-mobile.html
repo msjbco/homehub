@@ -1,0 +1,1635 @@
+<!--
+================================================================================
+HomeHub Application Suite - homehub-mobile.html
+================================================================================
+
+TITLE: Homehub Mobile
+PURPOSE: Mobile application responsive interface
+LAST UPDATED: 2026-05-16
+
+This HTML file is part of the HomeHub platform - a comprehensive property
+management system for homeowners. Single-page application with vanilla JS,
+responsive design, and dark mode support.
+
+================================================================================
+STRUCTURE: <style> CSS | <body> HTML | <script> JavaScript
+================================================================================
+
+CSS VARIABLES: --blue, --green, --orange, --gold (+ light/dark variants)
+RESPONSIVE: Mobile (<768px) | Tablet (768px) | Desktop (1024px+)
+DARK MODE: [data-theme="dark"] selector overrides CSS variables
+
+Key Components:
+  • Sidebar/Navigation (fixed 280px, collapsible on mobile)
+  • Responsive grid/flexbox layouts
+  • Card-based UI components
+  • Modal overlays for forms
+  • Dynamic JavaScript interactions
+
+================================================================================
+QUICK REFERENCE
+================================================================================
+
+CSS Customization:
+  1. Update color variables in :root and [data-theme="dark"]
+  2. Modify font-size and padding for spacing
+  3. Adjust media queries for different breakpoints
+
+JavaScript Patterns:
+  • DOM selection: querySelector, querySelectorAll
+  • Events: addEventListener, event delegation
+  • Storage: localStorage for persistent settings
+  • DOM updates: innerHTML, classList, setAttribute
+
+Testing:
+  ✓ Responsive design (test all breakpoints)
+  ✓ Dark mode toggle
+  ✓ Keyboard navigation
+  ✓ Button/form interactions
+  ✓ Cross-browser compatibility
+
+================================================================================
+For detailed documentation, see sections marked with === throughout the file
+================================================================================
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HomeHub Mobile — Your Home's Complete Living Record</title>
+<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  height: 100%;
+  background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  padding: 20px;
+}
+
+/* Phone Frame Container */
+.phone-frame {
+  width: 375px;
+  height: 812px;
+  background: black;
+  border-radius: 40px;
+  border: 12px solid #1a1a1a;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Notch */
+.phone-frame::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 28px;
+  background: black;
+  border-radius: 0 0 30px 30px;
+  z-index: 1000;
+}
+
+/* Content Viewport */
+.phone-content {
+  flex: 1;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  background: #FFFFFF;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar Styling */
+.phone-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.phone-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.phone-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+/* Header/Navigation */
+header {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 12px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  margin-top: 8px;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1d1d1d;
+}
+
+.header-logo-icon {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #C4A747, #a08935);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-small {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-signin-small {
+  background: transparent;
+  color: #1d1d1d;
+}
+
+.btn-signin-small:active {
+  opacity: 0.5;
+}
+
+.btn-signup-small {
+  background: #1d1d1d;
+  color: white;
+}
+
+.btn-signup-small:active {
+  opacity: 0.7;
+}
+
+/* Hero Section */
+.hero {
+  position: relative;
+  height: 380px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.hero-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)),
+              url('https://foyr.com/learn/wp-content/uploads/2022/06/types-of-house-styles-and-homes.jpg') center/cover;
+  z-index: 1;
+}
+
+.hero-overlay {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 32px 16px 40px;
+  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.85) 100%);
+  text-align: center;
+  color: white;
+}
+
+.hero-title {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 10px;
+  letter-spacing: -0.3px;
+}
+
+.hero-subtitle {
+  font-size: 13px;
+  line-height: 1.5;
+  opacity: 0.95;
+  margin-bottom: 24px;
+  color: #f5f5f5;
+}
+
+.hero-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  background: #C4A747;
+  color: #1d1d1d;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:active {
+  background: #b8941f;
+  transform: scale(0.98);
+}
+
+.btn-secondary {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: white;
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Content Sections */
+section {
+  padding: 32px 16px;
+  background: white;
+}
+
+section.dark {
+  background: #f5f5f5;
+}
+
+section.gold {
+  background: #C4A747;
+  color: #1d1d1d;
+}
+
+/* Section Headers */
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 6px;
+  letter-spacing: -0.3px;
+  color: #1d1d1d;
+}
+
+.section-title-dark {
+  color: white;
+}
+
+.section-subtitle {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.section-subtitle-dark {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Feature Grid */
+.feature-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.feature-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.feature-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #C4A747, #a08935);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.feature-text h3 {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 3px;
+  color: #1d1d1d;
+}
+
+.feature-text p {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* Benefits Cards */
+.benefits-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.benefit-card {
+  background: white;
+  padding: 18px;
+  border-radius: 12px;
+  border: 1px solid #e8e8e8;
+  transition: all 0.3s ease;
+}
+
+.benefit-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.benefit-icon {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.benefit-card h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #1d1d1d;
+}
+
+.benefit-card p {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* Professional Tabs */
+.tab-container {
+  margin: 16px 0;
+}
+
+.tab-scroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.tab-scroll::-webkit-scrollbar {
+  height: 3px;
+}
+
+.tab-scroll::-webkit-scrollbar-thumb {
+  background: #d0d0d0;
+  border-radius: 2px;
+}
+
+.tab-btn {
+  padding: 6px 14px;
+  background: #f0f0f0;
+  border: none;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.tab-btn.active {
+  background: #1d1d1d;
+  color: white;
+}
+
+.tab-btn:active {
+  opacity: 0.7;
+}
+
+/* Professional Cards */
+.professional-card {
+  background: white;
+  padding: 18px;
+  border-radius: 12px;
+  border: 1px solid #e8e8e8;
+  margin-top: 12px;
+  display: none;
+}
+
+.professional-card.active {
+  display: block;
+}
+
+.prof-icon {
+  width: 44px;
+  height: 44px;
+  background: #C4A747;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+.professional-card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #1d1d1d;
+}
+
+.professional-card p {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.professional-card strong {
+  color: #1d1d1d;
+  font-weight: 600;
+}
+
+/* CTA Section */
+.cta-section {
+  text-align: center;
+  padding-bottom: 40px;
+}
+
+.cta-section .section-title {
+  color: #1d1d1d;
+  margin-bottom: 8px;
+}
+
+.cta-section .section-subtitle {
+  color: rgba(29, 29, 29, 0.8);
+}
+
+.btn-cta {
+  width: 100%;
+  padding: 12px;
+  background: #1d1d1d;
+  color: #C4A747;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: all 0.3s ease;
+}
+
+.btn-cta:active {
+  background: rgba(29, 29, 29, 0.8);
+}
+
+/* Modals */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 2000;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 20px 20px 0 0;
+  padding: 24px 16px;
+  width: 375px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.modal-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #1d1d1d;
+}
+
+.modal-header p {
+  font-size: 12px;
+  color: #666;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #1d1d1d;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #C4A747;
+  box-shadow: 0 0 0 3px rgba(196, 167, 71, 0.1);
+}
+
+/* Progress Bar */
+.progress-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.progress-step {
+  height: 2px;
+  flex: 1;
+  max-width: 35px;
+  background: #e5e5e5;
+  border-radius: 1px;
+  transition: all 0.3s ease;
+}
+
+.progress-step.active {
+  background: #C4A747;
+}
+
+.progress-step.completed {
+  background: #34C759;
+}
+
+/* Form Buttons */
+.form-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-form {
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-form-primary {
+  background: #1d1d1d;
+  color: white;
+}
+
+.btn-form-primary:active {
+  background: #333;
+}
+
+.btn-form-secondary {
+  background: #f0f0f0;
+  color: #1d1d1d;
+  border: 1px solid #e0e0e0;
+}
+
+.btn-form-secondary:active {
+  background: #e5e5e5;
+}
+
+/* Role Cards */
+.role-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.role-card {
+  background: white;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.role-card:active {
+  transform: scale(0.98);
+}
+
+.role-card.selected {
+  border-color: #C4A747;
+  background: rgba(196, 167, 71, 0.05);
+}
+
+.role-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(196, 167, 71, 0.1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+  font-size: 20px;
+  color: #C4A747;
+}
+
+.role-card.selected .role-icon {
+  background: #C4A747;
+  color: white;
+}
+
+.role-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #1d1d1d;
+}
+
+.role-desc {
+  font-size: 11px;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* Form Text */
+.form-text {
+  text-align: center;
+  font-size: 11px;
+  color: #666;
+  margin-top: 12px;
+}
+
+.form-text a {
+  color: #C4A747;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* Demo Access */
+.demo-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e5e5;
+  text-align: center;
+}
+
+.demo-toggle {
+  color: #C4A747;
+  font-size: 11px;
+  cursor: pointer;
+  font-weight: 600;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+#demo-buttons {
+  display: none;
+  margin-top: 10px;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#demo-buttons.show {
+  display: flex;
+}
+
+#demo-buttons button {
+  width: 100%;
+  font-size: 11px;
+}
+
+/* Checkbox Styles */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #C4A747;
+}
+
+.checkbox-item label {
+  font-size: 12px;
+  color: #1d1d1d;
+  cursor: pointer;
+  flex: 1;
+}
+
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+  <div class="phone-content">
+    <!-- Header -->
+    <header>
+      <div class="header-content">
+        <div class="header-logo">
+          <div class="header-logo-icon"><i class="fas fa-home"></i></div>
+          <span>HomeHub</span>
+        </div>
+        <div class="header-buttons">
+          <button class="btn-small btn-signin-small" onclick="showSignIn()">Sign In</button>
+          <button class="btn-small btn-signup-small" onclick="showUserType()">Sign Up</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-image"></div>
+      <div class="hero-overlay">
+        <h1 class="hero-title">Preserve Your Home's Complete Living Record</h1>
+        <p class="hero-subtitle">Track projects, contractors, and everything that makes your home valuable.</p>
+        <div class="hero-buttons">
+          <button class="btn-primary" onclick="showUserType()">Get Started</button>
+          <button class="btn-secondary" onclick="showSignIn()">Sign In</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section>
+      <h2 class="section-title">Your Home's Complete Memory</h2>
+      <p class="section-subtitle">Keep every detail organized and accessible forever</p>
+
+      <div class="feature-grid">
+        <div class="feature-item">
+          <div class="feature-icon"><i class="fas fa-wrench"></i></div>
+          <div class="feature-text">
+            <h3>Track Every Project</h3>
+            <p>Document repairs, upgrades, and maintenance work</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><i class="fas fa-user-check"></i></div>
+          <div class="feature-text">
+            <h3>Know Your Contractors</h3>
+            <p>Store contact info and work history for all professionals</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><i class="fas fa-file-alt"></i></div>
+          <div class="feature-text">
+            <h3>Store Documentation</h3>
+            <p>Keep permits, warranties, receipts, and records organized</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><i class="fas fa-calendar-check"></i></div>
+          <div class="feature-text">
+            <h3>Smart Reminders</h3>
+            <p>Schedule maintenance and get intelligent notifications</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+          <div class="feature-text">
+            <h3>Link Insurance</h3>
+            <p>Connect policies and coverage details to your home record</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon"><i class="fas fa-handshake"></i></div>
+          <div class="feature-text">
+            <h3>Transfer Easily</h3>
+            <p>Hand off complete records when you sell your home</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section class="dark">
+      <h2 class="section-title">Why Homeowners Trust HomeHub</h2>
+      <p class="section-subtitle">Simplify property management and maximize home value</p>
+
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <div class="benefit-icon">🔒</div>
+          <h3>Never Lose Track</h3>
+          <p>All your home's information in one secure place, accessible anytime</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">💰</div>
+          <h3>Better Resale Value</h3>
+          <p>Buyers see your complete maintenance history and often pay premium prices</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">📅</div>
+          <h3>Smart Maintenance</h3>
+          <p>Stay on top of what needs doing with intelligent reminders and scheduling</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Professionals Section -->
+    <section>
+      <h2 class="section-title">Built for Professionals</h2>
+      <p class="section-subtitle">Real Estate Agents, Inspectors, Contractors, and more use HomeHub</p>
+
+      <div class="tab-container">
+        <div class="tab-scroll">
+          <button class="tab-btn active" onclick="switchTab(this, 'agent')">Agents</button>
+          <button class="tab-btn" onclick="switchTab(this, 'inspector')">Inspectors</button>
+          <button class="tab-btn" onclick="switchTab(this, 'contractor')">Contractors</button>
+          <button class="tab-btn" onclick="switchTab(this, 'pm')">Managers</button>
+        </div>
+      </div>
+
+      <div class="professional-card active" id="prof-agent">
+        <div class="prof-icon"><i class="fas fa-briefcase"></i></div>
+        <h3>Real Estate Agents</h3>
+        <p><strong>Onboard clients instantly</strong> — Set up property records for buyers and sellers.</p>
+        <p>Show comprehensive home histories to justify pricing and build confidence. Gift HomeHub accounts to clients or manage property records on their behalf.</p>
+      </div>
+
+      <div class="professional-card" id="prof-inspector">
+        <div class="prof-icon"><i class="fas fa-magnifying-glass"></i></div>
+        <h3>Home Inspectors</h3>
+        <p><strong>Fulfill inspections digitally</strong> — Upload findings directly into homeowner records.</p>
+        <p>Streamline your workflow with digital uploads. Keep clients informed with real-time report delivery and access historical inspection data over time.</p>
+      </div>
+
+      <div class="professional-card" id="prof-contractor">
+        <div class="prof-icon"><i class="fas fa-hammer"></i></div>
+        <h3>Contractors</h3>
+        <p><strong>Document every job</strong> — Upload before/after photos, permits, and invoices.</p>
+        <p>Build trust through transparency and create lasting records of your quality work. Showcase completed projects with visual proof and documentation.</p>
+      </div>
+
+      <div class="professional-card" id="prof-pm">
+        <div class="prof-icon"><i class="fas fa-building"></i></div>
+        <h3>Property Managers</h3>
+        <p><strong>Manage portfolios at scale</strong> — Oversee maintenance across multiple properties.</p>
+        <p>Simplify portfolio management with centralized records. Monitor requests, track vendor performance, and demonstrate property value to stakeholders.</p>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="gold cta-section">
+      <h2 class="section-title">A Simple, Proven Process</h2>
+      <p class="section-subtitle">Getting started takes just minutes. We handle the complexity so you can focus on what matters.</p>
+      <button class="btn-cta" onclick="showUserType()">Get Started Now</button>
+    </section>
+  </div>
+</div>
+
+<!-- Sign In Modal -->
+<div class="modal" id="signin-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Welcome Back</h2>
+      <p>Sign in to your HomeHub account</p>
+    </div>
+    <form onsubmit="handleSignIn(event)">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-input" placeholder="you@example.com" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn-form btn-form-primary" style="width: 100%;">Sign In</button>
+    </form>
+
+    <div class="demo-section">
+      <button class="demo-toggle" onclick="toggleDemoLogin(event)">Demo Access</button>
+      <div id="demo-buttons">
+        <button type="button" class="btn-form btn-form-primary" onclick="demoNavigate('homehub-homeowner-mobile.html', event)">Demo: Homeowner</button>
+        <button type="button" class="btn-form btn-form-primary" onclick="demoNavigate('homehub-agent-web.html', event)">Demo: RE Agent</button>
+        <button type="button" class="btn-form btn-form-primary" onclick="demoNavigate('homehub-inspector-mobile.html', event)">Demo: Inspector</button>
+        <button type="button" class="btn-form btn-form-primary" onclick="demoNavigate('homehub-contractor-mobile.html', event)">Demo: Contractor</button>
+        <button type="button" class="btn-form btn-form-primary" onclick="demoNavigate('homehub-admin-web.html', event)">Demo: Admin</button>
+      </div>
+    </div>
+
+    <div class="form-text">
+      Don't have an account? <a onclick="hideSignIn(); showUserType();">Get started</a>
+    </div>
+
+    <button type="button" class="btn-form btn-form-secondary" onclick="hideSignIn()" style="width: 100%; margin-top: 12px;">Close</button>
+  </div>
+</div>
+
+<!-- User Type Modal -->
+<div class="modal" id="usertype-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>What brings you here?</h2>
+      <p>Choose where you're getting started with HomeHub</p>
+    </div>
+    <div class="role-grid">
+      <div class="role-card" onclick="selectRole(this, 'homeowner')">
+        <div class="role-icon"><i class="fas fa-home"></i></div>
+        <div class="role-title">For My Home</div>
+        <div class="role-desc">Organize my home's records and prepare for resale</div>
+      </div>
+      <div class="role-card" onclick="selectRole(this, 'professional')">
+        <div class="role-icon"><i class="fas fa-briefcase"></i></div>
+        <div class="role-title">For Work / Business</div>
+        <div class="role-desc">Work with clients' properties and grow my business</div>
+      </div>
+    </div>
+    <button type="button" class="btn-form btn-form-secondary" onclick="hideUserType()" style="width: 100%; margin-top: 20px;">Back</button>
+  </div>
+</div>
+
+<!-- Homeowner Registration Modal -->
+<div class="modal" id="homeowner-reg-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Create Your Account</h2>
+      <p>Step <span id="step-num">1</span> of 4</p>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-step active" id="p1"></div>
+      <div class="progress-step" id="p2"></div>
+      <div class="progress-step" id="p3"></div>
+      <div class="progress-step" id="p4"></div>
+    </div>
+    <form id="homeowner-form" onsubmit="nextStep(event)">
+      <div id="step1" class="form-step">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" placeholder="you@example.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" placeholder="••••••••" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm Password</label>
+          <input type="password" class="form-input" placeholder="••••••••" required>
+        </div>
+      </div>
+
+      <div id="step2" class="form-step" style="display: none;">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-input" placeholder="Sarah Johnson" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input type="tel" class="form-input" placeholder="(555) 123-4567" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Preferred Contact</label>
+          <select class="form-select" required>
+            <option value="">Select preference</option>
+            <option value="email">Email</option>
+            <option value="phone">Phone</option>
+            <option value="text">Text</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="step3" class="form-step" style="display: none;">
+        <div class="form-group">
+          <label class="form-label">Property Address</label>
+          <input type="text" class="form-input" placeholder="123 Main Street" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">City</label>
+          <input type="text" class="form-input" placeholder="San Francisco" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">State</label>
+          <input type="text" class="form-input" placeholder="CA" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ownership Status</label>
+          <select class="form-select" required>
+            <option value="">Select status</option>
+            <option value="primary">Primary Residence</option>
+            <option value="investment">Investment/Rental</option>
+            <option value="second">Second Home</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="step4" class="form-step" style="display: none;">
+        <div class="form-group">
+          <label class="form-label">Property Type</label>
+          <select class="form-select" required>
+            <option value="">Select type</option>
+            <option value="sfh">Single Family Home</option>
+            <option value="townhome">Townhome</option>
+            <option value="condo">Condo</option>
+            <option value="multi">Multi-Family</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Year Built (Optional)</label>
+          <input type="number" class="form-input" placeholder="2010" min="1800" max="2099">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bedrooms</label>
+          <input type="number" class="form-input" placeholder="3" min="0" max="10">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bathrooms</label>
+          <input type="number" class="form-input" placeholder="2" min="0" max="10" step="0.5">
+        </div>
+      </div>
+
+      <div class="form-buttons">
+        <button type="button" class="btn-form btn-form-secondary" id="back-btn" onclick="prevStep()" style="display: none;">Back</button>
+        <button type="submit" class="btn-form btn-form-primary">Next</button>
+      </div>
+    </form>
+    <div class="form-text">
+      Already have an account? <a onclick="hideUserType(); showSignIn();">Sign in</a>
+    </div>
+  </div>
+</div>
+
+<!-- Professional Type Selection Modal -->
+<div class="modal" id="proftype-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Choose Your Role</h2>
+      <p>What's your professional role?</p>
+    </div>
+    <div class="role-grid">
+      <div class="role-card" onclick="selectProfRole('agent')">
+        <div class="role-icon"><i class="fas fa-handshake"></i></div>
+        <div class="role-title">Real Estate Agent</div>
+        <div class="role-desc">Help clients buy, sell, or invest</div>
+      </div>
+      <div class="role-card" onclick="selectProfRole('inspector')">
+        <div class="role-icon"><i class="fas fa-magnifying-glass"></i></div>
+        <div class="role-title">Home Inspector</div>
+        <div class="role-desc">Conduct property inspections</div>
+      </div>
+      <div class="role-card" onclick="selectProfRole('contractor')">
+        <div class="role-icon"><i class="fas fa-hammer"></i></div>
+        <div class="role-title">Contractor</div>
+        <div class="role-desc">Build trust through documented work</div>
+      </div>
+      <div class="role-card" onclick="selectProfRole('pm')">
+        <div class="role-icon"><i class="fas fa-building"></i></div>
+        <div class="role-title">Property Manager</div>
+        <div class="role-desc">Manage multiple properties</div>
+      </div>
+    </div>
+    <button type="button" class="btn-form btn-form-secondary" onclick="hideProfType()" style="width: 100%; margin-top: 20px;">Back</button>
+  </div>
+</div>
+
+<!-- Real Estate Agent Registration -->
+<div class="modal" id="agent-reg-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Real Estate Agent</h2>
+      <p>Join HomeHub to better serve your clients</p>
+    </div>
+    <form onsubmit="completeProfRegistration(event, 'agent')">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-input" placeholder="John Smith" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-input" placeholder="john@brokerage.com" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input type="tel" class="form-input" placeholder="(555) 123-4567" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Brokerage/Company</label>
+        <input type="text" class="form-input" placeholder="Your Brokerage Name" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">License State</label>
+        <select class="form-select" required>
+          <option value="">Select state</option>
+          <option value="ca">California</option>
+          <option value="tx">Texas</option>
+          <option value="ny">New York</option>
+          <option value="fl">Florida</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">License Number</label>
+        <input type="text" class="form-input" placeholder="Your license number" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Primary Market Area</label>
+        <input type="text" class="form-input" placeholder="e.g., San Francisco Bay Area" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Years in Business</label>
+        <input type="number" class="form-input" placeholder="5" min="0" max="70" required>
+      </div>
+      <div class="form-buttons">
+        <button type="button" class="btn-form btn-form-secondary" onclick="hideProfReg()">Back</button>
+        <button type="submit" class="btn-form btn-form-primary">Create Account</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Home Inspector Registration -->
+<div class="modal" id="inspector-reg-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Home Inspector</h2>
+      <p>Sign up to manage inspections on HomeHub</p>
+    </div>
+    <form onsubmit="completeProfRegistration(event, 'inspector')">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-input" placeholder="Sarah Johnson" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-input" placeholder="sarah@inspections.com" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input type="tel" class="form-input" placeholder="(555) 123-4567" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Company Name</label>
+        <input type="text" class="form-input" placeholder="Your Company" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">License State</label>
+        <select class="form-select" required>
+          <option value="">Select state</option>
+          <option value="ca">California</option>
+          <option value="tx">Texas</option>
+          <option value="ny">New York</option>
+          <option value="fl">Florida</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">License Number</label>
+        <input type="text" class="form-input" placeholder="Your license number" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Inspection Types</label>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="gen" name="inspections" value="general">
+            <label for="gen">General Home</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="com" name="inspections" value="commercial">
+            <label for="com">Commercial</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="pest" name="inspections" value="pest">
+            <label for="pest">Pest</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="found" name="inspections" value="foundation">
+            <label for="found">Foundation</label>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Service Area</label>
+        <input type="text" class="form-input" placeholder="e.g., Northern California" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Years in Business</label>
+        <input type="number" class="form-input" placeholder="8" min="0" max="70" required>
+      </div>
+      <div class="form-buttons">
+        <button type="button" class="btn-form btn-form-secondary" onclick="hideProfReg()">Back</button>
+        <button type="submit" class="btn-form btn-form-primary">Create Account</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Contractor Registration -->
+<div class="modal" id="contractor-reg-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Contractor</h2>
+      <p>Build client trust with HomeHub documentation</p>
+    </div>
+    <form onsubmit="completeProfRegistration(event, 'contractor')">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-input" placeholder="Mike Davis" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-input" placeholder="mike@construction.com" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input type="tel" class="form-input" placeholder="(555) 123-4567" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Company Name</label>
+        <input type="text" class="form-input" placeholder="Your Company" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Trade Category</label>
+        <select class="form-select" required>
+          <option value="">Select trade</option>
+          <option value="general">General Contractor</option>
+          <option value="plumbing">Plumbing</option>
+          <option value="electrical">Electrical</option>
+          <option value="hvac">HVAC</option>
+          <option value="roofing">Roofing</option>
+          <option value="painting">Painting</option>
+          <option value="landscaping">Landscaping</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">License State</label>
+        <select class="form-select" required>
+          <option value="">Select state</option>
+          <option value="ca">California</option>
+          <option value="tx">Texas</option>
+          <option value="ny">New York</option>
+          <option value="fl">Florida</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Insured?</label>
+        <select class="form-select" required>
+          <option value="">Select</option>
+          <option value="yes">Yes, fully insured</option>
+          <option value="bonded">Bonded</option>
+          <option value="no">Not insured</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Service Area</label>
+        <input type="text" class="form-input" placeholder="e.g., Bay Area" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Team Size</label>
+        <input type="number" class="form-input" placeholder="5" min="1" max="1000" required>
+      </div>
+      <div class="form-buttons">
+        <button type="button" class="btn-form btn-form-secondary" onclick="hideProfReg()">Back</button>
+        <button type="submit" class="btn-form btn-form-primary">Create Account</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Property Manager Registration -->
+<div class="modal" id="pm-reg-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Property Manager</h2>
+      <p>Manage portfolios efficiently on HomeHub</p>
+    </div>
+    <form onsubmit="completeProfRegistration(event, 'pm')">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-input" placeholder="Jessica Martinez" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-input" placeholder="jessica@propertymanagement.com" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input type="tel" class="form-input" placeholder="(555) 123-4567" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Company Name</label>
+        <input type="text" class="form-input" placeholder="Your Company" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Properties Under Management</label>
+        <input type="number" class="form-input" placeholder="45" min="1" max="10000" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Property Types</label>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="res" name="types" value="residential">
+            <label for="res">Residential</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="comm" name="types" value="commercial">
+            <label for="comm">Commercial</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="mixed" name="types" value="mixed">
+            <label for="mixed">Mixed-Use</label>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Markets Served</label>
+        <input type="text" class="form-input" placeholder="CA, TX, NY" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Specialties</label>
+        <input type="text" class="form-input" placeholder="e.g., HOA Management" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Years in Business</label>
+        <input type="number" class="form-input" placeholder="12" min="0" max="70" required>
+      </div>
+      <div class="form-buttons">
+        <button type="button" class="btn-form btn-form-secondary" onclick="hideProfReg()">Back</button>
+        <button type="submit" class="btn-form btn-form-primary">Create Account</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+let currentStep = 1;
+let selectedRole = null;
+
+function showSignIn() {
+  document.getElementById('signin-modal').classList.add('active');
+}
+
+function hideSignIn() {
+  document.getElementById('signin-modal').classList.remove('active');
+}
+
+function showUserType() {
+  document.getElementById('usertype-modal').classList.add('active');
+}
+
+function hideUserType() {
+  document.getElementById('usertype-modal').classList.remove('active');
+}
+
+function toggleDemoLogin(e) {
+  e.preventDefault();
+  const buttons = document.getElementById('demo-buttons');
+  buttons.classList.toggle('show');
+}
+
+function demoNavigate(url, event) {
+  event.preventDefault();
+  event.stopPropagation();
+  const roleMap = {
+    'homehub-homeowner-mobile.html': 'homeowner',
+    'homehub-agent-web.html': 'agent',
+    'homehub-inspector-mobile.html': 'inspector',
+    'homehub-contractor-mobile.html': 'contractor',
+    'homehub-admin-web.html': 'admin'
+  };
+  const role = roleMap[url] || 'homeowner';
+  localStorage.setItem('homeHubAuth', JSON.stringify({
+    isAuthenticated: true,
+    role: role,
+    displayName: 'Demo User'
+  }));
+  window.location.href = url;
+}
+
+function handleSignIn(e) {
+  e.preventDefault();
+  hideSignIn();
+  alert('✅ Signed in successfully!');
+}
+
+function selectRole(element, role) {
+  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+  element.classList.add('selected');
+  selectedRole = role;
+
+  if (role === 'homeowner') {
+    setTimeout(() => {
+      hideUserType();
+      document.getElementById('homeowner-reg-modal').classList.add('active');
+    }, 300);
+  } else {
+    hideUserType();
+    document.getElementById('proftype-modal').classList.add('active');
+  }
+}
+
+function nextStep(e) {
+  e.preventDefault();
+  if (currentStep < 4) {
+    currentStep++;
+    updateStep();
+  } else {
+    document.getElementById('homeowner-reg-modal').classList.remove('active');
+    alert('✅ Account created successfully! Welcome to HomeHub!');
+  }
+}
+
+function prevStep() {
+  if (currentStep > 1) {
+    currentStep--;
+    updateStep();
+  }
+}
+
+function updateStep() {
+  document.querySelectorAll('.form-step').forEach(s => s.style.display = 'none');
+  document.getElementById('step' + currentStep).style.display = 'block';
+  document.getElementById('step-num').textContent = currentStep;
+
+  for (let i = 1; i <= 4; i++) {
+    const step = document.getElementById('p' + i);
+    if (i < currentStep) {
+      step.classList.remove('active');
+      step.classList.add('completed');
+    } else if (i === currentStep) {
+      step.classList.add('active');
+      step.classList.remove('completed');
+    } else {
+      step.classList.remove('active', 'completed');
+    }
+  }
+
+  document.getElementById('back-btn').style.display = currentStep > 1 ? 'block' : 'none';
+  document.querySelector('form button[type="submit"]').textContent = currentStep === 4 ? 'Complete' : 'Next';
+}
+
+function switchTab(btn, tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const tabs = ['agent', 'inspector', 'contractor', 'pm'];
+  tabs.forEach(t => {
+    const el = document.getElementById('prof-' + t);
+    if (el) el.classList.toggle('active', t === tab);
+  });
+}
+
+function hideProfType() {
+  document.getElementById('proftype-modal').classList.remove('active');
+  document.getElementById('usertype-modal').classList.add('active');
+}
+
+function selectProfRole(role) {
+  const modals = ['agent-reg-modal', 'inspector-reg-modal', 'contractor-reg-modal', 'pm-reg-modal'];
+  const modalMap = {
+    'agent': 'agent-reg-modal',
+    'inspector': 'inspector-reg-modal',
+    'contractor': 'contractor-reg-modal',
+    'pm': 'pm-reg-modal'
+  };
+
+  modals.forEach(m => document.getElementById(m).classList.remove('active'));
+  document.getElementById('proftype-modal').classList.remove('active');
+
+  setTimeout(() => {
+    document.getElementById(modalMap[role]).classList.add('active');
+  }, 300);
+}
+
+function hideProfReg() {
+  document.querySelectorAll('[id$="-reg-modal"]').forEach(m => {
+    if (m.id !== 'homeowner-reg-modal') m.classList.remove('active');
+  });
+  document.getElementById('proftype-modal').classList.add('active');
+}
+
+function completeProfRegistration(e, role) {
+  e.preventDefault();
+  const roleNames = {
+    'agent': 'Real Estate Agent',
+    'inspector': 'Home Inspector',
+    'contractor': 'Contractor',
+    'pm': 'Property Manager'
+  };
+
+  document.querySelectorAll('[id$="-reg-modal"]').forEach(m => m.classList.remove('active'));
+  alert('✅ Account created successfully! Welcome to HomeHub, ' + roleNames[role] + '!');
+}
+
+window.onclick = function(e) {
+  const modals = [
+    'signin-modal',
+    'usertype-modal',
+    'proftype-modal',
+    'homeowner-reg-modal',
+    'agent-reg-modal',
+    'inspector-reg-modal',
+    'contractor-reg-modal',
+    'pm-reg-modal'
+  ];
+
+  modals.forEach(id => {
+    const modal = document.getElementById(id);
+    if (e.target === modal) {
+      modal.classList.remove('active');
+    }
+  });
+};
+</script>
+
+</body>
+</html>

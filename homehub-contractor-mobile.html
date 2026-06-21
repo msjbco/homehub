@@ -1,0 +1,3928 @@
+<!--
+================================================================================
+HomeHub Application Suite - homehub-contractor-mobile.html
+================================================================================
+
+TITLE: Homehub Contractor Mobile
+PURPOSE: Contractor portal for job management, scheduling, and work documentation
+LAST UPDATED: 2026-05-16
+
+This HTML file is part of the HomeHub platform - a comprehensive property
+management system for homeowners. Single-page application with vanilla JS,
+responsive design, and dark mode support.
+
+================================================================================
+STRUCTURE: <style> CSS | <body> HTML | <script> JavaScript
+================================================================================
+
+CSS VARIABLES: --blue, --green, --orange, --gold (+ light/dark variants)
+RESPONSIVE: Mobile (<768px) | Tablet (768px) | Desktop (1024px+)
+DARK MODE: [data-theme="dark"] selector overrides CSS variables
+
+Key Components:
+  • Sidebar/Navigation (fixed 280px, collapsible on mobile)
+  • Responsive grid/flexbox layouts
+  • Card-based UI components
+  • Modal overlays for forms
+  • Dynamic JavaScript interactions
+
+================================================================================
+QUICK REFERENCE
+================================================================================
+
+CSS Customization:
+  1. Update color variables in :root and [data-theme="dark"]
+  2. Modify font-size and padding for spacing
+  3. Adjust media queries for different breakpoints
+
+JavaScript Patterns:
+  • DOM selection: querySelector, querySelectorAll
+  • Events: addEventListener, event delegation
+  • Storage: localStorage for persistent settings
+  • DOM updates: innerHTML, classList, setAttribute
+
+Testing:
+  ✓ Responsive design (test all breakpoints)
+  ✓ Dark mode toggle
+  ✓ Keyboard navigation
+  ✓ Button/form interactions
+  ✓ Cross-browser compatibility
+
+================================================================================
+For detailed documentation, see sections marked with === throughout the file
+================================================================================
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HomeHub – Contractor Mobile</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #E8EDF5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.phone {
+  width: 390px;
+  height: 844px;
+  background: #F8FAFC;
+  border-radius: 44px;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.25), 0 0 0 10px #1a1a2e, 0 0 0 12px #2d2d4e;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.status-bar {
+  background: white;
+  padding: 14px 24px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1E293B;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.status-bar .notch {
+  width: 100px;
+  height: 26px;
+  background: #1a1a2e;
+  border-radius: 0 0 18px 18px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.status-icons { display: flex; gap: 6px; align-items: center; }
+
+.screen-container {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: none;
+  flex-direction: column;
+  background: #F8FAFC;
+  scrollbar-width: none;
+}
+
+.screen::-webkit-scrollbar { display: none; }
+.screen.active { display: flex; }
+
+.bottom-nav {
+  background: white;
+  border-top: 1px solid #E2E8F0;
+  display: flex;
+  padding: 8px 0 20px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.nav-item i { font-size: 18px; color: #94A3B8; transition: all 0.2s; }
+.nav-item span { font-size: 9px; color: #94A3B8; font-weight: 500; transition: all 0.2s; }
+.nav-item.active i, .nav-item.active span { color: #1F3A5F; }
+.nav-item:hover i, .nav-item:hover span { color: #1F3A5F; }
+
+.alert-badge {
+  position: absolute;
+  top: -4px;
+  right: 8px;
+  background: #C94949;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+:root {
+  --blue: #1F3A5F;
+  --blue-dark: #1A3150;
+  --blue-light: #E0F0EA;
+  --orange: #27A570;
+  --green: #27A570;
+  --red: #C94949;
+  --text: #1E293B;
+  --text-secondary: #64748B;
+  --border: #D4E8E3;
+  --bg: #F5F9F8;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04);
+  overflow: hidden;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.btn-primary { background: var(--blue); color: white; width: 100%; }
+.btn-primary:hover { background: var(--blue-dark); }
+.btn-secondary { background: var(--blue-light); color: var(--blue); width: 100%; }
+
+.page-header {
+  background: white;
+  padding: 16px 20px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.page-header h2 { font-size: 17px; font-weight: 700; color: var(--text); }
+
+.back-btn {
+  width: 34px; height: 34px;
+  background: var(--blue-light);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  border: none;
+  color: var(--blue);
+  font-size: 15px;
+}
+
+.scroll-content { padding: 16px 20px 24px; flex: 1; overflow-y: auto; }
+
+/* Dashboard */
+.dash-header {
+  background: linear-gradient(135deg, #1A3150, #1F3A5F);
+  padding: 20px 20px 28px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.dash-greeting { font-size: 13px; opacity: 0.8; margin-bottom: 2px; }
+.dash-name { font-size: 20px; font-weight: 800; margin-bottom: 18px; }
+
+.quick-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  padding: 0 20px;
+  margin-top: -22px;
+  gap: 10px;
+  z-index: 10;
+  position: relative;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 14px;
+  padding: 12px 10px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.stat-card:active { transform: scale(0.95); }
+.stat-val { font-size: 17px; font-weight: 800; color: var(--text); }
+.stat-lbl { font-size: 10px; color: var(--text-secondary); margin-top: 2px; font-weight: 500; }
+
+.action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 20px;
+  margin-top: 20px;
+}
+
+.action-card {
+  background: white;
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+
+.action-card:active { transform: scale(0.98); background: var(--blue-light); }
+.action-card i { font-size: 20px; color: var(--blue); }
+.action-card span { font-size: 12px; font-weight: 600; color: var(--text); }
+
+.job-card {
+  background: white;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  border-left: 3px solid var(--blue);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+
+.job-card.pending { border-left-color: var(--orange); }
+.job-card.completed { border-left-color: var(--green); }
+
+.job-address { font-size: 13px; font-weight: 700; color: var(--text); }
+.job-owner { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.job-meta { display: flex; gap: 12px; font-size: 11px; color: var(--text-secondary); margin-top: 8px; }
+.job-status { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: var(--blue-light); color: var(--blue); display: inline-block; }
+
+.section-title { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; padding: 16px 20px 8px; }
+
+/* Property Summary */
+.property-hero {
+  background: linear-gradient(135deg, #27A570, #1F3A5F);
+  padding: 20px;
+  color: white;
+  height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.prop-address { font-size: 13px; font-weight: 600; }
+.prop-sub { font-size: 11px; opacity: 0.8; margin-top: 2px; }
+
+.prop-summary-card {
+  background: white;
+  border-radius: 14px;
+  padding: 14px;
+  margin: 16px 20px 0;
+  margin-top: -28px;
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.prop-owner-info { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; }
+.prop-systems { display: flex; gap: 6px; flex-wrap: wrap; }
+.sys-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--blue-light);
+  color: var(--blue);
+  padding: 4px 8px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.alert-banner {
+  background: #DFE9E5;
+  border-left: 3px solid var(--orange);
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin: 12px 20px 0;
+  font-size: 11px;
+}
+
+.alert-banner p { font-weight: 600; color: var(--text); }
+.alert-banner span { font-size: 10px; color: var(--text-secondary); display: block; margin-top: 2px; }
+
+.action-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+}
+
+.btn-action {
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-action-primary {
+  background: var(--blue);
+  color: white;
+}
+
+.btn-action-primary:active { background: var(--blue-dark); }
+
+.btn-action-secondary {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--text);
+}
+
+.btn-action-secondary:active { background: var(--blue-light); }
+
+/* Trade History */
+.history-card {
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-left: 3px solid var(--green);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  cursor: pointer;
+}
+
+.hist-date { font-size: 10px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; }
+.hist-contractor { font-size: 12px; font-weight: 700; color: var(--text); margin-top: 4px; }
+.hist-work { font-size: 11px; color: var(--text-secondary); margin-top: 3px; line-height: 1.4; }
+.hist-footer { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-secondary); margin-top: 6px; }
+
+.filter-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 12px 20px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
+}
+
+.filter-tab {
+  padding: 6px 10px;
+  border-radius: 16px;
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+.filter-tab.active {
+  background: var(--blue);
+  color: white;
+  border-color: var(--blue);
+}
+
+/* QR Scan */
+.scan-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.scan-icon { font-size: 60px; margin-bottom: 16px; }
+.scan-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.scan-desc { font-size: 12px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.5; }
+
+.scan-btns {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scan-btn {
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.scan-btn-primary {
+  background: var(--blue);
+  color: white;
+}
+
+.scan-btn-primary:active { background: var(--blue-dark); }
+
+.scan-btn-secondary {
+  background: var(--blue-light);
+  color: var(--blue);
+  border: 1px solid var(--border);
+}
+
+/* Form Styles */
+.form-section {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.form-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: white;
+}
+
+.form-group textarea { resize: vertical; min-height: 80px; }
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: var(--blue);
+  outline: none;
+}
+
+/* Photo Upload */
+.photo-upload {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--bg);
+  margin-bottom: 12px;
+}
+
+.photo-upload:active { border-color: var(--blue); background: var(--blue-light); }
+.photo-upload i { font-size: 28px; color: var(--blue); margin-bottom: 8px; }
+.photo-upload p { font-size: 12px; color: var(--text); font-weight: 600; }
+.photo-upload span { font-size: 11px; color: var(--text-secondary); display: block; margin-top: 4px; }
+
+.photo-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.photo-item {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  position: relative;
+  cursor: pointer;
+}
+
+.photo-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  background: var(--red);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+/* Sticky Save Footer */
+.sticky-save {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  border-top: 1px solid var(--border);
+  padding: 12px 20px 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.sticky-save button {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sticky-save .btn-cancel {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--text);
+}
+
+.sticky-save .btn-cancel:active { background: var(--blue-light); }
+
+.sticky-save .btn-save {
+  background: var(--blue);
+  color: white;
+}
+
+.sticky-save .btn-save:active { background: var(--blue-dark); }
+
+/* Properties List */
+.prop-card {
+  background: white;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+
+.prop-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.prop-card-addr { font-size: 13px; font-weight: 700; color: var(--text); }
+.prop-card-owner { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.prop-card-meta { display: flex; gap: 12px; font-size: 11px; color: var(--text-secondary); margin-top: 8px; }
+
+.prop-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--blue-light);
+  color: var(--blue);
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* Profile */
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--orange), var(--green));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin: 20px auto;
+}
+
+.profile-name { text-align: center; font-size: 16px; font-weight: 700; color: var(--text); }
+.profile-email { text-align: center; font-size: 12px; color: var(--text-secondary); margin-top: 4px; margin-bottom: 24px; }
+
+.profile-item {
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+
+.profile-item-label { font-size: 12px; font-weight: 600; color: var(--text); }
+.profile-item-value { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.profile-badge { font-size: 10px; background: #ECFDF5; color: var(--green); padding: 3px 6px; border-radius: 4px; font-weight: 600; }
+
+.profile-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+}
+
+.profile-btn {
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.profile-btn-primary {
+  background: var(--blue);
+  color: white;
+}
+
+.profile-btn-primary:active { background: var(--blue-dark); }
+
+.profile-btn-secondary {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--text);
+}
+
+.profile-btn-secondary:active { background: var(--blue-light); }
+
+/* Alerts */
+.alert-card {
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-left: 3px solid var(--blue);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.alert-card.unread {
+  opacity: 1;
+  background: var(--blue-light);
+  border-left-color: var(--blue);
+}
+
+.alert-card.warning { border-left-color: var(--orange); }
+.alert-card.success { border-left-color: var(--green); }
+
+.alert-title { font-size: 12px; font-weight: 700; color: var(--text); }
+.alert-text { font-size: 11px; color: var(--text-secondary); margin-top: 4px; line-height: 1.4; }
+
+/* Job Detail */
+.job-detail-header {
+  background: linear-gradient(135deg, #27A570, #1F3A5F);
+  padding: 20px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.job-detail-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.job-detail-sub { font-size: 12px; opacity: 0.85; }
+
+.job-info-card {
+  background: white;
+  border-radius: 12px;
+  padding: 14px;
+  margin: 16px 20px 0;
+  margin-top: -28px;
+  position: relative;
+  z-index: 10;
+}
+
+.info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.info-row:last-child { border-bottom: none; }
+.info-label { font-size: 11px; color: var(--text-secondary); font-weight: 600; }
+.info-value { font-size: 12px; font-weight: 600; color: var(--text); }
+
+.price-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #ECFDF5;
+  color: var(--green);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.price-badge.unconfirmed {
+  background: #FEF2F2;
+  color: var(--red);
+}
+
+.photo-carousel {
+  position: relative;
+  height: 300px;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 20px;
+}
+
+.carousel-image {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 80px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.carousel-image.active { display: flex; opacity: 1; }
+
+.carousel-nav {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 10;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+  cursor: pointer;
+}
+
+.carousel-dot.active { background: white; }
+
+.carousel-arrows {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 12px;
+  z-index: 5;
+}
+
+.carousel-btn {
+  width: 32px;
+  height: 32px;
+  background: rgba(255,255,255,0.3);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.notes-section {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.notes-title { font-size: 12px; font-weight: 700; color: var(--text); text-transform: uppercase; margin-bottom: 8px; }
+.notes-text { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+
+.confirm-btn {
+  margin: 20px;
+  padding: 12px 16px;
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  width: calc(100% - 40px);
+}
+
+.confirm-btn:disabled {
+  background: #ECFDF5;
+  color: var(--green);
+  cursor: default;
+}
+
+/* Past Jobs List */
+.past-job-card {
+  background: white;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+
+.past-job-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.past-job-addr { font-size: 13px; font-weight: 700; color: var(--text); }
+.past-job-date { font-size: 11px; color: var(--text-secondary); }
+.past-job-meta { display: flex; gap: 12px; font-size: 11px; color: var(--text-secondary); margin-top: 6px; }
+.past-job-cost { font-size: 12px; font-weight: 700; color: var(--blue); margin-top: 6px; }
+
+/* Edit Profile */
+.doc-upload {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.doc-info { flex: 1; }
+.doc-name { font-size: 12px; font-weight: 600; color: var(--text); }
+.doc-status { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+
+.doc-remove {
+  width: 28px;
+  height: 28px;
+  background: #FEF2F2;
+  border: none;
+  border-radius: 6px;
+  color: var(--red);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* Pending Job Detail */
+.pending-job-detail-card {
+  background: white;
+  border-radius: 12px;
+  padding: 14px;
+  margin: 16px 20px 0;
+  margin-top: -28px;
+  position: relative;
+  z-index: 10;
+}
+
+.pending-action-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #DFE9E5;
+  color: var(--orange);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.action-buttons-detailed {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+}
+
+.action-btn-detailed {
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.action-btn-primary-detailed {
+  background: var(--blue);
+  color: white;
+}
+
+.action-btn-primary-detailed:active { background: var(--blue-dark); }
+
+.action-btn-secondary-detailed {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--text);
+}
+
+.action-btn-secondary-detailed:active { background: var(--blue-light); }
+
+/* List Sections */
+.list-section { margin-bottom: 20px; }
+.list-section-title { font-size: 12px; font-weight: 700; color: var(--text-secondary); padding: 12px 20px 8px; text-transform: uppercase; }
+
+/* ── Contractor Mobile Search ───────────────────────────── */
+#ctw-mob-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.5); z-index:9999;
+  flex-direction:column; justify-content:flex-start;
+}
+#ctw-mob-overlay.open { display:flex; }
+#ctw-mob-box {
+  background:#fff; width:100%; max-height:90vh;
+  display:flex; flex-direction:column;
+  border-radius:0 0 20px 20px;
+  box-shadow:0 8px 40px rgba(0,0,0,0.2); overflow:hidden;
+  animation:ctwMobSlide 0.2s ease;
+}
+@keyframes ctwMobSlide {
+  from{transform:translateY(-100%);opacity:0}
+  to{transform:translateY(0);opacity:1}
+}
+#ctw-mob-search-hdr {
+  display:flex;align-items:center;gap:10px;
+  padding:52px 16px 12px; background:#1F3A5F;
+}
+#ctw-mob-search-input {
+  flex:1;border:none;border-radius:10px;
+  background:rgba(255,255,255,0.15);color:white;
+  font-size:16px;padding:10px 14px;outline:none;font-family:inherit;
+}
+#ctw-mob-search-input::placeholder{color:rgba(255,255,255,0.6);}
+#ctw-mob-cancel{color:white;background:none;border:none;font-size:14px;font-weight:600;cursor:pointer;padding:8px 4px;white-space:nowrap;}
+#ctw-mob-results{overflow-y:auto;flex:1;background:#f7f8fa;-webkit-overflow-scrolling:touch;}
+.ctw-mob-label{font-size:10px;font-weight:700;letter-spacing:.08em;color:#888;padding:12px 16px 4px;text-transform:uppercase;background:#f7f8fa;}
+.ctw-mob-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:white;border-bottom:1px solid #f0f0f0;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.ctw-mob-item:active{background:#f0f4ff;}
+.ctw-mob-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.ctw-mob-text{flex:1;min-width:0;}
+.ctw-mob-title{font-size:15px;font-weight:600;color:#1a1a2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ctw-mob-sub{font-size:12px;color:#888;margin-top:2px;}
+.ctw-mob-empty{text-align:center;padding:48px 20px;color:#888;font-size:14px;background:white;}
+.ctw-mob-hint-row{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px 16px;background:white;border-bottom:1px solid #f0f0f0;}
+.ctw-mob-chip{font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;border:1px solid #e0e0e0;background:#f5f5f5;color:#555;cursor:pointer;}
+.ctw-mob-chip:active{background:#e0e8ff;color:#1F5AE0;}
+mark.ctwm{background:rgba(31,90,224,.12);color:#1F5AE0;border-radius:3px;font-style:normal;font-weight:700;}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="status-bar">
+    <div class="status-icons">
+      <span>📶</span>
+      <span>🔋</span>
+    </div>
+    <span>9:41</span>
+    <div class="status-icons">
+      <span>🔋</span>
+    </div>
+    <div class="notch"></div>
+  </div>
+
+  <div class="screen-container">
+
+    <!-- HOME DASHBOARD -->
+    <div class="screen active" id="screen-home">
+      <div class="dash-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div class="dash-greeting">Good morning</div>
+          <div class="dash-name">ProPipe</div>
+        </div>
+        <div onclick="openCtwMobSearch()" style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">
+          <i class="fas fa-search" style="color:white;font-size:16px;"></i>
+        </div>
+      </div>
+
+      <div class="quick-stats">
+        <div class="stat-card" onclick="showScreen('jobs-active')">
+          <div class="stat-val">3</div>
+          <div class="stat-lbl">Active</div>
+        </div>
+        <div class="stat-card" onclick="showScreen('jobs-pending')">
+          <div class="stat-val">5</div>
+          <div class="stat-lbl">Follow-ups</div>
+        </div>
+        <div class="stat-card" onclick="showScreen('jobs-new')">
+          <div class="stat-val">2</div>
+          <div class="stat-lbl">New Access</div>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <div class="action-card" onclick="showScreen('scan')">
+          <i class="fas fa-qrcode"></i>
+          <span>Scan Property</span>
+        </div>
+        <div class="action-card" onclick="showScreen('newjob')">
+          <i class="fas fa-plus-circle"></i>
+          <span>Log Job</span>
+        </div>
+        <div class="action-card" onclick="showScreen('properties')">
+          <i class="fas fa-search"></i>
+          <span>Find Property</span>
+        </div>
+        <div class="action-card" onclick="showScreen('jobs-past')">
+          <i class="fas fa-history"></i>
+          <span>Past Jobs</span>
+        </div>
+      </div>
+
+      <div class="section-title">Recent Jobs</div>
+      <div style="padding: 0 20px 20px;">
+        <div class="job-card" onclick="showScreen('property-summary')">
+          <div class="job-address">1247 Oak Street</div>
+          <div class="job-owner">Sarah Chen</div>
+          <div class="job-meta">
+            <span><i class="fas fa-wrench"></i> Plumbing</span>
+            <span><i class="fas fa-clock"></i> Today</span>
+          </div>
+          <div style="margin-top: 6px;">
+            <span class="job-status">In Progress</span>
+          </div>
+        </div>
+
+        <div class="job-card pending" onclick="showScreen('property-summary')">
+          <div class="job-address">3892 Maple Ave</div>
+          <div class="job-owner">Michael Torres</div>
+          <div class="job-meta">
+            <span><i class="fas fa-wrench"></i> Plumbing</span>
+            <span><i class="fas fa-clock"></i> Mar 10</span>
+          </div>
+          <div style="margin-top: 6px;">
+            <span class="job-status" style="background: #DFE9E5; color: var(--orange);">Pending Quote</span>
+          </div>
+        </div>
+
+        <div class="job-card completed" onclick="showScreen('property-summary')">
+          <div class="job-address">5631 River Road</div>
+          <div class="job-owner">Emily Watson</div>
+          <div class="job-meta">
+            <span><i class="fas fa-wrench"></i> Plumbing</span>
+            <span><i class="fas fa-clock"></i> Mar 8</span>
+          </div>
+          <div style="margin-top: 6px;">
+            <span class="job-status" style="background: #ECFDF5; color: var(--green);">Completed</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVE JOBS LIST -->
+    <div class="screen" id="screen-jobs-active">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('home')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Active Jobs (3)</h2>
+      </div>
+      <div class="scroll-content">
+        <div class="job-card" onclick="showScreen('property-summary')">
+          <div class="job-address">1247 Oak Street</div>
+          <div class="job-owner">Sarah Chen</div>
+          <div class="job-meta">
+            <span><i class="fas fa-wrench"></i> Plumbing</span>
+            <span><i class="fas fa-clock"></i> Today</span>
+          </div>
+        </div>
+        <div class="job-card" onclick="showScreen('property-summary')">
+          <div class="job-address">4521 Pine Lane</div>
+          <div class="job-owner">David Johnson</div>
+          <div class="job-meta">
+            <span><i class="fas fa-wrench"></i> Plumbing</span>
+            <span><i class="fas fa-clock"></i> Mar 14</span>
+          </div>
+        </div>
+        <div class="job-card" onclick="showScreen('property-summary')">
+          <div class="job-address">7832 Birch St</div>
+          <div class="job-owner">Lisa Martinez</div>
+          <div class="job-meta">
+            <span><i class="fas fa-wrench"></i> Plumbing</span>
+            <span><i class="fas fa-clock"></i> Mar 13</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PENDING FOLLOW-UPS LIST -->
+    <div class="screen" id="screen-jobs-pending">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('home')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Pending Follow-ups (5)</h2>
+      </div>
+      <div class="scroll-content">
+        <div class="job-card pending" onclick="showScreen('pending-detail-1')">
+          <div class="job-address">3892 Maple Ave</div>
+          <div class="job-owner">Michael Torres</div>
+          <div class="job-meta">
+            <span><i class="fas fa-wrench"></i> Plumbing</span>
+            <span><i class="fas fa-clock"></i> Quote due Mar 20</span>
+          </div>
+        </div>
+        <div class="job-card pending" onclick="showScreen('pending-detail-2')">
+          <div class="job-address">2456 Cedar Ln</div>
+          <div class="job-owner">Jennifer Lee</div>
+          <div class="job-meta">
+            <span><i class="fas fa-wrench"></i> Plumbing</span>
+            <span><i class="fas fa-clock"></i> Awaiting approval</span>
+          </div>
+        </div>
+        <div class="job-card pending" onclick="showScreen('pending-detail-3')">
+          <div class="job-address">6789 Elm Ave</div>
+          <div class="job-owner">Robert Brown</div>
+          <div class="job-meta">
+            <span><i class="fas fa-wrench"></i> Plumbing</span>
+            <span><i class="fas fa-clock"></i> Follow-up call needed</span>
+          </div>
+        </div>
+        <div class="job-card pending" onclick="showScreen('pending-detail-4')">
+          <div class="job-address">9012 Oak Rd</div>
+          <div class="job-owner">Patricia Davis</div>
+          <div class="job-meta">
+            <span><i class="fas fa-wrench"></i> Plumbing</span>
+            <span><i class="fas fa-clock"></i> Waiting on parts</span>
+          </div>
+        </div>
+        <div class="job-card pending" onclick="showScreen('pending-detail-5')">
+          <div class="job-address">3345 Maple St</div>
+          <div class="job-owner">James Wilson</div>
+          <div class="job-meta">
+            <span><i class="fas fa-wrench"></i> Plumbing</span>
+            <span><i class="fas fa-clock"></i> Schedule callback</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PENDING JOB DETAIL 1 -->
+    <div class="screen" id="screen-pending-detail-1">
+      <div class="job-detail-header">
+        <button class="back-btn" style="background: rgba(255,255,255,0.2); color: white; position: absolute; top: 16px; left: 20px;" onclick="showScreen('jobs-pending')"><i class="fas fa-arrow-left"></i></button>
+        <div style="text-align: center;">
+          <div class="job-detail-title">Kitchen & Bathroom Upgrade</div>
+          <div class="job-detail-sub">3892 Maple Ave • Michael Torres</div>
+        </div>
+      </div>
+
+      <div class="scroll-content" style="padding-top: 0; padding-bottom: 100px;">
+        <div class="pending-job-detail-card">
+          <div class="pending-action-label">⏰ Pending Quote</div>
+          <div class="info-row">
+            <span class="info-label">Property</span>
+            <span class="info-value">3892 Maple Ave</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Homeowner</span>
+            <span class="info-value">Michael Torres</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Trade</span>
+            <span class="info-value">Plumbing</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Status</span>
+            <span class="info-value">Quote due Mar 20</span>
+          </div>
+        </div>
+
+        <div class="notes-section">
+          <div class="notes-title">Job Description</div>
+          <div class="notes-text">Customer wants to upgrade kitchen sink fixtures and bathroom plumbing. Includes new faucet installation, drain replacements, and water line upgrades.</div>
+        </div>
+
+        <div class="action-buttons-detailed">
+          <button class="action-btn-detailed action-btn-primary-detailed" onclick="showScreen('property-summary')">
+            <i class="fas fa-home"></i> View Property
+          </button>
+          <button class="action-btn-detailed action-btn-primary-detailed" onclick="alert('Opening quote form...')">
+            <i class="fas fa-file-invoice"></i> Create & Send Quote
+          </button>
+          <button class="action-btn-detailed action-btn-secondary-detailed" onclick="alert('Opening phone...')">
+            <i class="fas fa-phone"></i> Call Michael
+          </button>
+          <button class="action-btn-detailed action-btn-secondary-detailed" onclick="alert('Opening message...')">
+            <i class="fas fa-comment"></i> Send Message
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PENDING JOB DETAIL 2 -->
+    <div class="screen" id="screen-pending-detail-2">
+      <div class="job-detail-header">
+        <button class="back-btn" style="background: rgba(255,255,255,0.2); color: white; position: absolute; top: 16px; left: 20px;" onclick="showScreen('jobs-pending')"><i class="fas fa-arrow-left"></i></button>
+        <div style="text-align: center;">
+          <div class="job-detail-title">Pipe Replacement</div>
+          <div class="job-detail-sub">2456 Cedar Ln • Jennifer Lee</div>
+        </div>
+      </div>
+
+      <div class="scroll-content" style="padding-top: 0; padding-bottom: 100px;">
+        <div class="pending-job-detail-card">
+          <div class="pending-action-label">⏳ Awaiting Approval</div>
+          <div class="info-row">
+            <span class="info-label">Property</span>
+            <span class="info-value">2456 Cedar Ln</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Homeowner</span>
+            <span class="info-value">Jennifer Lee</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Trade</span>
+            <span class="info-value">Plumbing</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Status</span>
+            <span class="info-value">Awaiting approval</span>
+          </div>
+        </div>
+
+        <div class="notes-section">
+          <div class="notes-title">Job Description</div>
+          <div class="notes-text">Quote submitted for main water line replacement. Copper pipes showing signs of corrosion. Estimated labor: 2 days.</div>
+        </div>
+
+        <div class="action-buttons-detailed">
+          <button class="action-btn-detailed action-btn-primary-detailed" onclick="showScreen('property-summary')">
+            <i class="fas fa-home"></i> View Property
+          </button>
+          <button class="action-btn-detailed action-btn-primary-detailed" onclick="alert('Opening follow-up...')">
+            <i class="fas fa-redo"></i> Send Follow-up
+          </button>
+          <button class="action-btn-detailed action-btn-secondary-detailed" onclick="alert('Opening phone...')">
+            <i class="fas fa-phone"></i> Call Jennifer
+          </button>
+          <button class="action-btn-detailed action-btn-secondary-detailed" onclick="alert('Opening message...')">
+            <i class="fas fa-comment"></i> Send Message
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PENDING JOB DETAIL 3 -->
+    <div class="screen" id="screen-pending-detail-3">
+      <div class="job-detail-header">
+        <button class="back-btn" style="background: rgba(255,255,255,0.2); color: white; position: absolute; top: 16px; left: 20px;" onclick="showScreen('jobs-pending')"><i class="fas fa-arrow-left"></i></button>
+        <div style="text-align: center;">
+          <div class="job-detail-title">Water Heater Inspection</div>
+          <div class="job-detail-sub">6789 Elm Ave • Robert Brown</div>
+        </div>
+      </div>
+
+      <div class="scroll-content" style="padding-top: 0; padding-bottom: 100px;">
+        <div class="pending-job-detail-card">
+          <div class="pending-action-label">📞 Follow-up Call Needed</div>
+          <div class="info-row">
+            <span class="info-label">Property</span>
+            <span class="info-value">6789 Elm Ave</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Homeowner</span>
+            <span class="info-value">Robert Brown</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Trade</span>
+            <span class="info-value">Plumbing</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Status</span>
+            <span class="info-value">Follow-up call needed</span>
+          </div>
+        </div>
+
+        <div class="notes-section">
+          <div class="notes-title">Last Visit</div>
+          <div class="notes-text">Performed inspection of 10-year-old water heater. Identified possible issues. Customer needs callback to discuss replacement options and warranty coverage.</div>
+        </div>
+
+        <div class="action-buttons-detailed">
+          <button class="action-btn-detailed action-btn-primary-detailed" onclick="showScreen('property-summary')">
+            <i class="fas fa-home"></i> View Property
+          </button>
+          <button class="action-btn-detailed action-btn-primary-detailed" onclick="alert('Opening phone...')">
+            <i class="fas fa-phone"></i> Call Robert Now
+          </button>
+          <button class="action-btn-detailed action-btn-secondary-detailed" onclick="alert('Opening message...')">
+            <i class="fas fa-comment"></i> Send Message
+          </button>
+          <button class="action-btn-detailed action-btn-secondary-detailed" onclick="alert('Scheduling callback...')">
+            <i class="fas fa-calendar"></i> Schedule Callback
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PENDING JOB DETAIL 4 -->
+    <div class="screen" id="screen-pending-detail-4">
+      <div class="job-detail-header">
+        <button class="back-btn" style="background: rgba(255,255,255,0.2); color: white; position: absolute; top: 16px; left: 20px;" onclick="showScreen('jobs-pending')"><i class="fas fa-arrow-left"></i></button>
+        <div style="text-align: center;">
+          <div class="job-detail-title">Drain Cleaning</div>
+          <div class="job-detail-sub">9012 Oak Rd • Patricia Davis</div>
+        </div>
+      </div>
+
+      <div class="scroll-content" style="padding-top: 0; padding-bottom: 100px;">
+        <div class="pending-job-detail-card">
+          <div class="pending-action-label">📦 Waiting on Parts</div>
+          <div class="info-row">
+            <span class="info-label">Property</span>
+            <span class="info-value">9012 Oak Rd</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Homeowner</span>
+            <span class="info-value">Patricia Davis</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Trade</span>
+            <span class="info-value">Plumbing</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Status</span>
+            <span class="info-value">Waiting on parts • ETA Mar 18</span>
+          </div>
+        </div>
+
+        <div class="notes-section">
+          <div class="notes-title">Situation</div>
+          <div class="notes-text">Initial drain cleaning performed. Diagnosed need for specialized parts to fully clear main drain. Parts ordered and in transit. Ready to schedule completion visit once parts arrive.</div>
+        </div>
+
+        <div class="action-buttons-detailed">
+          <button class="action-btn-detailed action-btn-primary-detailed" onclick="showScreen('property-summary')">
+            <i class="fas fa-home"></i> View Property
+          </button>
+          <button class="action-btn-detailed action-btn-primary-detailed" onclick="alert('Opening calendar...')">
+            <i class="fas fa-calendar"></i> Schedule Return Visit
+          </button>
+          <button class="action-btn-detailed action-btn-secondary-detailed" onclick="alert('Opening message...')">
+            <i class="fas fa-comment"></i> Update Patricia
+          </button>
+          <button class="action-btn-detailed action-btn-secondary-detailed" onclick="alert('Opening phone...')">
+            <i class="fas fa-phone"></i> Call Patricia
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PENDING JOB DETAIL 5 -->
+    <div class="screen" id="screen-pending-detail-5">
+      <div class="job-detail-header">
+        <button class="back-btn" style="background: rgba(255,255,255,0.2); color: white; position: absolute; top: 16px; left: 20px;" onclick="showScreen('jobs-pending')"><i class="fas fa-arrow-left"></i></button>
+        <div style="text-align: center;">
+          <div class="job-detail-title">Fixture Installation</div>
+          <div class="job-detail-sub">3345 Maple St • James Wilson</div>
+        </div>
+      </div>
+
+      <div class="scroll-content" style="padding-top: 0; padding-bottom: 100px;">
+        <div class="pending-job-detail-card">
+          <div class="pending-action-label">📅 Schedule Callback</div>
+          <div class="info-row">
+            <span class="info-label">Property</span>
+            <span class="info-value">3345 Maple St</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Homeowner</span>
+            <span class="info-value">James Wilson</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Trade</span>
+            <span class="info-value">Plumbing</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Status</span>
+            <span class="info-value">Schedule callback</span>
+          </div>
+        </div>
+
+        <div class="notes-section">
+          <div class="notes-title">Last Communication</div>
+          <div class="notes-text">Customer requested quote for new faucet installation in master bathroom. Estimate provided. Awaiting confirmation and available appointment window to schedule installation.</div>
+        </div>
+
+        <div class="action-buttons-detailed">
+          <button class="action-btn-detailed action-btn-primary-detailed" onclick="showScreen('property-summary')">
+            <i class="fas fa-home"></i> View Property
+          </button>
+          <button class="action-btn-detailed action-btn-primary-detailed" onclick="alert('Opening calendar...')">
+            <i class="fas fa-calendar"></i> Propose Times
+          </button>
+          <button class="action-btn-detailed action-btn-secondary-detailed" onclick="alert('Opening message...')">
+            <i class="fas fa-comment"></i> Send Message
+          </button>
+          <button class="action-btn-detailed action-btn-secondary-detailed" onclick="alert('Opening phone...')">
+            <i class="fas fa-phone"></i> Call James
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW ACCESS LIST -->
+    <div class="screen" id="screen-jobs-new">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('home')"><i class="fas fa-arrow-left"></i></button>
+        <h2>New Properties (2)</h2>
+      </div>
+      <div class="scroll-content">
+        <div class="job-card">
+          <div class="job-address">1920 Willow Ct</div>
+          <div class="job-owner">Amanda White</div>
+          <div class="job-meta">
+            <span><i class="fas fa-wrench"></i> Plumbing</span>
+            <span><i class="fas fa-clock"></i> Granted today</span>
+          </div>
+        </div>
+        <div class="job-card">
+          <div class="job-address">5504 Spruce Dr</div>
+          <div class="job-owner">Mark Thompson</div>
+          <div class="job-meta">
+            <span><i class="fas fa-wrench"></i> Plumbing</span>
+            <span><i class="fas fa-clock"></i> Granted today</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAST JOBS LIST -->
+    <div class="screen" id="screen-jobs-past">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('home')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Past Jobs</h2>
+      </div>
+      <div class="scroll-content">
+        <div class="list-section-title">Completed This Year</div>
+        <div style="padding: 0 20px 20px;">
+          <div class="past-job-card" onclick="showScreen('job-detail')">
+            <div class="past-job-header">
+              <div class="past-job-addr">1247 Oak Street</div>
+              <div class="past-job-date">Mar 15, 2025</div>
+            </div>
+            <div class="past-job-meta">
+              <span>Water Heater Replace</span>
+              <span>Sarah Chen</span>
+            </div>
+            <div class="past-job-cost">$1,240 <span class="price-badge">Confirmed ✓</span></div>
+          </div>
+
+          <div class="past-job-card" onclick="showScreen('job-detail-unconfirmed')">
+            <div class="past-job-header">
+              <div class="past-job-addr">5631 River Road</div>
+              <div class="past-job-date">Mar 8, 2025</div>
+            </div>
+            <div class="past-job-meta">
+              <span>Leak Repair</span>
+              <span>Emily Watson</span>
+            </div>
+            <div class="past-job-cost">$680 <span class="price-badge unconfirmed">Unconfirmed</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOB DETAIL -->
+    <div class="screen" id="screen-job-detail">
+      <div class="job-detail-header">
+        <button class="back-btn" style="background: rgba(255,255,255,0.2); color: white; position: absolute; top: 16px; left: 20px;" onclick="showScreen('jobs-past')"><i class="fas fa-arrow-left"></i></button>
+        <div style="text-align: center;">
+          <div class="job-detail-title">Water Heater Replacement</div>
+          <div class="job-detail-sub">1247 Oak Street • Sarah Chen</div>
+        </div>
+      </div>
+
+      <div class="scroll-content" style="padding-top: 0;">
+        <div class="job-info-card">
+          <div class="info-row">
+            <span class="info-label">Date Completed</span>
+            <span class="info-value">Mar 15, 2025</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Trade</span>
+            <span class="info-value">Plumbing</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Contractor</span>
+            <span class="info-value">ProPipe Plumbing</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Price</span>
+            <div>
+              <span class="info-value">$1,240</span><br>
+              <span class="price-badge" style="margin-top: 4px;">Confirmed ✓</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding: 0 20px;">
+          <div style="margin-top: 20px; margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text); text-transform: uppercase; margin-bottom: 8px;">Photos</div>
+            <div class="photo-carousel">
+              <div class="carousel-image active">📸 Before</div>
+              <div class="carousel-image">🔧 During</div>
+              <div class="carousel-image">✅ After</div>
+
+              <div class="carousel-arrows">
+                <button class="carousel-btn" onclick="prevPhoto()">‹</button>
+                <button class="carousel-btn" onclick="nextPhoto()">›</button>
+              </div>
+
+              <div class="carousel-nav">
+                <div class="carousel-dot active" onclick="goToPhoto(0)"></div>
+                <div class="carousel-dot" onclick="goToPhoto(1)"></div>
+                <div class="carousel-dot" onclick="goToPhoto(2)"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="notes-section">
+          <div class="notes-title">Issue</div>
+          <div class="notes-text">No hot water upstairs. Water heater making strange noise when pilot lit.</div>
+        </div>
+
+        <div class="notes-section">
+          <div class="notes-title">Work Performed</div>
+          <div class="notes-text">Replaced 40-gallon electric water heater. Old unit had failed heating element. Flushed lines and tested all outlets. New heater installed with new anode rod and brass valve.</div>
+        </div>
+
+        <div class="notes-section">
+          <div class="notes-title">Parts Used</div>
+          <div class="notes-text">• 40-gal Electric Water Heater<br>• Anode Rod (6in)<br>• Brass Valve 3/4in<br>• Teflon Tape & Fittings</div>
+        </div>
+
+        <div class="notes-section">
+          <div class="notes-title">Recommendations</div>
+          <div class="notes-text">Full system flush and inspection in 6 months. Consider water softener for hard water in area. Service heater annually for optimal performance.</div>
+        </div>
+
+        <button class="confirm-btn" disabled>✓ Price Confirmed</button>
+      </div>
+    </div>
+
+    <!-- JOB DETAIL UNCONFIRMED -->
+    <div class="screen" id="screen-job-detail-unconfirmed">
+      <div class="job-detail-header">
+        <button class="back-btn" style="background: rgba(255,255,255,0.2); color: white; position: absolute; top: 16px; left: 20px;" onclick="showScreen('jobs-past')"><i class="fas fa-arrow-left"></i></button>
+        <div style="text-align: center;">
+          <div class="job-detail-title">Leak Repair</div>
+          <div class="job-detail-sub">5631 River Road • Emily Watson</div>
+        </div>
+      </div>
+
+      <div class="scroll-content" style="padding-top: 0;">
+        <div class="job-info-card">
+          <div class="info-row">
+            <span class="info-label">Date Completed</span>
+            <span class="info-value">Mar 8, 2025</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Trade</span>
+            <span class="info-value">Plumbing</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Contractor</span>
+            <span class="info-value">ProPipe Plumbing</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Price</span>
+            <div>
+              <span class="info-value">$680</span><br>
+              <span class="price-badge unconfirmed" style="margin-top: 4px;">⏳ Awaiting Homeowner</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding: 0 20px;">
+          <div style="margin-top: 20px; margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text); text-transform: uppercase; margin-bottom: 8px;">Photos</div>
+            <div class="photo-carousel" id="carousel2">
+              <div class="carousel-image active">💧 Leak Location</div>
+              <div class="carousel-image">🔧 Repair Work</div>
+
+              <div class="carousel-arrows">
+                <button class="carousel-btn" onclick="prevPhoto('carousel2')">‹</button>
+                <button class="carousel-btn" onclick="nextPhoto('carousel2')">›</button>
+              </div>
+
+              <div class="carousel-nav">
+                <div class="carousel-dot active" onclick="goToPhoto(0, 'carousel2')"></div>
+                <div class="carousel-dot" onclick="goToPhoto(1, 'carousel2')"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="notes-section">
+          <div class="notes-title">Issue</div>
+          <div class="notes-text">Kitchen sink drain leaking under sink. Water pooling on cabinet floor.</div>
+        </div>
+
+        <div class="notes-section">
+          <div class="notes-title">Work Performed</div>
+          <div class="notes-text">Located leak in P-trap coupling. Drained line, replaced faulty coupling with new brass fitting. Tested all connections. No further leaks detected.</div>
+        </div>
+
+        <div class="notes-section">
+          <div class="notes-title">Parts Used</div>
+          <div class="notes-text">• Brass P-Trap Coupling 1.5in<br>• Teflon Tape<br>• Stainless Steel Clamps</div>
+        </div>
+
+        <div class="notes-section">
+          <div class="notes-title">Recommendations</div>
+          <div class="notes-text">Monitor sink drain for next few weeks. If any additional leaking occurs, may need full P-trap replacement.</div>
+        </div>
+
+        <button class="confirm-btn" onclick="confirmPrice()">Confirm Price with Homeowner</button>
+      </div>
+    </div>
+
+    <!-- SCAN SCREEN -->
+    <div class="screen" id="screen-scan">
+      <div class="page-header">
+        <h2>Scan Property</h2>
+      </div>
+      <div class="scroll-content" style="display: flex; flex-direction: column; justify-content: center;">
+        <div class="scan-container">
+          <div class="scan-icon">📱</div>
+          <div class="scan-title">Scan QR Code</div>
+          <div class="scan-desc">Point your camera at the property's HomeHub QR code to access its service history.</div>
+          <div class="scan-btns">
+            <button class="scan-btn scan-btn-primary" onclick="showScreen('property-summary')">
+              <i class="fas fa-camera"></i> Open Camera
+            </button>
+            <button class="scan-btn scan-btn-secondary" onclick="openMobPropertyIdModal()">
+              <i class="fas fa-keyboard" style="margin-right:6px"></i>Enter Property ID
+            </button>
+            <button class="scan-btn scan-btn-secondary" onclick="toggleMobRecentProperties()">
+              <i class="fas fa-history" style="margin-right:6px"></i>Recent Properties
+            </button>
+          </div>
+        </div>
+
+        <!-- Recent Properties Toggle Panel -->
+        <div id="mob-recent-props-panel" style="display:none;margin-top:16px;background:white;border-radius:16px;border:1px solid #E2E8F0;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08)">
+          <div style="padding:14px 16px;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:13px;font-weight:700;color:#1E293B">Recent Properties</span>
+            <button onclick="toggleMobRecentProperties()" style="background:none;border:none;cursor:pointer;color:#94A3B8;font-size:14px;padding:2px"><i class="fas fa-times"></i></button>
+          </div>
+          <div id="mob-recent-props-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Property ID Lookup Bottom Sheet -->
+    <div id="mob-prop-id-backdrop" onclick="closeMobPropertyIdModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000"></div>
+    <div id="mob-prop-id-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;background:white;border-radius:20px 20px 0 0;z-index:1001;padding:0 0 env(safe-area-inset-bottom,16px);max-height:85vh;overflow-y:auto">
+      <!-- Input Step -->
+      <div id="mob-propid-step-input">
+        <div style="padding:20px 20px 0">
+          <div style="width:40px;height:4px;background:#E2E8F0;border-radius:2px;margin:0 auto 16px"></div>
+          <div style="font-size:17px;font-weight:700;color:#1E293B;margin-bottom:4px">Enter Property ID</div>
+          <div style="font-size:13px;color:#64748B;margin-bottom:20px">Type the HomeHub Property ID to access a property's records.</div>
+          <div style="position:relative;margin-bottom:12px">
+            <input id="mob-propid-input" type="text" placeholder="e.g. HH-WCK-2847" maxlength="12"
+              style="width:100%;box-sizing:border-box;padding:14px 16px;border:1.5px solid #E2E8F0;border-radius:12px;font-size:15px;font-family:'Courier New',monospace;font-weight:700;letter-spacing:1px;text-transform:uppercase;outline:none;color:#1E293B"
+              oninput="this.value=this.value.toUpperCase()"
+              onkeydown="if(event.key==='Enter')lookupMobPropertyId()">
+          </div>
+          <div id="mob-propid-error" style="display:none;color:#EF4444;font-size:12px;margin-bottom:10px;padding:8px 12px;background:#FEF2F2;border-radius:8px"></div>
+          <button onclick="lookupMobPropertyId()" style="width:100%;padding:14px;background:linear-gradient(135deg,#1F3A5F,#27A570);color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:16px">
+            <span id="mob-propid-btn-text">Look Up Property</span>
+          </button>
+          <div style="text-align:center;margin-bottom:20px">
+            <span style="font-size:12px;color:#94A3B8">Try: HH-WCK-2847 · HH-OAK-1247 · HH-MPL-3892</span>
+          </div>
+        </div>
+      </div>
+      <!-- Found Step -->
+      <div id="mob-propid-step-found" style="display:none">
+        <div style="background:linear-gradient(135deg,#0f2442,#1F3A5F,#27A570);padding:24px 20px 20px;border-radius:20px 20px 0 0">
+          <div style="width:40px;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;margin:0 auto 16px"></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <div style="width:36px;height:36px;background:rgba(255,255,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center">
+              <i class="fas fa-house" style="color:white;font-size:14px"></i>
+            </div>
+            <div>
+              <div id="mob-found-address" style="font-size:15px;font-weight:700;color:white"></div>
+              <div id="mob-found-city" style="font-size:12px;color:rgba(255,255,255,0.8)"></div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:16px 20px">
+          <div style="display:flex;gap:10px;margin-bottom:14px">
+            <div style="flex:1;background:#F8FAFC;border-radius:10px;padding:10px 12px;text-align:center">
+              <div style="font-size:10px;color:#64748B;text-transform:uppercase;font-weight:600;margin-bottom:2px">Owner</div>
+              <div id="mob-found-owner" style="font-size:13px;font-weight:700;color:#1E293B"></div>
+            </div>
+            <div style="flex:1;background:#F8FAFC;border-radius:10px;padding:10px 12px;text-align:center">
+              <div style="font-size:10px;color:#64748B;text-transform:uppercase;font-weight:600;margin-bottom:2px">Built</div>
+              <div id="mob-found-built" style="font-size:13px;font-weight:700;color:#1E293B"></div>
+            </div>
+            <div style="flex:1;background:#F8FAFC;border-radius:10px;padding:10px 12px;text-align:center">
+              <div style="font-size:10px;color:#64748B;text-transform:uppercase;font-weight:600;margin-bottom:2px">Score</div>
+              <div id="mob-found-score" style="font-size:13px;font-weight:700;color:#27A570"></div>
+            </div>
+          </div>
+          <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:10px 12px;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+            <i class="fas fa-shield-alt" style="color:#27A570;font-size:13px"></i>
+            <span style="font-size:12px;color:#166534;font-weight:600">Property verified · Homeowner has granted contractor access</span>
+          </div>
+          <div style="display:flex;gap:10px;margin-bottom:8px">
+            <button onclick="mobStartJobForProperty()" style="flex:1;padding:14px;background:linear-gradient(135deg,#1F3A5F,#27A570);color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">
+              <i class="fas fa-plus" style="margin-right:6px"></i>Start New Job
+            </button>
+            <button onclick="mobViewPropertyHistory()" style="flex:1;padding:14px;background:#F1F5F9;color:#1E293B;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">
+              <i class="fas fa-history" style="margin-right:6px"></i>History
+            </button>
+          </div>
+          <button onclick="closeMobPropertyIdModal()" style="width:100%;padding:12px;background:none;border:1.5px solid #E2E8F0;border-radius:12px;font-size:14px;font-weight:600;color:#64748B;cursor:pointer;margin-bottom:8px">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROPERTY ACCESS SUMMARY -->
+    <div class="screen" id="screen-property-summary">
+      <div class="property-hero">
+        <div class="prop-address">1247 Oak Street</div>
+        <div class="prop-sub">Austin, TX 78701</div>
+      </div>
+
+      <div class="scroll-content" style="padding-top: 0;">
+        <div class="prop-summary-card">
+          <div class="prop-owner-info"><strong>Sarah Chen</strong> • Homeowner</div>
+          <div style="margin-bottom: 12px;">
+            <div style="font-size: 10px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 6px;">Systems</div>
+            <div class="prop-systems">
+              <div class="sys-badge"><i class="fas fa-faucet"></i> Plumbing</div>
+              <div class="sys-badge"><i class="fas fa-fan"></i> HVAC</div>
+              <div class="sys-badge"><i class="fas fa-bolt"></i> Electrical</div>
+              <div class="sys-badge"><i class="fas fa-house"></i> Roofing</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert-banner">
+          <p>Access note</p>
+          <span>Side gate key under planter. Avoid front door during business calls.</span>
+        </div>
+
+        <div class="action-btns">
+          <button class="btn-action btn-action-primary" onclick="showScreen('newjob')">
+            <i class="fas fa-plus"></i> Start New Job
+          </button>
+          <button class="btn-action btn-action-secondary" onclick="showScreen('trade-history')">
+            <i class="fas fa-history"></i> View Work History
+          </button>
+          <button class="btn-action btn-action-secondary">
+            <i class="fas fa-file-alt"></i> Full Property Record
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRADE HISTORY -->
+    <div class="screen" id="screen-trade-history">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('property-summary')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Work History</h2>
+      </div>
+
+      <div class="filter-tabs">
+        <div class="filter-tab active">All</div>
+        <div class="filter-tab">My Co.</div>
+        <div class="filter-tab">Open</div>
+        <div class="filter-tab">Photos</div>
+      </div>
+
+      <div class="scroll-content">
+        <div style="padding: 0;">
+          <div class="history-card" onclick="showScreen('history-detail')">
+            <div class="hist-date">Mar 14, 2025</div>
+            <div class="hist-contractor">AquaPro Plumbing — Water Heater Replace</div>
+            <div class="hist-work">Replaced 40-gal electric heater. Old unit failing, no hot water.</div>
+            <div class="hist-footer">
+              <span>5 photos</span>
+              <span>⭐ 5.0</span>
+            </div>
+          </div>
+
+          <div class="history-card">
+            <div class="hist-date">Feb 28, 2025</div>
+            <div class="hist-contractor">AquaPro Plumbing — Plumbing Inspection</div>
+            <div class="hist-work">Full home inspection. Minor issues noted in master bath drains.</div>
+            <div class="hist-footer">
+              <span>3 photos</span>
+              <span>⭐ 4.8</span>
+            </div>
+          </div>
+
+          <div class="history-card">
+            <div class="hist-date">Jan 12, 2025</div>
+            <div class="hist-contractor">AquaPro Plumbing — Leak Repair</div>
+            <div class="hist-work">Kitchen sink drain leak fixed. Replaced coupling.</div>
+            <div class="hist-footer">
+              <span>2 photos</span>
+              <span>⭐ 5.0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY DETAIL -->
+    <div class="screen" id="screen-history-detail">
+      <div class="job-detail-header">
+        <button class="back-btn" style="background: rgba(255,255,255,0.2); color: white; position: absolute; top: 16px; left: 20px;" onclick="showScreen('trade-history')"><i class="fas fa-arrow-left"></i></button>
+        <div style="text-align: center;">
+          <div class="job-detail-title">Water Heater Replacement</div>
+          <div class="job-detail-sub">AquaPro Plumbing • Mar 14, 2025</div>
+        </div>
+      </div>
+
+      <div class="scroll-content" style="padding-top: 0;">
+        <div class="job-info-card">
+          <div class="info-row">
+            <span class="info-label">Contractor</span>
+            <span class="info-value">AquaPro Plumbing</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Rating</span>
+            <span class="info-value">⭐ 5.0 (Excellent)</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Date</span>
+            <span class="info-value">Mar 14, 2025</span>
+          </div>
+        </div>
+
+        <div style="padding: 0 20px;">
+          <div style="margin-top: 20px; margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text); text-transform: uppercase; margin-bottom: 8px;">Photos (5)</div>
+            <div class="photo-carousel" id="carousel3">
+              <div class="carousel-image active">📸 Before</div>
+              <div class="carousel-image">🔧 During Work</div>
+              <div class="carousel-image">✅ After Install</div>
+              <div class="carousel-image">🧪 Testing</div>
+              <div class="carousel-image">📋 Final Inspection</div>
+
+              <div class="carousel-arrows">
+                <button class="carousel-btn" onclick="prevPhoto('carousel3')">‹</button>
+                <button class="carousel-btn" onclick="nextPhoto('carousel3')">›</button>
+              </div>
+
+              <div class="carousel-nav">
+                <div class="carousel-dot active" onclick="goToPhoto(0, 'carousel3')"></div>
+                <div class="carousel-dot" onclick="goToPhoto(1, 'carousel3')"></div>
+                <div class="carousel-dot" onclick="goToPhoto(2, 'carousel3')"></div>
+                <div class="carousel-dot" onclick="goToPhoto(3, 'carousel3')"></div>
+                <div class="carousel-dot" onclick="goToPhoto(4, 'carousel3')"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="notes-section">
+          <div class="notes-title">Issue Reported</div>
+          <div class="notes-text">No hot water in master bathroom. Water heater making noise and leaking slightly from base.</div>
+        </div>
+
+        <div class="notes-section">
+          <div class="notes-title">Work Performed</div>
+          <div class="notes-text">Drained and disconnected old 40-gallon water heater. Replaced with new energy-efficient model. Installed new anode rod, brass valve, and all fittings. Flushed entire system and tested all hot water outlets.</div>
+        </div>
+
+        <div class="notes-section">
+          <div class="notes-title">Parts & Materials</div>
+          <div class="notes-text">• 40-gal Electric Water Heater (Rheem)<br>• Anode Rod (Magnesium, 6in)<br>• Brass Ball Valve 3/4in<br>• Relief Valve & Connector<br>• Teflon Tape & Pipe Dope<br>• Flex Connectors (2)<br>• Labor: 3.5 hours</div>
+        </div>
+
+        <div class="notes-section">
+          <div class="notes-title">Contractor Recommendation</div>
+          <div class="notes-text">⭐ Homeowner Notes: "Great job! Very professional and quick. New heater is much quieter. Will call again for annual service."</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW JOB LOG -->
+    <div class="screen" id="screen-newjob">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('home')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Log Job</h2>
+      </div>
+
+      <div class="scroll-content" style="padding-bottom: 100px;">
+        <form id="jobForm">
+          <div class="form-section">
+            <div class="form-section-title">Basics</div>
+            <div class="form-group">
+              <label>Property</label>
+              <input type="text" id="mob-newjob-property-field" value="1247 Oak Street" disabled style="background: var(--bg);">
+            </div>
+            <div class="form-group">
+              <label>Trade</label>
+              <select required>
+                <option>-- Select --</option>
+                <option selected>Plumbing</option>
+                <option>HVAC</option>
+                <option>Electrical</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" value="2025-03-15">
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">Issue</div>
+            <div class="form-group">
+              <label>What's the problem?</label>
+              <textarea placeholder="e.g., No hot water upstairs" required></textarea>
+            </div>
+            <div class="form-group">
+              <label>What did you observe?</label>
+              <textarea placeholder="e.g., Water heater making noise" required></textarea>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">Work Done</div>
+            <div class="form-group">
+              <label>Work performed</label>
+              <textarea placeholder="e.g., Replaced water heater, flushed lines" required></textarea>
+            </div>
+            <div class="form-group">
+              <label>Parts used</label>
+              <textarea placeholder="e.g., 40gal electric heater, Valve kit" required></textarea>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">Photos</div>
+            <div class="photo-upload" onclick="document.getElementById('photoInput').click()">
+              <i class="fas fa-camera"></i>
+              <p>Add photos</p>
+              <span>Before, during, after</span>
+            </div>
+            <input type="file" id="photoInput" style="display: none;" accept="image/*" multiple>
+            <div class="photo-gallery">
+              <div class="photo-item">📸</div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">Recommendations</div>
+            <div class="form-group">
+              <label>Future work</label>
+              <textarea placeholder="e.g., Flush system in 6 months" required></textarea>
+            </div>
+            <div class="form-group">
+              <label>Urgency</label>
+              <select>
+                <option>Monitor</option>
+                <option>Recommend Soon</option>
+                <option selected>Routine</option>
+                <option>Urgent</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select>
+                <option selected>Completed</option>
+                <option>Pending Follow-up</option>
+                <option>Quote Needed</option>
+              </select>
+            </div>
+          </div>
+        </form>
+
+        <div style="height: 20px;"></div>
+      </div>
+
+      <div class="sticky-save">
+        <button class="btn-cancel" onclick="showScreen('home')">Cancel</button>
+        <button class="btn-save" onclick="alert('Job saved!')">Save</button>
+      </div>
+    </div>
+
+    <!-- PROPERTIES LIST -->
+    <div class="screen" id="screen-properties">
+      <div class="page-header">
+        <h2>Properties</h2>
+      </div>
+
+      <div class="scroll-content" style="padding-top: 0;">
+        <div style="padding: 16px 20px; background: white; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10;">
+          <input type="text" placeholder="Search properties..." style="width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px;">
+        </div>
+
+        <div style="padding: 0 20px 20px;">
+          <div class="prop-card" onclick="showScreen('property-summary')">
+            <div class="prop-card-header">
+              <div>
+                <div class="prop-card-addr">1247 Oak Street</div>
+                <div class="prop-card-owner">Sarah Chen</div>
+                <div style="margin-top: 6px;">
+                  <span class="prop-badge">🔧 Plumbing</span>
+                  <span class="prop-badge">📅 Today</span>
+                </div>
+              </div>
+              <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+            </div>
+          </div>
+
+          <div class="prop-card">
+            <div class="prop-card-header">
+              <div>
+                <div class="prop-card-addr">3892 Maple Ave</div>
+                <div class="prop-card-owner">Michael Torres</div>
+                <div style="margin-top: 6px;">
+                  <span class="prop-badge">🔧 Plumbing</span>
+                  <span class="prop-badge">📅 Mar 8</span>
+                </div>
+              </div>
+              <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+            </div>
+          </div>
+
+          <div class="prop-card">
+            <div class="prop-card-header">
+              <div>
+                <div class="prop-card-addr">5631 River Road</div>
+                <div class="prop-card-owner">Emily Watson</div>
+                <div style="margin-top: 6px;">
+                  <span class="prop-badge">🔧 Plumbing</span>
+                  <span class="prop-badge">📅 Feb 15</span>
+                </div>
+              </div>
+              <i class="fas fa-chevron-right" style="color: var(--text-secondary);"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERTS -->
+    <div class="screen" id="screen-alerts">
+      <div class="page-header">
+        <h2>Alerts (1)</h2>
+      </div>
+
+      <div class="scroll-content">
+        <div style="padding: 0 20px;">
+          <div class="alert-card unread" onclick="showScreen('alert-detail-1')">
+            <div class="alert-title">Message from Sarah Chen</div>
+            <div class="alert-text">Great job on the water heater! Very professional work.</div>
+          </div>
+
+          <div class="alert-card warning" onclick="showScreen('alert-detail-2')">
+            <div class="alert-title">Follow-up reminder</div>
+            <div class="alert-text">Michael Torres quote due Mar 20</div>
+          </div>
+
+          <div class="alert-card success" onclick="showScreen('alert-detail-3')">
+            <div class="alert-title">New property access</div>
+            <div class="alert-text">Emily Watson added you to 5631 River Road</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERT DETAIL 1 -->
+    <div class="screen" id="screen-alert-detail-1">
+      <div class="page-header">
+        <button class="back-btn" onclick="markAsRead(1)"><i class="fas fa-arrow-left"></i></button>
+        <h2>Message</h2>
+      </div>
+
+      <div class="scroll-content">
+        <div style="background: var(--blue-light); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+          <div style="font-size: 12px; font-weight: 700; color: var(--text);">From: Sarah Chen</div>
+          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">Mar 15, 2025 at 3:45 PM</div>
+        </div>
+
+        <div style="background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+          <div style="font-size: 13px; line-height: 1.6; color: var(--text);">
+            "Great job on the water heater replacement! You were very professional and efficient. The new heater is much quieter than the old one. My family is very happy with the work. I'll definitely call ProPipe again for our next plumbing needs. Thank you!"
+          </div>
+        </div>
+
+        <div style="background: white; border-radius: 12px; padding: 16px;">
+          <div style="font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Reply to Sarah Chen</div>
+          <textarea class="message-input" placeholder="Type your response..."></textarea>
+          <div style="display: flex; gap: 10px;">
+            <button style="flex: 1; padding: 10px; background: var(--blue); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Send</button>
+            <button style="flex: 1; padding: 10px; background: transparent; border: 1.5px solid var(--border); border-radius: 8px; color: var(--text); font-weight: 600; cursor: pointer;">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERT DETAIL 2 -->
+    <div class="screen" id="screen-alert-detail-2">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('alerts')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Follow-up Reminder</h2>
+      </div>
+
+      <div class="scroll-content">
+        <div style="background: #DFE9E5; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+          <div style="font-size: 12px; font-weight: 700; color: var(--orange);">⏰ Pending Action</div>
+          <div style="font-size: 13px; color: var(--text); margin-top: 8px;">Quote needed for Michael Torres at 3892 Maple Ave</div>
+          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Due: Mar 20, 2025</div>
+        </div>
+
+        <div style="background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+          <div style="font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Job Details</div>
+          <div style="font-size: 11px; color: var(--text-secondary); line-height: 1.6;">
+            <div><strong>Property:</strong> 3892 Maple Ave</div>
+            <div><strong>Homeowner:</strong> Michael Torres</div>
+            <div><strong>Issue:</strong> Kitchen and bathroom plumbing upgrade</div>
+          </div>
+        </div>
+
+        <button style="width: 100%; margin: 20px; padding: 12px 16px; background: var(--blue); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; margin-top: 0; width: calc(100% - 40px);">
+          Send Quote
+        </button>
+
+        <div style="background: white; border-radius: 12px; padding: 16px; margin: 20px;">
+          <button style="width: 100%; padding: 10px; background: transparent; border: 1.5px solid var(--border); color: var(--red); border-radius: 8px; font-weight: 600; cursor: pointer;">Delete Alert</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERT DETAIL 3 -->
+    <div class="screen" id="screen-alert-detail-3">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('alerts')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Property Access</h2>
+      </div>
+
+      <div class="scroll-content">
+        <div style="background: #ECFDF5; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+          <div style="font-size: 12px; font-weight: 700; color: var(--green);">✓ Access Granted</div>
+          <div style="font-size: 13px; color: var(--text); margin-top: 8px;">Emily Watson added you to property</div>
+          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Mar 15, 2025</div>
+        </div>
+
+        <div style="background: white; border-radius: 12px; padding: 16px;">
+          <div style="font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 12px;">5631 River Road</div>
+          <div style="font-size: 11px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px;">
+            <div><strong>Homeowner:</strong> Emily Watson</div>
+            <div><strong>Location:</strong> Austin, TX 78701</div>
+          </div>
+          <button style="width: 100%; padding: 12px; background: var(--blue); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="showScreen('property-summary')">View Property</button>
+        </div>
+
+        <div style="background: white; border-radius: 12px; padding: 16px; margin: 20px;">
+          <button style="width: 100%; padding: 10px; background: transparent; border: 1.5px solid var(--border); color: var(--red); border-radius: 8px; font-weight: 600; cursor: pointer;">Delete Alert</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="screen" id="screen-profile">
+      <div class="page-header">
+        <h2>Profile</h2>
+      </div>
+
+      <div class="scroll-content" style="padding-bottom: 100px;">
+        <div class="profile-avatar">🔧</div>
+        <div class="profile-name">ProPipe Plumbing</div>
+        <div class="profile-email">john@propipe.com</div>
+
+        <div style="padding: 0 20px; margin-bottom: 20px;">
+          <div style="background: var(--card-bg); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 12px;">Business Info</div>
+            <div class="profile-item" style="margin-bottom: 8px;">
+              <div class="profile-item-label">Company</div>
+              <div class="profile-item-value" style="font-weight: 600;">ProPipe Plumbing</div>
+            </div>
+            <div class="profile-item" style="margin-bottom: 8px;">
+              <div class="profile-item-label">Owner</div>
+              <div class="profile-item-value" style="font-weight: 600;">John Martinez</div>
+            </div>
+            <div class="profile-item" style="margin-bottom: 8px;">
+              <div class="profile-item-label">Phone</div>
+              <div class="profile-item-value" style="font-weight: 600;">(512) 555-0123</div>
+            </div>
+            <div class="profile-item" style="margin-bottom: 8px;">
+              <div class="profile-item-label">Website</div>
+              <div class="profile-item-value" style="font-weight: 600; color: var(--blue);">www.propipeplumbing.com</div>
+            </div>
+            <div class="profile-item">
+              <div class="profile-item-label">Address</div>
+              <div class="profile-item-value" style="font-weight: 600; font-size: 12px;">1847 Service Rd, Austin, TX</div>
+            </div>
+          </div>
+
+          <div style="background: var(--card-bg); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 12px;">Credentials</div>
+            <div class="profile-item" style="margin-bottom: 8px;">
+              <div>
+                <div class="profile-item-label">License</div>
+                <div class="profile-item-value">PL-2847291</div>
+              </div>
+              <div class="profile-badge">Verified</div>
+            </div>
+            <div class="profile-item" style="margin-bottom: 8px;">
+              <div>
+                <div class="profile-item-label">License Expiration</div>
+                <div class="profile-item-value">May 15, 2026</div>
+              </div>
+            </div>
+            <div class="profile-item">
+              <div>
+                <div class="profile-item-label">Insurance</div>
+                <div class="profile-item-value">Active • Dec 2025</div>
+              </div>
+              <div class="profile-badge">Verified</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-buttons">
+          <button class="profile-btn profile-btn-primary" onclick="showScreen('edit-profile')">
+            <i class="fas fa-gear"></i> Edit Profile
+          </button>
+          <button class="profile-btn profile-btn-secondary">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDIT PROFILE -->
+    <div class="screen" id="screen-edit-profile">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('profile')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Edit Profile</h2>
+      </div>
+
+      <div class="scroll-content" style="padding-bottom: 100px;">
+        <form>
+          <div class="form-section">
+            <div class="form-section-title">Business Info</div>
+            <div class="form-group">
+              <label>Company Name</label>
+              <input type="text" value="ProPipe Plumbing">
+            </div>
+            <div class="form-group">
+              <label>Owner/Contact Name</label>
+              <input type="text" value="John Martinez">
+            </div>
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="tel" value="(512) 555-0123">
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" value="john@propipe.com">
+            </div>
+            <div class="form-group">
+              <label>Website</label>
+              <input type="url" value="www.propipeplumbing.com">
+            </div>
+            <div class="form-group">
+              <label>Address</label>
+              <input type="text" value="1847 Service Road, Austin, TX 78701">
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">Credentials & Documents</div>
+            <div class="form-group">
+              <label>License Number</label>
+              <input type="text" value="PL-2847291">
+            </div>
+            <div class="form-group">
+              <label>License Expiration</label>
+              <input type="date" value="2026-05-15">
+            </div>
+
+            <div style="margin-top: 16px;">
+              <div style="font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Proof of Insurance</div>
+              <div class="doc-upload">
+                <div class="doc-info">
+                  <div class="doc-name">General Liability Insurance.pdf</div>
+                  <div class="doc-status">Expires: Dec 2025</div>
+                </div>
+                <button class="doc-remove" onclick="event.preventDefault();">✕</button>
+              </div>
+              <button style="width: 100%; padding: 10px; background: var(--blue-light); color: var(--blue); border: 1.5px dashed var(--blue); border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 12px;">Upload New Document</button>
+            </div>
+
+            <div style="margin-top: 16px;">
+              <div style="font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 8px;">License Certificate</div>
+              <div class="doc-upload">
+                <div class="doc-info">
+                  <div class="doc-name">TX_Plumbing_License_PL2847291.pdf</div>
+                  <div class="doc-status">Expires: May 2026</div>
+                </div>
+                <button class="doc-remove" onclick="event.preventDefault();">✕</button>
+              </div>
+              <button style="width: 100%; padding: 10px; background: var(--blue-light); color: var(--blue); border: 1.5px dashed var(--blue); border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 12px;">Upload New Document</button>
+            </div>
+
+            <div style="margin-top: 16px;">
+              <div style="font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Additional Documents</div>
+              <button style="width: 100%; padding: 10px; background: var(--blue-light); color: var(--blue); border: 1.5px dashed var(--blue); border-radius: 8px; font-weight: 600; cursor: pointer;">+ Add Document</button>
+            </div>
+          </div>
+
+          <div style="height: 20px;"></div>
+        </form>
+      </div>
+
+      <div class="sticky-save">
+        <button class="btn-cancel" onclick="showScreen('profile')">Cancel</button>
+        <button class="btn-save" onclick="alert('Profile updated!')">Save Changes</button>
+      </div>
+    </div>
+
+    <!-- PRICEMATCH OFFERS (Mobile) -->
+    <div class="screen" id="screen-pricematch-offers">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('home')"><i class="fas fa-arrow-left"></i></button>
+        <h2>My Offers</h2>
+        <button style="background: none; border: none; cursor: pointer; color: var(--blue); font-size: 20px;" onclick="showScreen('pricematch-create-offer')"><i class="fas fa-plus-circle"></i></button>
+      </div>
+
+      <div class="scroll-content">
+        <div style="padding: 16px 20px 20px;">
+          <!-- Offer 1 -->
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px; cursor: pointer;" onclick="showScreen('pricematch-offer-detail-1')">
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--text);">Shower Replacement</div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">Bathroom</div>
+              </div>
+              <span style="background: #ECFDF5; color: var(--green); padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">Active</span>
+            </div>
+            <div style="font-size: 18px; font-weight: 800; color: var(--blue); margin-bottom: 8px;">$7,500</div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;"><i class="fas fa-map-pin" style="margin-right: 4px;"></i> 3 / 5 slots</div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 12px;"><i class="fas fa-calendar" style="margin-right: 4px;"></i> Expires in 30 days</div>
+            <button style="width: 100%; padding: 10px; background: var(--blue); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px;" onclick="showScreen('pricematch-requests')">View Offers</button>
+          </div>
+
+          <!-- Offer 2 -->
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px; cursor: pointer;" onclick="showScreen('pricematch-offer-detail-2')">
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--text);">Gutter Cleaning</div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">Maintenance</div>
+              </div>
+              <span style="background: #ECFDF5; color: var(--green); padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">Active</span>
+            </div>
+            <div style="font-size: 18px; font-weight: 800; color: var(--blue); margin-bottom: 8px;">$249</div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;"><i class="fas fa-map-pin" style="margin-right: 4px;"></i> 12 / 20 slots</div>
+            <div style="font-size: 11px; color: #D4A574; margin-bottom: 12px;"><i class="fas fa-calendar" style="margin-right: 4px;"></i> <strong>Expires in 14 days</strong></div>
+            <button style="width: 100%; padding: 10px; background: var(--blue); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px;" onclick="showScreen('pricematch-requests')">View Offers</button>
+          </div>
+
+          <!-- Offer 3 -->
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px; cursor: pointer;" onclick="showScreen('pricematch-offer-detail-3')">
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--text);">HVAC Tune-Up</div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">HVAC</div>
+              </div>
+              <span style="background: #ECFDF5; color: var(--green); padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">Active</span>
+            </div>
+            <div style="font-size: 18px; font-weight: 800; color: var(--blue); margin-bottom: 8px;">$129</div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;"><i class="fas fa-map-pin" style="margin-right: 4px;"></i> 8 / 15 slots</div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 12px;"><i class="fas fa-calendar" style="margin-right: 4px;"></i> Expires in 21 days</div>
+            <button style="width: 100%; padding: 10px; background: var(--blue); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px;" onclick="showScreen('pricematch-requests')">View Offers</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRICEMATCH REQUESTS (Mobile) -->
+    <div class="screen" id="screen-pricematch-requests">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('home')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Requests</h2>
+        <div class="alert-badge" style="position: absolute; right: 20px; top: 14px;">2</div>
+      </div>
+
+      <div style="display: flex; gap: 8px; padding: 12px 20px; overflow-x: auto;">
+        <button class="filter-btn" style="background: var(--blue); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">All</button>
+        <button class="filter-btn" style="background: transparent; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">New</button>
+        <button class="filter-btn" style="background: transparent; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">In Review</button>
+      </div>
+
+      <div class="scroll-content">
+        <div style="padding: 16px 20px 20px;">
+          <!-- Request 1 - Strong Fit -->
+          <div class="card" style="margin-bottom: 12px; border-left: 4px solid var(--green); cursor: pointer;" onclick="showScreen('pricematch-request-detail-1')">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+              <div style="font-size: 13px; font-weight: 700; color: var(--text);">Request #1241</div>
+              <span style="background: #ECFDF5; color: var(--green); padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">Strong Fit</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;">Shower Remodel</div>
+            <div style="font-size: 11px; color: var(--text-secondary);"><i class="fas fa-map-pin" style="margin-right: 4px;"></i> Beverly Hills, CA</div>
+          </div>
+
+          <!-- Request 2 - Possible Fit -->
+          <div class="card" style="margin-bottom: 12px; border-left: 4px solid #D4A574; cursor: pointer;" onclick="showScreen('pricematch-request-detail-2')">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+              <div style="font-size: 13px; font-weight: 700; color: var(--text);">Request #1242</div>
+              <span style="background: #FFF3E0; color: #C86F1A; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">Possible Fit</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;">Gutter Cleaning + Repairs</div>
+            <div style="font-size: 11px; color: var(--text-secondary);"><i class="fas fa-map-pin" style="margin-right: 4px;"></i> Santa Monica, CA</div>
+          </div>
+
+          <!-- Request 3 - Needs Review -->
+          <div class="card" style="margin-bottom: 12px; border-left: 4px solid #C94949; cursor: pointer;" onclick="showScreen('pricematch-request-detail-4')">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+              <div style="font-size: 13px; font-weight: 700; color: var(--text);">Request #1243</div>
+              <span style="background: #FEF2F2; color: #C94949; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">Needs Review</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;">Water Damage Assessment</div>
+            <div style="font-size: 11px; color: var(--text-secondary);"><i class="fas fa-map-pin" style="margin-right: 4px;"></i> Pasadena, CA</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRICEMATCH JOBS (Mobile) -->
+    <div class="screen" id="screen-pricematch-jobs">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('home')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Jobs</h2>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div style="display: flex; gap: 0; border-bottom: 1px solid var(--border); overflow-x: auto; padding: 0 20px;">
+        <button onclick="document.querySelectorAll('[data-mobile-job-tab]').forEach(el => el.style.display='none'); document.getElementById('mobile-jobs-active-tab').style.display='block';" style="flex: 1; padding: 12px; border: none; background: transparent; color: var(--text); font-weight: 600; font-size: 13px; border-bottom: 2px solid var(--blue); cursor: pointer; white-space: nowrap;">Active (6)</button>
+        <button onclick="document.querySelectorAll('[data-mobile-job-tab]').forEach(el => el.style.display='none'); document.getElementById('mobile-jobs-potential-tab').style.display='block';" style="flex: 1; padding: 12px; border: none; background: transparent; color: var(--text-secondary); font-weight: 600; font-size: 13px; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap;">Potential (5)</button>
+        <button onclick="document.querySelectorAll('[data-mobile-job-tab]').forEach(el => el.style.display='none'); document.getElementById('mobile-jobs-past-tab').style.display='block';" style="flex: 1; padding: 12px; border: none; background: transparent; color: var(--text-secondary); font-weight: 600; font-size: 13px; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap;">Past (3)</button>
+      </div>
+
+      <div class="scroll-content">
+        <!-- Active Jobs Tab -->
+        <div id="mobile-jobs-active-tab" data-mobile-job-tab style="display: block; padding: 16px 20px 20px;">
+          <div class="card" style="margin-bottom: 12px; cursor: pointer;" onclick="showScreen('job-active-detail-1')">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Shower Replacement</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Price</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--blue);">$7,500</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Status</div>
+                <div style="font-size: 12px; font-weight: 700; color: var(--blue);">In Progress</div>
+              </div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary);"><i class="fas fa-map-pin" style="margin-right: 4px;"></i> Beverly Hills, CA</div>
+          </div>
+
+          <div class="card" style="margin-bottom: 12px; cursor: pointer;" onclick="showScreen('job-active-detail-2')">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Gutter Cleaning</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Price</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--blue);">$249</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Status</div>
+                <div style="font-size: 12px; font-weight: 700; color: var(--blue);">In Progress</div>
+              </div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary);"><i class="fas fa-map-pin" style="margin-right: 4px;"></i> Santa Monica, CA</div>
+          </div>
+
+          <div class="card" style="margin-bottom: 12px; cursor: pointer;" onclick="showScreen('job-active-detail-3')">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Plumbing Repair</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Price</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--blue);">$480</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Status</div>
+                <div style="font-size: 12px; font-weight: 700; color: var(--blue);">In Progress</div>
+              </div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary);"><i class="fas fa-map-pin" style="margin-right: 4px;"></i> Los Angeles, CA</div>
+          </div>
+
+          <div class="card" style="margin-bottom: 12px; cursor: pointer;" onclick="showScreen('job-active-detail-4')">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px;">HVAC Service</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Price</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--blue);">$350</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Status</div>
+                <div style="font-size: 12px; font-weight: 700; color: var(--blue);">In Progress</div>
+              </div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary);"><i class="fas fa-map-pin" style="margin-right: 4px;"></i> Pasadena, CA</div>
+          </div>
+
+          <div class="card" style="margin-bottom: 12px; cursor: pointer;" onclick="showScreen('job-active-detail-5')">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Electrical Work</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Price</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--blue);">$620</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Status</div>
+                <div style="font-size: 12px; font-weight: 700; color: var(--blue);">In Progress</div>
+              </div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary);"><i class="fas fa-map-pin" style="margin-right: 4px;"></i> West Hollywood, CA</div>
+          </div>
+
+          <div class="card" style="margin-bottom: 12px; cursor: pointer;" onclick="showScreen('job-active-detail-6')">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Roof Inspection</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Price</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--blue);">$450</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Status</div>
+                <div style="font-size: 12px; font-weight: 700; color: var(--blue);">In Progress</div>
+              </div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary);"><i class="fas fa-map-pin" style="margin-right: 4px;"></i> Long Beach, CA</div>
+          </div>
+        </div>
+
+        <!-- Potential Jobs Tab -->
+        <div id="mobile-jobs-potential-tab" data-mobile-job-tab style="display: none; padding: 16px 20px 20px;">
+          <div class="card" style="margin-bottom: 12px; border-left: 4px solid var(--orange); cursor: pointer;" onclick="showScreen('job-bid-detail-1')">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Kitchen Remodel</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Bid</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--blue);">$4,200</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Status</div>
+                <div style="font-size: 11px; font-weight: 700; color: var(--orange);">Bid Sent</div>
+              </div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary);"><i class="fas fa-map-pin" style="margin-right: 4px;"></i> Culver City, CA</div>
+          </div>
+
+          <div class="card" style="margin-bottom: 12px; border-left: 4px solid var(--orange); cursor: pointer;" onclick="showScreen('job-bid-detail-2')">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Deck Building</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Bid</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--blue);">$2,800</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Status</div>
+                <div style="font-size: 11px; font-weight: 700; color: var(--orange);">Awaiting Approval</div>
+              </div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary);"><i class="fas fa-map-pin" style="margin-right: 4px;"></i> Manhattan Beach, CA</div>
+          </div>
+
+          <div class="card" style="margin-bottom: 12px; border-left: 4px solid var(--orange); cursor: pointer;" onclick="showScreen('job-bid-detail-3')">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Basement Finishing</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Bid</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--blue);">$5,600</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Status</div>
+                <div style="font-size: 11px; font-weight: 700; color: var(--orange);">Bid Sent</div>
+              </div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary);"><i class="fas fa-map-pin" style="margin-right: 4px;"></i> Torrance, CA</div>
+          </div>
+
+          <div class="card" style="margin-bottom: 12px; border-left: 4px solid var(--orange); cursor: pointer;" onclick="showScreen('job-bid-detail-4')">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Fence Repair</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Bid</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--blue);">$890</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Status</div>
+                <div style="font-size: 11px; font-weight: 700; color: var(--orange);">Awaiting Approval</div>
+              </div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary);"><i class="fas fa-map-pin" style="margin-right: 4px;"></i> Redondo Beach, CA</div>
+          </div>
+
+          <div class="card" style="margin-bottom: 12px; border-left: 4px solid var(--orange); cursor: pointer;" onclick="showScreen('job-bid-detail-5')">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Pool Cleaning Service</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Bid</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--blue);">$340</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Status</div>
+                <div style="font-size: 11px; font-weight: 700; color: var(--orange);">Bid Sent</div>
+              </div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary);"><i class="fas fa-map-pin" style="margin-right: 4px;"></i> El Segundo, CA</div>
+          </div>
+        </div>
+
+        <!-- Past Jobs Tab -->
+        <div id="mobile-jobs-past-tab" data-mobile-job-tab style="display: none; padding: 16px 20px 20px;">
+          <div class="card" style="margin-bottom: 12px; opacity: 0.8; cursor: pointer;" onclick="showScreen('job-closed-detail-1')">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Sink Installation</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Price</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--green);">$580</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Completed</div>
+                <div style="font-size: 11px; font-weight: 700; color: var(--green);">✓</div>
+              </div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary);"><i class="fas fa-calendar" style="margin-right: 4px;"></i> Feb 28, 2026</div>
+          </div>
+
+          <div class="card" style="margin-bottom: 12px; opacity: 0.8; cursor: pointer;" onclick="showScreen('job-closed-detail-2')">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Cabinet Repair</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Price</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--green);">$210</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Completed</div>
+                <div style="font-size: 11px; font-weight: 700; color: var(--green);">✓</div>
+              </div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary);"><i class="fas fa-calendar" style="margin-right: 4px;"></i> Feb 15, 2026</div>
+          </div>
+
+          <div class="card" style="margin-bottom: 12px; opacity: 0.8; cursor: pointer;" onclick="showScreen('job-closed-detail-3')">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Window Cleaning</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Price</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--green);">$160</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Completed</div>
+                <div style="font-size: 11px; font-weight: 700; color: var(--green);">✓</div>
+              </div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary);"><i class="fas fa-calendar" style="margin-right: 4px;"></i> Feb 1, 2026</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVE JOB DETAIL SCREENS (6) -->
+    <!-- ACTIVE JOB DETAIL 1: Shower Replacement -->
+    <div class="screen" id="screen-job-active-detail-1">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('pricematch-jobs')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Shower Replacement</h2>
+      </div>
+      <div class="scroll-content" style="padding-bottom: 20px;">
+        <div style="padding: 16px 20px;">
+          <!-- Job Details Card -->
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Job Details</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+              <div><span style="color: var(--text-secondary);">Homeowner</span><div style="font-weight: 700; color: var(--text);">Sarah Chen</div></div>
+              <div><span style="color: var(--text-secondary);">Status</span><div style="font-weight: 700; color: var(--blue);">In Progress</div></div>
+              <div><span style="color: var(--text-secondary);">Trade</span><div style="font-weight: 700; color: var(--text);">Plumbing</div></div>
+              <div><span style="color: var(--text-secondary);">Budget</span><div style="font-weight: 700; color: var(--blue);">$1,800</div></div>
+            </div>
+          </div>
+
+          <!-- Project Description -->
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Project Description</div>
+            <div style="font-size: 13px; color: var(--text); line-height: 1.6;">Replace existing bathtub shower enclosure with new glass shower surround. Remove old tiles, prepare wall, install new unit with plumbing connections.</div>
+          </div>
+
+          <!-- Photos -->
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+              <span>Photos</span>
+              <button style="padding: 4px 8px; background: var(--blue); color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 11px;" onclick="toggleJobUpload('ja1-photos')">+ Add</button>
+            </div>
+            <div id="ja1-photos" style="display: none; margin-bottom: 12px; padding: 12px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); font-size: 12px;">
+              <div style="margin-bottom: 8px;"><label><input type="radio" name="ja1-photo" value="Before" checked> Before</label> <label style="margin-left: 12px;"><input type="radio" name="ja1-photo" value="During"> During</label></div>
+              <input type="file" accept="image/*" style="width: 100%; font-size: 11px; margin-bottom: 8px;">
+              <button style="padding: 6px 12px; background: var(--blue); color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer;">Upload</button>
+              <button onclick="toggleJobUpload('ja1-photos')" style="padding: 6px 12px; background: transparent; border: 1px solid var(--border); color: var(--text-secondary); border-radius: 4px; font-size: 11px; cursor: pointer; margin-left: 4px;">Cancel</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; min-height: 60px;">
+              <div style="aspect-ratio: 1; border: 1px dashed var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 20px; cursor: pointer;">+</div>
+            </div>
+          </div>
+
+          <!-- Documents -->
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+              <span>Documents</span>
+              <button style="padding: 4px 8px; background: var(--blue); color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 11px;" onclick="toggleJobUpload('ja1-docs')">+ Add</button>
+            </div>
+            <div id="ja1-docs-upload" style="display: none; margin-bottom: 12px; padding: 12px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); font-size: 11px;">
+              <div style="margin-bottom: 8px;"><label><input type="radio" name="ja1-doc" value="Bid"> Bid</label></div>
+              <div style="margin-bottom: 8px;"><label><input type="radio" name="ja1-doc" value="Invoice"> Invoice</label></div>
+              <input type="file" style="width: 100%; font-size: 11px; margin-bottom: 8px;">
+              <button style="padding: 6px 12px; background: var(--blue); color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer;">Upload</button>
+              <button onclick="toggleJobUpload('ja1-docs')" style="padding: 6px 12px; background: transparent; border: 1px solid var(--border); color: var(--text-secondary); border-radius: 4px; font-size: 11px; cursor: pointer; margin-left: 4px;">Cancel</button>
+            </div>
+            <div id="ja1-docs-list" style="font-size: 12px; color: var(--text-secondary); font-style: italic;">No documents yet.</div>
+          </div>
+
+          <!-- Conversation -->
+          <div class="card">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px;">Messages</div>
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; max-height: 150px; overflow-y: auto;">
+              <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <div style="background: var(--blue-light); border-radius: 8px; padding: 8px 10px; max-width: 85%; font-size: 12px; color: var(--text);">On my way now!</div>
+                <div style="width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, var(--orange), var(--green)); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: 700;">Y</div>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--blue); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: 700;">S</div>
+                <div style="background: var(--bg); border-radius: 8px; padding: 8px 10px; max-width: 85%; font-size: 12px; color: var(--text);">Great! Door is unlocked.</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <input type="text" placeholder="Message..." style="flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; background: var(--bg); color: var(--text);">
+              <button style="padding: 8px 12px; background: var(--blue); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600;">Send</button>
+            </div>
+          </div>
+
+          <div style="height: 20px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVE JOB DETAIL 2: Gutter Cleaning -->
+    <div class="screen" id="screen-job-active-detail-2">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('pricematch-jobs')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Gutter Cleaning</h2>
+      </div>
+      <div class="scroll-content" style="padding-bottom: 20px;">
+        <div style="padding: 16px 20px;">
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Job Details</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+              <div><span style="color: var(--text-secondary);">Homeowner</span><div style="font-weight: 700; color: var(--text);">Maria Garcia</div></div>
+              <div><span style="color: var(--text-secondary);">Status</span><div style="font-weight: 700; color: var(--blue);">In Progress</div></div>
+              <div><span style="color: var(--text-secondary);">Trade</span><div style="font-weight: 700; color: var(--text);">Roofing</div></div>
+              <div><span style="color: var(--text-secondary);">Budget</span><div style="font-weight: 700; color: var(--blue);">$249</div></div>
+            </div>
+          </div>
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Description</div>
+            <div style="font-size: 13px; color: var(--text); line-height: 1.6;">Clean all gutters and downspouts. Remove leaves and debris. Check for proper drainage. Flush system with water.</div>
+          </div>
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px;">Photos</div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+              <div style="aspect-ratio: 1; border: 1px dashed var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 20px; cursor: pointer;">+</div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px;">Messages</div>
+            <div style="font-size: 12px; color: var(--text-secondary); font-style: italic;">No messages yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVE JOB DETAIL 3: Plumbing Repair -->
+    <div class="screen" id="screen-job-active-detail-3">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('pricematch-jobs')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Plumbing Repair</h2>
+      </div>
+      <div class="scroll-content" style="padding-bottom: 20px;">
+        <div style="padding: 16px 20px;">
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Job Details</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+              <div><span style="color: var(--text-secondary);">Homeowner</span><div style="font-weight: 700; color: var(--text);">Robert Martinez</div></div>
+              <div><span style="color: var(--text-secondary);">Status</span><div style="font-weight: 700; color: var(--blue);">In Progress</div></div>
+              <div><span style="color: var(--text-secondary);">Trade</span><div style="font-weight: 700; color: var(--text);">Plumbing</div></div>
+              <div><span style="color: var(--text-secondary);">Budget</span><div style="font-weight: 700; color: var(--blue);">$480</div></div>
+            </div>
+          </div>
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Description</div>
+            <div style="font-size: 13px; color: var(--text); line-height: 1.6;">Fix leaking kitchen sink. Replace worn P-trap and supply lines. Test for proper drainage.</div>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px;">Photos</div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+              <div style="aspect-ratio: 1; border: 1px dashed var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 20px; cursor: pointer;">+</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVE JOB DETAIL 4: HVAC Service -->
+    <div class="screen" id="screen-job-active-detail-4">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('pricematch-jobs')"><i class="fas fa-arrow-left"></i></button>
+        <h2>HVAC Service</h2>
+      </div>
+      <div class="scroll-content" style="padding-bottom: 20px;">
+        <div style="padding: 16px 20px;">
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Job Details</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+              <div><span style="color: var(--text-secondary);">Homeowner</span><div style="font-weight: 700; color: var(--text);">Lisa Anderson</div></div>
+              <div><span style="color: var(--text-secondary);">Status</span><div style="font-weight: 700; color: var(--blue);">In Progress</div></div>
+              <div><span style="color: var(--text-secondary);">Trade</span><div style="font-weight: 700; color: var(--text);">HVAC</div></div>
+              <div><span style="color: var(--text-secondary);">Budget</span><div style="font-weight: 700; color: var(--blue);">$350</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Description</div>
+            <div style="font-size: 13px; color: var(--text); line-height: 1.6;">Spring AC maintenance. Inspect compressor, replace filter, clean condenser coils, test refrigerant levels.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVE JOB DETAIL 5: Electrical Work -->
+    <div class="screen" id="screen-job-active-detail-5">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('pricematch-jobs')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Electrical Work</h2>
+      </div>
+      <div class="scroll-content" style="padding-bottom: 20px;">
+        <div style="padding: 16px 20px;">
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Job Details</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+              <div><span style="color: var(--text-secondary);">Homeowner</span><div style="font-weight: 700; color: var(--text);">Tom Williams</div></div>
+              <div><span style="color: var(--text-secondary);">Status</span><div style="font-weight: 700; color: var(--blue);">In Progress</div></div>
+              <div><span style="color: var(--text-secondary);">Trade</span><div style="font-weight: 700; color: var(--text);">Electrical</div></div>
+              <div><span style="color: var(--text-secondary);">Budget</span><div style="font-weight: 700; color: var(--blue);">$620</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Description</div>
+            <div style="font-size: 13px; color: var(--text); line-height: 1.6;">Install new ceiling outlets and light fixtures. Run new conduit. Upgrade wiring to code. Full inspection included.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVE JOB DETAIL 6: Roof Inspection -->
+    <div class="screen" id="screen-job-active-detail-6">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('pricematch-jobs')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Roof Inspection</h2>
+      </div>
+      <div class="scroll-content" style="padding-bottom: 20px;">
+        <div style="padding: 16px 20px;">
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Job Details</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+              <div><span style="color: var(--text-secondary);">Homeowner</span><div style="font-weight: 700; color: var(--text);">James Powell</div></div>
+              <div><span style="color: var(--text-secondary);">Status</span><div style="font-weight: 700; color: var(--blue);">In Progress</div></div>
+              <div><span style="color: var(--text-secondary);">Trade</span><div style="font-weight: 700; color: var(--text);">Roofing</div></div>
+              <div><span style="color: var(--text-secondary);">Budget</span><div style="font-weight: 700; color: var(--blue);">$450</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Description</div>
+            <div style="font-size: 13px; color: var(--text); line-height: 1.6;">Complete roof inspection. Check shingles, flashing, gutters, and attic ventilation. Generate detailed report with photos.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POTENTIAL/BID JOB DETAIL SCREENS (5) -->
+    <!-- BID JOB DETAIL 1: Kitchen Remodel -->
+    <div class="screen" id="screen-job-bid-detail-1">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('pricematch-jobs')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Kitchen Remodel</h2>
+      </div>
+      <div class="scroll-content" style="padding-bottom: 20px;">
+        <div style="padding: 16px 20px;">
+          <div class="card" style="margin-bottom: 12px; background: #FEF8F0; border-left: 4px solid var(--orange);">
+            <div style="font-size: 12px; font-weight: 700; color: var(--orange); margin-bottom: 4px;">⏳ Bid Sent</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">Awaiting homeowner response</div>
+          </div>
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Bid Details</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+              <div><span style="color: var(--text-secondary);">Homeowner</span><div style="font-weight: 700; color: var(--text);">Patricia Davis</div></div>
+              <div><span style="color: var(--text-secondary);">Bid Amount</span><div style="font-weight: 700; color: var(--blue);">$4,200</div></div>
+              <div><span style="color: var(--text-secondary);">Trade</span><div style="font-weight: 700; color: var(--text);">General Contracting</div></div>
+              <div><span style="color: var(--text-secondary);">Status</span><div style="font-weight: 700; color: var(--orange);">Bid Sent</div></div>
+            </div>
+          </div>
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Scope</div>
+            <div style="font-size: 13px; color: var(--text); line-height: 1.6;">Complete kitchen remodel: new cabinets, countertops, appliances, flooring, and lighting. Includes demolition and disposal.</div>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px;">Messages</div>
+            <div style="font-size: 12px; color: var(--text-secondary); font-style: italic;">No messages yet. Waiting for homeowner response.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BID JOB DETAIL 2: Deck Building -->
+    <div class="screen" id="screen-job-bid-detail-2">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('pricematch-jobs')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Deck Building</h2>
+      </div>
+      <div class="scroll-content" style="padding-bottom: 20px;">
+        <div style="padding: 16px 20px;">
+          <div class="card" style="margin-bottom: 12px; background: #FEF8F0; border-left: 4px solid var(--orange);">
+            <div style="font-size: 12px; font-weight: 700; color: var(--orange); margin-bottom: 4px;">⏳ Awaiting Approval</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">Homeowner reviewing bid</div>
+          </div>
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Bid Details</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+              <div><span style="color: var(--text-secondary);">Homeowner</span><div style="font-weight: 700; color: var(--text);">Christopher Lee</div></div>
+              <div><span style="color: var(--text-secondary);">Bid Amount</span><div style="font-weight: 700; color: var(--blue);">$2,800</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Scope</div>
+            <div style="font-size: 13px; color: var(--text); line-height: 1.6;">Build new 12x16 pressure-treated wood deck. Includes foundation, framing, decking, railings, and stairs.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BID JOB DETAIL 3: Basement Finishing -->
+    <div class="screen" id="screen-job-bid-detail-3">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('pricematch-jobs')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Basement Finishing</h2>
+      </div>
+      <div class="scroll-content" style="padding-bottom: 20px;">
+        <div style="padding: 16px 20px;">
+          <div class="card" style="margin-bottom: 12px; background: #FEF8F0; border-left: 4px solid var(--orange);">
+            <div style="font-size: 12px; font-weight: 700; color: var(--orange); margin-bottom: 4px;">📋 Bid Sent</div>
+          </div>
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Bid Details</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+              <div><span style="color: var(--text-secondary);">Homeowner</span><div style="font-weight: 700; color: var(--text);">Monica Taylor</div></div>
+              <div><span style="color: var(--text-secondary);">Bid Amount</span><div style="font-weight: 700; color: var(--blue);">$5,600</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Scope</div>
+            <div style="font-size: 13px; color: var(--text); line-height: 1.6;">Basement finishing: framing, drywall, flooring, lighting, HVAC, and bathroom. Waterproofing and egress window included.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BID JOB DETAIL 4: Fence Repair -->
+    <div class="screen" id="screen-job-bid-detail-4">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('pricematch-jobs')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Fence Repair</h2>
+      </div>
+      <div class="scroll-content" style="padding-bottom: 20px;">
+        <div style="padding: 16px 20px;">
+          <div class="card" style="margin-bottom: 12px; background: #FEF8F0; border-left: 4px solid var(--orange);">
+            <div style="font-size: 12px; font-weight: 700; color: var(--orange); margin-bottom: 4px;">⏳ Awaiting Approval</div>
+          </div>
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Bid Details</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+              <div><span style="color: var(--text-secondary);">Homeowner</span><div style="font-weight: 700; color: var(--text);">Amanda White</div></div>
+              <div><span style="color: var(--text-secondary);">Bid Amount</span><div style="font-weight: 700; color: var(--blue);">$890</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Scope</div>
+            <div style="font-size: 13px; color: var(--text); line-height: 1.6;">Repair damaged fence sections. Replace 4 boards, reset posts, and stain entire fence. Two days of labor.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BID JOB DETAIL 5: Pool Cleaning Service -->
+    <div class="screen" id="screen-job-bid-detail-5">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('pricematch-jobs')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Pool Cleaning Service</h2>
+      </div>
+      <div class="scroll-content" style="padding-bottom: 20px;">
+        <div style="padding: 16px 20px;">
+          <div class="card" style="margin-bottom: 12px; background: #FEF8F0; border-left: 4px solid var(--orange);">
+            <div style="font-size: 12px; font-weight: 700; color: var(--orange); margin-bottom: 4px;">📋 Bid Sent</div>
+          </div>
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Bid Details</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+              <div><span style="color: var(--text-secondary);">Homeowner</span><div style="font-weight: 700; color: var(--text);">Jennifer Brown</div></div>
+              <div><span style="color: var(--text-secondary);">Bid Amount</span><div style="font-weight: 700; color: var(--blue);">$340</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Scope</div>
+            <div style="font-size: 13px; color: var(--text); line-height: 1.6;">Monthly pool cleaning and maintenance. Skimming, vacuuming, brush walls and tiles, balance chemicals, clean filter.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAST/CLOSED JOB DETAIL SCREENS (3) -->
+    <!-- CLOSED JOB DETAIL 1: Sink Installation -->
+    <div class="screen" id="screen-job-closed-detail-1">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('pricematch-jobs')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Sink Installation</h2>
+      </div>
+      <div class="scroll-content" style="padding-bottom: 20px;">
+        <div style="padding: 16px 20px;">
+          <div class="card" style="margin-bottom: 12px; background: #ECFDF5; border-left: 4px solid var(--green);">
+            <div style="font-size: 12px; font-weight: 700; color: var(--green); margin-bottom: 4px;">✓ Completed</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">Finished Feb 28, 2026</div>
+          </div>
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Job Details</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+              <div><span style="color: var(--text-secondary);">Homeowner</span><div style="font-weight: 700; color: var(--text);">Karen Sullivan</div></div>
+              <div><span style="color: var(--text-secondary);">Amount</span><div style="font-weight: 700; color: var(--green);">$580 ✓</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Description</div>
+            <div style="font-size: 13px; color: var(--text); line-height: 1.6;">Install new pedestal sink in guest bathroom. Remove old vanity, prepare plumbing, install faucet, test all connections.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLOSED JOB DETAIL 2: Cabinet Repair -->
+    <div class="screen" id="screen-job-closed-detail-2">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('pricematch-jobs')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Cabinet Repair</h2>
+      </div>
+      <div class="scroll-content" style="padding-bottom: 20px;">
+        <div style="padding: 16px 20px;">
+          <div class="card" style="margin-bottom: 12px; background: #ECFDF5; border-left: 4px solid var(--green);">
+            <div style="font-size: 12px; font-weight: 700; color: var(--green); margin-bottom: 4px;">✓ Completed</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">Finished Feb 15, 2026</div>
+          </div>
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Job Details</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+              <div><span style="color: var(--text-secondary);">Homeowner</span><div style="font-weight: 700; color: var(--text);">Richard Harris</div></div>
+              <div><span style="color: var(--text-secondary);">Amount</span><div style="font-weight: 700; color: var(--green);">$210 ✓</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Description</div>
+            <div style="font-size: 13px; color: var(--text); line-height: 1.6;">Repair kitchen cabinet doors and drawers. Fix misaligned hinges, replace handles, refinish damaged edges. All doors now functioning smoothly.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLOSED JOB DETAIL 3: Window Cleaning -->
+    <div class="screen" id="screen-job-closed-detail-3">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('pricematch-jobs')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Window Cleaning</h2>
+      </div>
+      <div class="scroll-content" style="padding-bottom: 20px;">
+        <div style="padding: 16px 20px;">
+          <div class="card" style="margin-bottom: 12px; background: #ECFDF5; border-left: 4px solid var(--green);">
+            <div style="font-size: 12px; font-weight: 700; color: var(--green); margin-bottom: 4px;">✓ Completed</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">Finished Feb 1, 2026</div>
+          </div>
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Job Details</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px;">
+              <div><span style="color: var(--text-secondary);">Homeowner</span><div style="font-weight: 700; color: var(--text);">Susan Clark</div></div>
+              <div><span style="color: var(--text-secondary);">Amount</span><div style="font-weight: 700; color: var(--green);">$160 ✓</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Description</div>
+            <div style="font-size: 13px; color: var(--text); line-height: 1.6;">Clean all interior and exterior windows. 24 windows total. Includes frames and sills. Streak-free finish guaranteed.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRICEMATCH PERFORMANCE (Mobile) -->
+    <div class="screen" id="screen-pricematch-performance">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('home')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Performance</h2>
+      </div>
+
+      <div class="scroll-content">
+        <div style="padding: 16px 20px 20px;">
+          <!-- KPI Cards -->
+          <div class="card" style="margin-bottom: 12px; background: linear-gradient(135deg, #1F3A5F, #27A570); color: white;">
+            <div style="font-size: 11px; opacity: 0.9; margin-bottom: 4px;">Total Revenue</div>
+            <div style="font-size: 24px; font-weight: 800;">$12,847</div>
+            <div style="font-size: 11px; opacity: 0.8; margin-top: 4px;">↑ 23% from last month</div>
+          </div>
+
+          <div class="card" style="margin-bottom: 12px; background: linear-gradient(135deg, #27A570, #1F3A5F); color: white;">
+            <div style="font-size: 11px; opacity: 0.9; margin-bottom: 4px;">Completed Jobs</div>
+            <div style="font-size: 24px; font-weight: 800;">18</div>
+            <div style="font-size: 11px; opacity: 0.8; margin-top: 4px;">4.2★ average rating</div>
+          </div>
+
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Conversion Rate</div>
+            <div style="font-size: 24px; font-weight: 800; color: #D4A574;">34%</div>
+            <div style="width: 100%; height: 6px; background: var(--border); border-radius: 3px; margin-top: 10px; overflow: hidden;">
+              <div style="width: 34%; height: 100%; background: #D4A574;"></div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Pricing Accuracy</div>
+            <div style="font-size: 24px; font-weight: 800; color: var(--blue);">92.3%</div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">Quoted vs actual within 8%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRICEMATCH CREATE OFFER (Mobile) -->
+    <div class="screen" id="screen-pricematch-create-offer">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('pricematch-offers')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Create Offer</h2>
+      </div>
+
+      <div class="scroll-content" style="padding-bottom: 100px;">
+        <form style="padding: 16px 20px;">
+          <div class="form-section">
+            <div class="form-section-title">Basic Info</div>
+            <div class="form-group">
+              <label>Offer Name *</label>
+              <input type="text" placeholder="e.g., Shower Replacement" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;">
+            </div>
+            <div class="form-group">
+              <label>Category *</label>
+              <select style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;">
+                <option>Bathroom</option>
+                <option>HVAC</option>
+                <option>Plumbing</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Fixed Price *</label>
+              <input type="number" placeholder="7500" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;">
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">Scope Language (REQUIRED)</div>
+            <div class="form-group">
+              <label>This Price Assumes *</label>
+              <textarea placeholder="List 4-5 baseline conditions..." style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; min-height: 80px;"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Adjustments May Apply For *</label>
+              <textarea placeholder="List 4-5 variable factors..." style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; min-height: 80px;"></textarea>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">Service Details</div>
+            <div class="form-group">
+              <label>Service Zip Codes *</label>
+              <input type="text" placeholder="90210, 90211, 90212" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;">
+            </div>
+            <div class="form-group">
+              <label>Concurrent Slots *</label>
+              <input type="number" placeholder="5" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;">
+            </div>
+            <div class="form-group">
+              <label>Expiration Date *</label>
+              <input type="date" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;">
+            </div>
+          </div>
+
+          <div style="height: 20px;"></div>
+        </form>
+      </div>
+
+      <div class="sticky-save">
+        <button class="btn-cancel" onclick="showScreen('pricematch-offers')">Cancel</button>
+        <button class="btn-save" onclick="alert('Offer published!')">Publish</button>
+      </div>
+    </div>
+
+    <!-- PRICEMATCH REQUEST DETAIL 1 (Mobile) -->
+    <div class="screen" id="screen-pricematch-request-detail-1">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('pricematch-requests')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Request #1241</h2>
+      </div>
+
+      <div class="scroll-content">
+        <div style="padding: 16px 20px;">
+          <div class="card" style="margin-bottom: 12px; background: #ECFDF5; border-left: 4px solid var(--green);">
+            <div style="font-size: 13px; font-weight: 700; color: var(--green); margin-bottom: 4px;">✓ STRONG FIT</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">All assumptions met - ready to accept</div>
+          </div>
+
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Shower Remodel</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">
+              <i class="fas fa-map-pin" style="margin-right: 4px;"></i> Beverly Hills, CA
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 2px;">
+              <strong>Your Offer Price:</strong> $7,500
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary);">
+              <strong>Homeowner Budget:</strong> $6,000–$9,000
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 10px;">Homeowner Responses:</div>
+            <div style="display: flex; align-items: center; margin-bottom: 8px;">
+              <i class="fas fa-check-circle" style="color: var(--green); margin-right: 8px;"></i>
+              <span style="font-size: 12px;">Single-story home</span>
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 8px;">
+              <i class="fas fa-check-circle" style="color: var(--green); margin-right: 8px;"></i>
+              <span style="font-size: 12px;">No structural issues</span>
+            </div>
+            <div style="display: flex; align-items: center;">
+              <i class="fas fa-check-circle" style="color: var(--green); margin-right: 8px;"></i>
+              <span style="font-size: 12px;">Standard plumbing</span>
+            </div>
+          </div>
+
+          <div style="height: 20px;"></div>
+        </div>
+      </div>
+
+      <div class="sticky-save">
+        <button class="btn-cancel" onclick="showScreen('pricematch-requests')">Back</button>
+        <button class="btn-save" onclick="alert('Request accepted! Job created.')">Accept Request</button>
+      </div>
+    </div>
+
+    <!-- PRICEMATCH REQUEST DETAIL 4 (Mobile - Needs Review) -->
+    <div class="screen" id="screen-pricematch-request-detail-4">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('pricematch-requests')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Request #1243</h2>
+      </div>
+
+      <div class="scroll-content">
+        <div style="padding: 16px 20px;">
+          <div class="card" style="margin-bottom: 12px; background: #FEF2F2; border-left: 4px solid #C94949;">
+            <div style="font-size: 13px; font-weight: 700; color: #C94949; margin-bottom: 4px;">⚠ NEEDS REVIEW</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">Significant scope differences - inspection recommended</div>
+          </div>
+
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Water Damage Assessment</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">
+              <i class="fas fa-map-pin" style="margin-right: 4px;"></i> Pasadena, CA
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary);">
+              <strong>Estimated Additional Work:</strong> $500–$1,500+
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom: 12px; background: #FEF2F2;">
+            <div style="font-size: 12px; font-weight: 600; color: #C94949; margin-bottom: 10px;">Scope Concerns:</div>
+            <div style="display: flex; align-items: center; margin-bottom: 8px;">
+              <i class="fas fa-exclamation-circle" style="color: #C94949; margin-right: 8px;"></i>
+              <span style="font-size: 12px;">Water damage suspected</span>
+            </div>
+            <div style="display: flex; align-items: center;">
+              <i class="fas fa-exclamation-circle" style="color: #C94949; margin-right: 8px;"></i>
+              <span style="font-size: 12px;">Plumbing system older than expected</span>
+            </div>
+          </div>
+
+          <div style="height: 20px;"></div>
+        </div>
+      </div>
+
+      <div class="sticky-save">
+        <button class="btn-cancel" onclick="showScreen('pricematch-requests')">Back</button>
+        <button class="btn-save" onclick="alert('Inspection request sent!')">Request Inspection</button>
+      </div>
+    </div>
+
+    <!-- PLANS & BILLING (Mobile) -->
+    <div class="screen" id="screen-plans">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('profile')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Plans & Billing</h2>
+      </div>
+
+      <div class="scroll-content" style="padding-bottom: 40px;">
+        <div style="padding: 16px 20px;">
+          <div style="margin-bottom: 16px; padding: 12px; background: #ECFDF5; border-radius: 8px; border-left: 4px solid var(--green);">
+            <div style="font-size: 12px; font-weight: 700; color: var(--green);">✓ CURRENT PLAN</div>
+            <div style="font-size: 13px; font-weight: 700; color: var(--text);">Professional</div>
+            <div style="font-size: 11px; color: var(--text-secondary);">$79/month</div>
+          </div>
+
+          <!-- Starter Plan -->
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px;">Starter</div>
+            <div style="font-size: 18px; font-weight: 800; color: var(--blue); margin-bottom: 12px;">$29<span style="font-size: 12px; color: var(--text-secondary);">/month</span></div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">
+              • Up to 5 properties<br>
+              • Job logging<br>
+              • Photo uploads
+            </div>
+            <div style="background: var(--blue-light); padding: 8px; border-radius: 6px; margin-bottom: 10px;">
+              <div style="font-size: 11px; color: var(--blue); font-weight: 600;">✓ PriceMatch Offers <span style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--blue); color: var(--blue); font-size: 10px; font-weight: 700; margin-left: 4px; cursor: pointer;" onclick="showPriceMatchFeeInfo('starter')">i</span></div>
+              <div style="font-size: 10px; color: var(--text-secondary); margin-top: 4px;">Up to 3 concurrent offers • 7% success fee</div>
+            </div>
+            <button style="width: 100%; padding: 10px; background: var(--border); color: var(--text); border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px;">Downgrade</button>
+          </div>
+
+          <!-- Professional Plan (Current) -->
+          <div class="card" style="margin-bottom: 12px; border: 2px solid var(--green);">
+            <div style="font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px;">Professional</div>
+            <div style="font-size: 18px; font-weight: 800; color: var(--blue); margin-bottom: 12px;">$79<span style="font-size: 12px; color: var(--text-secondary);">/month</span></div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">
+              • Unlimited properties<br>
+              • Job logging & quotes<br>
+              • Advanced analytics
+            </div>
+            <div style="background: var(--blue-light); padding: 8px; border-radius: 6px; margin-bottom: 10px;">
+              <div style="font-size: 11px; color: var(--blue); font-weight: 600;">✓ PriceMatch Offers <span style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--blue); color: var(--blue); font-size: 10px; font-weight: 700; margin-left: 4px; cursor: pointer;" onclick="showPriceMatchFeeInfo('professional')">i</span></div>
+              <div style="font-size: 10px; color: var(--text-secondary); margin-top: 4px;">Up to 10 concurrent offers • 5% success fee</div>
+            </div>
+            <button style="width: 100%; padding: 10px; background: var(--green); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px;" disabled>Current Plan</button>
+          </div>
+
+          <!-- Enterprise Plan -->
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px;">Enterprise</div>
+            <div style="font-size: 18px; font-weight: 800; color: var(--blue); margin-bottom: 12px;">$199<span style="font-size: 12px; color: var(--text-secondary);">/month</span></div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">
+              • Unlimited everything<br>
+              • Custom integrations<br>
+              • 24/7 priority support
+            </div>
+            <div style="background: var(--blue-light); padding: 8px; border-radius: 6px; margin-bottom: 10px;">
+              <div style="font-size: 11px; color: var(--blue); font-weight: 600;">✓ PriceMatch Offers <span style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--blue); color: var(--blue); font-size: 10px; font-weight: 700; margin-left: 4px; cursor: pointer;" onclick="showPriceMatchFeeInfo('enterprise')">i</span></div>
+              <div style="font-size: 10px; color: var(--text-secondary); margin-top: 4px;">Unlimited offers • 4% success fee</div>
+            </div>
+            <button style="width: 100%; padding: 10px; background: var(--blue); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 12px;">Upgrade</button>
+          </div>
+
+          <div style="margin-top: 20px; padding: 12px; background: var(--blue-light); border-radius: 8px;">
+            <div style="font-size: 12px; color: var(--blue); font-weight: 600; margin-bottom: 6px;">Higher tier = Lower success fees</div>
+            <div style="font-size: 11px; color: var(--text-secondary);">Upgrade to save on PriceMatch fees and increase your offer capacity.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRICEMATCH JOB DETAIL (Mobile) -->
+    <div class="screen" id="screen-pricematch-job-detail-1">
+      <div class="page-header">
+        <button class="back-btn" onclick="showScreen('pricematch-jobs')"><i class="fas fa-arrow-left"></i></button>
+        <h2>Job Details</h2>
+      </div>
+
+      <div class="scroll-content">
+        <div style="padding: 16px 20px;">
+          <div class="card" style="margin-bottom: 12px;">
+            <div style="font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Shower Replacement</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+              <i class="fas fa-map-pin" style="margin-right: 4px;"></i> Beverly Hills, CA
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Offer Price</div>
+                <div style="font-size: 16px; font-weight: 800; color: var(--blue);">$7,500</div>
+              </div>
+              <div>
+                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Estimated Final</div>
+                <div style="font-size: 16px; font-weight: 800; color: var(--blue);">$8,120</div>
+              </div>
+            </div>
+
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">
+              <strong>Status:</strong> In Progress
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">
+              <strong>Scheduled:</strong> May 8, 2026
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary);">
+              <strong>Success Fee (5%):</strong> $406
+            </div>
+          </div>
+
+          <div style="height: 20px;"></div>
+        </div>
+      </div>
+
+      <div class="sticky-save">
+        <button class="btn-cancel" onclick="showScreen('pricematch-jobs')">Back</button>
+        <button class="btn-save" onclick="alert('Marked as complete!')">Mark Complete</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="showScreen('home')">
+      <i class="fas fa-home"></i>
+      <span>Home</span>
+    </div>
+    <div class="nav-item" onclick="showScreen('pricematch-offers')">
+      <i class="fas fa-tag"></i>
+      <span>PriceMatch</span>
+    </div>
+    <div class="nav-item" onclick="showScreen('pricematch-requests')">
+      <i class="fas fa-inbox"></i>
+      <span>Offer Requests</span>
+      <div class="alert-badge" style="display: block;">2</div>
+    </div>
+    <div class="nav-item" onclick="showScreen('alerts')">
+      <i class="fas fa-bell"></i>
+      <span>Alerts</span>
+      <div class="alert-badge">1</div>
+    </div>
+    <div class="nav-item" onclick="showScreen('profile')">
+      <i class="fas fa-user-circle"></i>
+      <span>Profile</span>
+    </div>
+  </div>
+</div>
+
+<script>
+let unreadAlerts = 1;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  let navMap = {
+    'home': 0,
+    'pricematch-offers': 1,
+    'pricematch-requests': 2,
+    'alerts': 3,
+    'profile': 4,
+    // Detail screens
+    'pricematch-offer-detail-1': 1,
+    'pricematch-offer-detail-2': 1,
+    'pricematch-offer-detail-3': 1,
+    'pricematch-request-detail-1': 2,
+    'pricematch-request-detail-2': 2,
+    'pricematch-request-detail-4': 2,
+    'pricematch-jobs': 1,
+    'pricematch-job-detail-1': 1,
+    'pricematch-performance': 1,
+    'pricematch-create-offer': 1,
+    // Active job details (6)
+    'job-active-detail-1': 0,
+    'job-active-detail-2': 0,
+    'job-active-detail-3': 0,
+    'job-active-detail-4': 0,
+    'job-active-detail-5': 0,
+    'job-active-detail-6': 0,
+    // Bid job details (5)
+    'job-bid-detail-1': 0,
+    'job-bid-detail-2': 0,
+    'job-bid-detail-3': 0,
+    'job-bid-detail-4': 0,
+    'job-bid-detail-5': 0,
+    // Closed job details (3)
+    'job-closed-detail-1': 0,
+    'job-closed-detail-2': 0,
+    'job-closed-detail-3': 0,
+    // Other screens
+    'scan': 0,
+    'properties': 0,
+    'jobs-active': 0,
+    'jobs-pending': 0,
+    'jobs-new': 0,
+    'jobs-past': 0,
+    'newjob': 0,
+    'edit-profile': 4
+  };
+
+  if (navMap[id] !== undefined) {
+    document.querySelectorAll('.nav-item')[navMap[id]].classList.add('active');
+  }
+}
+
+function markAsRead(alertNum) {
+  unreadAlerts--;
+  if (unreadAlerts <= 0) {
+    document.querySelector('.alert-badge').style.display = 'none';
+  } else {
+    document.querySelector('.alert-badge').textContent = unreadAlerts;
+  }
+
+  let firstAlert = document.querySelector('.alert-card.unread');
+  if (firstAlert) {
+    firstAlert.classList.remove('unread');
+  }
+
+  showScreen('alerts');
+}
+
+function toggleJobUpload(formId) {
+  let el = document.getElementById(formId);
+  if (el) {
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+function showPriceMatchFeeInfo(plan) {
+  const feeDetails = {
+    starter: { plan: 'Starter', fee: '7%', example: '$7,500 → $525 fee → $6,975 to you' },
+    professional: { plan: 'Professional', fee: '5%', example: '$7,500 → $375 fee → $7,125 to you' },
+    enterprise: { plan: 'Enterprise', fee: '4%', example: '$7,500 → $300 fee → $7,200 to you' }
+  };
+
+  const details = feeDetails[plan];
+  alert(`${details.plan} Plan\n\nSuccess Fee: ${details.fee}\nOn completed jobs via HomeHub\n\nExample:\n${details.example}\n\nOnly charged when jobs are completed and confirmed.`);
+}
+
+function confirmPrice() {
+  alert('Price confirmation sent to homeowner. Awaiting their response.');
+}
+
+function prevPhoto(carousel = null) {
+  let c = carousel ? document.getElementById(carousel) : document.querySelector('.photo-carousel');
+  let images = c.querySelectorAll('.carousel-image');
+  let dots = c.querySelectorAll('.carousel-dot');
+  let current = Array.from(images).findIndex(img => img.classList.contains('active'));
+
+  images[current].classList.remove('active');
+  dots[current].classList.remove('active');
+
+  current = (current - 1 + images.length) % images.length;
+
+  images[current].classList.add('active');
+  dots[current].classList.add('active');
+}
+
+function nextPhoto(carousel = null) {
+  let c = carousel ? document.getElementById(carousel) : document.querySelector('.photo-carousel');
+  let images = c.querySelectorAll('.carousel-image');
+  let dots = c.querySelectorAll('.carousel-dot');
+  let current = Array.from(images).findIndex(img => img.classList.contains('active'));
+
+  images[current].classList.remove('active');
+  dots[current].classList.remove('active');
+
+  current = (current + 1) % images.length;
+
+  images[current].classList.add('active');
+  dots[current].classList.add('active');
+}
+
+function goToPhoto(index, carousel = null) {
+  let c = carousel ? document.getElementById(carousel) : document.querySelector('.photo-carousel');
+  let images = c.querySelectorAll('.carousel-image');
+  let dots = c.querySelectorAll('.carousel-dot');
+
+  images.forEach(img => img.classList.remove('active'));
+  dots.forEach(dot => dot.classList.remove('active'));
+
+  images[index].classList.add('active');
+  dots[index].classList.add('active');
+}
+
+// ── Property ID Lookup (Mobile) ─────────────────────────────────────────────
+
+var MOB_PROPERTY_DB = {
+  'HH-WCK-2847': { address: '2847 Willow Creek Drive', city: 'Austin, TX 78745', owner: 'Michael J.', built: '2009', score: '87' },
+  'HH-OAK-1247': { address: '1247 Oak Street', city: 'Austin, TX 78701', owner: 'Sarah C.', built: '2003', score: '92' },
+  'HH-MPL-3892': { address: '3892 Maple Ridge Court', city: 'Austin, TX 78750', owner: 'David R.', built: '2015', score: '94' },
+  'HH-RVR-5631': { address: '5631 Riverside Blvd', city: 'Austin, TX 78741', owner: 'Jennifer L.', built: '1998', score: '79' }
+};
+
+var mobRecentProperties = [
+  { id: 'HH-OAK-1247', address: '1247 Oak Street', city: 'Austin, TX 78701', date: 'Mar 15, 2025' },
+  { id: 'HH-MPL-3892', address: '3892 Maple Ridge Court', city: 'Austin, TX 78750', date: 'Mar 8, 2025' }
+];
+
+var mobCurrentProperty = null;
+
+function openMobPropertyIdModal() {
+  document.getElementById('mob-prop-id-backdrop').style.display = 'block';
+  document.getElementById('mob-prop-id-sheet').style.display = 'block';
+  document.getElementById('mob-propid-step-input').style.display = 'block';
+  document.getElementById('mob-propid-step-found').style.display = 'none';
+  document.getElementById('mob-propid-input').value = '';
+  document.getElementById('mob-propid-error').style.display = 'none';
+  document.getElementById('mob-propid-btn-text').textContent = 'Look Up Property';
+  setTimeout(function() { document.getElementById('mob-propid-input').focus(); }, 300);
+}
+
+function closeMobPropertyIdModal() {
+  document.getElementById('mob-prop-id-backdrop').style.display = 'none';
+  document.getElementById('mob-prop-id-sheet').style.display = 'none';
+}
+
+function lookupMobPropertyId() {
+  var raw = document.getElementById('mob-propid-input').value.trim().toUpperCase();
+  var errEl = document.getElementById('mob-propid-error');
+  var btnText = document.getElementById('mob-propid-btn-text');
+
+  if (!raw) {
+    errEl.textContent = 'Please enter a Property ID.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  errEl.style.display = 'none';
+  btnText.textContent = 'Looking up…';
+
+  setTimeout(function() {
+    var prop = MOB_PROPERTY_DB[raw];
+    if (prop) {
+      mobCurrentProperty = { id: raw, data: prop };
+      document.getElementById('mob-found-address').textContent = prop.address;
+      document.getElementById('mob-found-city').textContent = prop.city;
+      document.getElementById('mob-found-owner').textContent = prop.owner;
+      document.getElementById('mob-found-built').textContent = prop.built;
+      document.getElementById('mob-found-score').textContent = prop.score + '/100';
+
+      // Add to recent list if not already there
+      var alreadyIn = mobRecentProperties.some(function(p) { return p.id === raw; });
+      if (!alreadyIn) {
+        mobRecentProperties.unshift({ id: raw, address: prop.address, city: prop.city, date: 'Today' });
+        if (mobRecentProperties.length > 5) mobRecentProperties.pop();
+      }
+
+      document.getElementById('mob-propid-step-input').style.display = 'none';
+      document.getElementById('mob-propid-step-found').style.display = 'block';
+    } else {
+      errEl.textContent = 'Property ID not found. Please check and try again.';
+      errEl.style.display = 'block';
+      btnText.textContent = 'Look Up Property';
+    }
+  }, 700);
+}
+
+function mobStartJobForProperty() {
+  if (mobCurrentProperty) {
+    var field = document.getElementById('mob-newjob-property-field');
+    if (field) field.value = mobCurrentProperty.data.address;
+  }
+  closeMobPropertyIdModal();
+  showScreen('newjob');
+}
+
+function mobViewPropertyHistory() {
+  closeMobPropertyIdModal();
+  showScreen('trade-history');
+}
+
+function toggleMobRecentProperties() {
+  var panel = document.getElementById('mob-recent-props-panel');
+  if (panel.style.display === 'none') {
+    buildMobRecentPropertiesPanel();
+    panel.style.display = 'block';
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+function buildMobRecentPropertiesPanel() {
+  var list = document.getElementById('mob-recent-props-list');
+  if (!mobRecentProperties.length) {
+    list.innerHTML = '<div style="padding:16px;text-align:center;color:#94A3B8;font-size:13px">No recent properties yet.</div>';
+    return;
+  }
+  list.innerHTML = mobRecentProperties.map(function(p, i) {
+    return '<div style="padding:12px 16px;' + (i < mobRecentProperties.length - 1 ? 'border-bottom:1px solid #F1F5F9;' : '') + 'display:flex;align-items:center;gap:12px;cursor:pointer" onclick="mobQuickAccessProperty(\'' + p.id + '\')">' +
+      '<div style="width:36px;height:36px;background:#EFF6FF;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-house" style="color:#3B82F6;font-size:13px"></i></div>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-size:13px;font-weight:700;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + p.address + '</div>' +
+        '<div style="font-size:11px;color:#64748B;margin-top:1px">' + p.id + ' · ' + p.date + '</div>' +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:4px">' +
+        '<button onclick="event.stopPropagation();mobQuickStartJob(\'' + p.id + '\')" style="padding:5px 10px;background:linear-gradient(135deg,#1F3A5F,#27A570);color:white;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">+ Job</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function mobQuickAccessProperty(propId) {
+  var prop = MOB_PROPERTY_DB[propId];
+  if (!prop) return;
+  mobCurrentProperty = { id: propId, data: prop };
+  document.getElementById('mob-recent-props-panel').style.display = 'none';
+  // Open the property found sheet directly
+  document.getElementById('mob-propid-step-input').style.display = 'none';
+  document.getElementById('mob-propid-step-found').style.display = 'block';
+  document.getElementById('mob-found-address').textContent = prop.address;
+  document.getElementById('mob-found-city').textContent = prop.city;
+  document.getElementById('mob-found-owner').textContent = prop.owner;
+  document.getElementById('mob-found-built').textContent = prop.built;
+  document.getElementById('mob-found-score').textContent = prop.score + '/100';
+  document.getElementById('mob-prop-id-backdrop').style.display = 'block';
+  document.getElementById('mob-prop-id-sheet').style.display = 'block';
+}
+
+function mobQuickStartJob(propId) {
+  var prop = MOB_PROPERTY_DB[propId];
+  if (!prop) return;
+  var field = document.getElementById('mob-newjob-property-field');
+  if (field) field.value = prop.address;
+  document.getElementById('mob-recent-props-panel').style.display = 'none';
+  showScreen('newjob');
+}
+</script>
+
+<!-- ══════════════════════════════════════════════════════════
+     CONTRACTOR MOBILE SEARCH
+     ══════════════════════════════════════════════════════════ -->
+<div id="ctw-mob-overlay">
+  <div id="ctw-mob-box">
+    <div id="ctw-mob-search-hdr">
+      <i class="fas fa-search" style="color:rgba(255,255,255,.7);font-size:16px;flex-shrink:0;"></i>
+      <input id="ctw-mob-search-input" type="text" placeholder="Search jobs, properties…" autocomplete="off"
+             oninput="runCtwMobSearch(this.value)" />
+      <button id="ctw-mob-cancel" onclick="closeCtwMobSearch()">Cancel</button>
+    </div>
+    <div id="ctw-mob-results"></div>
+  </div>
+  <div style="flex:1;" onclick="closeCtwMobSearch()"></div>
+</div>
+
+<script>
+const CTW_MOB_INDEX = [
+  {type:'nav',icon:'📊',bg:'#E8F0FB',label:'Dashboard',             screen:'home',              keywords:'dashboard home overview'},
+  {type:'nav',icon:'⚡',bg:'#FFFBE5',label:'Active Jobs',           screen:'jobs-active',       keywords:'active jobs current work'},
+  {type:'nav',icon:'📋',bg:'#FFF3E5',label:'New Job Opportunities', screen:'jobs-new',          keywords:'new jobs bids leads'},
+  {type:'nav',icon:'⏳',bg:'#F0FBE8',label:'Pending Jobs',         screen:'jobs-pending',      keywords:'pending jobs awaiting'},
+  {type:'nav',icon:'✅',bg:'#E5FBF0',label:'Past Jobs',            screen:'jobs-past',         keywords:'past completed jobs history'},
+  {type:'nav',icon:'🏠',bg:'#E8F0FB',label:'Properties',           screen:'properties',        keywords:'properties homes addresses'},
+  {type:'nav',icon:'➕',bg:'#E5FBF0',label:'Log New Job',          screen:'newjob',            keywords:'log new job create entry'},
+  {type:'nav',icon:'📷',bg:'#F5F5F5',label:'QR Scan',             screen:'scan',              keywords:'qr scan barcode property'},
+  {type:'nav',icon:'🔔',bg:'#F5F5F5',label:'Alerts',              screen:'alerts',            keywords:'alerts notifications messages'},
+  {type:'nav',icon:'👤',bg:'#F5F5F5',label:'Profile',             screen:'profile',           keywords:'profile account settings'},
+  {type:'job',icon:'🏠',bg:'#E5FBF0',label:'Kitchen Remodel – 2847 Willow Creek',screen:'job-detail',keywords:'kitchen remodel willow creek active'},
+  {type:'job',icon:'🔧',bg:'#E5FBF0',label:'Bathroom Tile – 412 Oakview Dr',screen:'job-detail',keywords:'bathroom tile oakview active'},
+  {type:'property',icon:'📍',bg:'#F0FBE8',label:'2847 Willow Creek Drive',screen:'property-summary',keywords:'willow creek property austin'},
+  {type:'property',icon:'📍',bg:'#F0FBE8',label:'412 Oakview Drive',screen:'property-summary',keywords:'oakview drive property'},
+  {type:'property',icon:'📍',bg:'#F0FBE8',label:'1030 Pine Avenue',screen:'property-summary',keywords:'pine avenue property'},
+  {type:'tool',icon:'📋',bg:'#E8F0FB',label:'Trade History',screen:'trade-history',keywords:'history trade past work'},
+];
+const CTW_MOB_META = {
+  nav:{label:'Section',color:'#1F5AE0',bg:'rgba(31,90,224,.1)'},
+  job:{label:'Job',color:'#27A570',bg:'rgba(39,165,112,.1)'},
+  property:{label:'Property',color:'#7B5EA7',bg:'rgba(123,94,167,.1)'},
+  tool:{label:'Tool',color:'#555',bg:'rgba(0,0,0,.07)'},
+};
+function openCtwMobSearch(){
+  document.getElementById('ctw-mob-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('ctw-mob-search-input').focus(),100);
+  runCtwMobSearch('');
+}
+function closeCtwMobSearch(){
+  document.getElementById('ctw-mob-overlay').classList.remove('open');
+  document.getElementById('ctw-mob-search-input').value='';
+}
+function ctwMHL(t,q){if(!q)return t;const e=q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');return t.replace(new RegExp(e,'gi'),m=>`<mark class="ctwm">${m}</mark>`);}
+function runCtwMobSearch(query){
+  query=query.trim();
+  const el=document.getElementById('ctw-mob-results');
+  if(!query){
+    el.innerHTML=`<div class="ctw-mob-hint-row">${['Active Jobs','New Jobs','Properties','Pending','Past Jobs','Alerts','Log Job','Scan','Profile','Dashboard'].map(h=>`<span class="ctw-mob-chip" onclick="document.getElementById('ctw-mob-search-input').value='${h}';runCtwMobSearch('${h}')">${h}</span>`).join('')}</div>`;
+    return;
+  }
+  const q=query.toLowerCase();
+  const results=CTW_MOB_INDEX.map(item=>{
+    const hay=(item.label+' '+item.keywords).toLowerCase();
+    let score=0;
+    if(item.label.toLowerCase().startsWith(q))score=100;
+    else if(item.label.toLowerCase().includes(q))score=70;
+    else if(hay.includes(q))score=40;
+    return{...item,score};
+  }).filter(r=>r.score>0).sort((a,b)=>b.score-a.score);
+  if(!results.length){el.innerHTML=`<div class="ctw-mob-empty"><i class="fas fa-search" style="font-size:32px;opacity:.3;display:block;margin-bottom:10px;"></i>No results for "<strong>${query}</strong>"</div>`;return;}
+  const groups={};results.forEach(r=>{if(!groups[r.type])groups[r.type]=[];groups[r.type].push(r);});
+  let html='';
+  ['nav','job','property','tool'].forEach(type=>{
+    if(!groups[type])return;
+    const meta=CTW_MOB_META[type]||{label:type,color:'#555',bg:'rgba(0,0,0,.07)'};
+    html+=`<div class="ctw-mob-label">${meta.label}s</div>`;
+    groups[type].slice(0,5).forEach(item=>{
+      html+=`<div class="ctw-mob-item" onclick="ctwMobNav('${item.screen}')">
+        <div class="ctw-mob-icon" style="background:${item.bg}">${item.icon}</div>
+        <div class="ctw-mob-text">
+          <div class="ctw-mob-title">${ctwMHL(item.label,query)}</div>
+          <div class="ctw-mob-sub"><span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;background:${meta.bg};color:${meta.color};">${meta.label}</span></div>
+        </div>
+        <i class="fas fa-chevron-right" style="color:#ccc;font-size:12px;"></i>
+      </div>`;
+    });
+  });
+  el.innerHTML=html;
+}
+function ctwMobNav(screen){closeCtwMobSearch();showScreen(screen);}
+</script>
+
+</body>
+</html>

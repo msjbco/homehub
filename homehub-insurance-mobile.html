@@ -1,0 +1,1317 @@
+<!--
+================================================================================
+HomeHub Application Suite - homehub-insurance-mobile.html
+================================================================================
+
+TITLE: Homehub Insurance Mobile
+PURPOSE: Insurance provider integration and claims management
+LAST UPDATED: 2026-05-16
+
+This HTML file is part of the HomeHub platform - a comprehensive property
+management system for homeowners. Single-page application with vanilla JS,
+responsive design, and dark mode support.
+
+================================================================================
+STRUCTURE: <style> CSS | <body> HTML | <script> JavaScript
+================================================================================
+
+CSS VARIABLES: --blue, --green, --orange, --gold (+ light/dark variants)
+RESPONSIVE: Mobile (<768px) | Tablet (768px) | Desktop (1024px+)
+DARK MODE: [data-theme="dark"] selector overrides CSS variables
+
+Key Components:
+  • Sidebar/Navigation (fixed 280px, collapsible on mobile)
+  • Responsive grid/flexbox layouts
+  • Card-based UI components
+  • Modal overlays for forms
+  • Dynamic JavaScript interactions
+
+================================================================================
+QUICK REFERENCE
+================================================================================
+
+CSS Customization:
+  1. Update color variables in :root and [data-theme="dark"]
+  2. Modify font-size and padding for spacing
+  3. Adjust media queries for different breakpoints
+
+JavaScript Patterns:
+  • DOM selection: querySelector, querySelectorAll
+  • Events: addEventListener, event delegation
+  • Storage: localStorage for persistent settings
+  • DOM updates: innerHTML, classList, setAttribute
+
+Testing:
+  ✓ Responsive design (test all breakpoints)
+  ✓ Dark mode toggle
+  ✓ Keyboard navigation
+  ✓ Button/form interactions
+  ✓ Cross-browser compatibility
+
+================================================================================
+For detailed documentation, see sections marked with === throughout the file
+================================================================================
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insurance - HomeHub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-dark: #1F3A5F;
+            --primary-blue: #2D5080;
+            --accent-green: #27A570;
+            --accent-yellow: #FDB913;
+            --bg-light: #F8F9FA;
+            --bg-white: #FFFFFF;
+            --text-primary: #000000;
+            --text-secondary: #666666;
+            --border-light: #E8E8E8;
+            --status-active: #27A570;
+            --status-warning: #FF9500;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+        }
+
+        .phone-frame {
+            max-width: 390px;
+            margin: 0 auto;
+            background: var(--bg-white);
+            border-radius: 40px;
+            border: 12px solid #000;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            min-height: 844px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-bar {
+            background-color: var(--bg-white);
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-header {
+            background-color: var(--bg-white);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .nav-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .nav-header-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        .nav-icon-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .back-button {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .content-area::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .content-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .content-area::-webkit-scrollbar-thumb {
+            background: var(--border-light);
+            border-radius: 2px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Hero Card */
+        .hero-card {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-blue) 100%);
+            color: white;
+            padding: 20px 16px;
+            margin: 12px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-card::before {
+            content: '';
+            position: absolute;
+            right: -40px;
+            bottom: -40px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        .hero-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-left {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .hero-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .hero-text h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .hero-text p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .status-badge {
+            background: var(--accent-green);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .hero-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-stat {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .hero-stat-label {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-bottom: 4px;
+        }
+
+        .hero-stat-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .hero-stat-detail {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        /* Section Styles */
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 16px 16px 8px;
+            margin: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .view-details-link {
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        /* Coverage Summary Grid */
+        .coverage-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+        }
+
+        .coverage-item {
+            background: var(--bg-light);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .coverage-item:active {
+            border-color: var(--primary-dark);
+            background: white;
+        }
+
+        .coverage-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .coverage-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .coverage-status {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--status-active);
+        }
+
+        .coverage-amount {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Compliance Status */
+        .compliance-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .compliance-item:active {
+            background: var(--bg-light);
+        }
+
+        .compliance-item:last-child {
+            border-bottom: none;
+        }
+
+        .compliance-icon {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .compliance-content {
+            flex: 1;
+        }
+
+        .compliance-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .compliance-detail {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .compliance-status-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--status-active);
+            text-align: right;
+        }
+
+        .compliance-status-text.warning {
+            color: var(--status-warning);
+        }
+
+        /* Activity List */
+        .activity-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .activity-item:active {
+            background: var(--bg-light);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            font-size: 18px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .activity-detail {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 0 12px 12px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-dark);
+            color: white;
+        }
+
+        .btn-primary:active {
+            background-color: var(--primary-blue);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            border: 1px solid var(--border-light);
+        }
+
+        .btn-secondary:active {
+            background-color: #F5F5F5;
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--bg-white);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--border-light);
+            margin: 12px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            background: var(--bg-white);
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            padding-bottom: 20px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            flex: 1;
+        }
+
+        .nav-item.active {
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        .nav-item-icon {
+            font-size: 20px;
+        }
+
+        /* Policy Details Card */
+        .policy-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 13px;
+        }
+
+        .policy-detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .policy-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .policy-value {
+            font-weight: 600;
+            text-align: right;
+        }
+
+        /* Coverage Breakdown */
+        .coverage-breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer;
+        }
+
+        .coverage-breakdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .coverage-breakdown-left {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .coverage-breakdown-icon {
+            font-size: 20px;
+        }
+
+        .coverage-breakdown-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .coverage-breakdown-amount {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        /* Compliance Check List */
+        .check-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            align-items: flex-start;
+        }
+
+        .check-icon {
+            font-size: 18px;
+            color: var(--status-active);
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .check-content {
+            flex: 1;
+        }
+
+        .check-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .check-detail {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        @media (max-width: 480px) {
+            .coverage-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- SCREEN 1: INSURANCE OVERVIEW -->
+    <div id="screen-overview" class="screen active">
+        <div class="phone-frame">
+            <div class="status-bar">
+                <div class="status-left">9:41</div>
+                <div class="status-right"><span>📶</span><span>📡</span><span>🔋</span></div>
+            </div>
+
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <div class="nav-header-title">Insurance</div>
+                </div>
+                <div class="nav-header-right">
+                    <button class="nav-icon-btn" onclick="openNotifications()">🔔</button>
+                    <button class="nav-icon-btn" onclick="openMenu()">⋯</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- Hero Card -->
+                <div class="hero-card">
+                    <div class="hero-header">
+                        <div class="hero-left">
+                            <div class="hero-icon">🛡️</div>
+                            <div class="hero-text">
+                                <h3>You're Protected</h3>
+                                <p>All required policies are active. Great job staying covered!</p>
+                            </div>
+                        </div>
+                        <div class="status-badge">Compliant</div>
+                    </div>
+
+                    <div class="hero-body">
+                        <div class="hero-stat">
+                            <div class="hero-stat-label">Next Renewal</div>
+                            <div class="hero-stat-value">May 14, 2025</div>
+                        </div>
+                        <div class="hero-stat">
+                            <div class="hero-stat-label">Days Until Renewal</div>
+                            <div class="hero-stat-value">47 days</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coverage Summary -->
+                <h4 class="section-title">Coverage Summary <span class="view-details-link" onclick="goToScreen('coverage')">View details</span></h4>
+                <div class="coverage-grid">
+                    <div class="coverage-item" onclick="goToScreen('homeowners')">
+                        <div class="coverage-icon">🏠</div>
+                        <div class="coverage-label">Homeowners</div>
+                        <div class="coverage-status">Active</div>
+                        <div class="coverage-amount">$500,000</div>
+                    </div>
+                    <div class="coverage-item" onclick="goToScreen('liability')">
+                        <div class="coverage-icon">🌳</div>
+                        <div class="coverage-label">Personal Liability</div>
+                        <div class="coverage-status">Active</div>
+                        <div class="coverage-amount">$300,000</div>
+                    </div>
+                    <div class="coverage-item" onclick="goToScreen('loss-of-use')">
+                        <div class="coverage-icon">🏘️</div>
+                        <div class="coverage-label">Loss of Use</div>
+                        <div class="coverage-status">Active</div>
+                        <div class="coverage-amount">$100,000</div>
+                    </div>
+                </div>
+
+                <!-- Compliance Status -->
+                <h4 class="section-title">Compliance Status</h4>
+                <div class="compliance-item" onclick="goToScreen('required-policies')">
+                    <div class="compliance-icon">✓</div>
+                    <div class="compliance-content">
+                        <div class="compliance-name">Required Policies</div>
+                    </div>
+                    <div class="compliance-status-text">3 of 3 Active ✓</div>
+                </div>
+                <div class="compliance-item" onclick="goToScreen('documents')">
+                    <div class="compliance-icon">📄</div>
+                    <div class="compliance-content">
+                        <div class="compliance-name">Documents Uploaded</div>
+                    </div>
+                    <div class="compliance-status-text">100% Complete ✓</div>
+                </div>
+                <div class="compliance-item" onclick="alert('You have 1 policy expiring soon')">
+                    <div class="compliance-icon">⚠️</div>
+                    <div class="compliance-content">
+                        <div class="compliance-name">Expires Soon</div>
+                    </div>
+                    <div class="compliance-status-text warning">1 Item ⚠️</div>
+                </div>
+
+                <!-- Recent Activity -->
+                <h4 class="section-title">Recent Activity <span class="view-details-link" onclick="goToScreen('activity')">See all</span></h4>
+                <div class="activity-item" onclick="goToScreen('activity-detail-1')">
+                    <div class="activity-icon">🛡️</div>
+                    <div class="activity-content">
+                        <div class="activity-title">Policy Renewed</div>
+                        <div class="activity-detail">Homeowners Policy</div>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">Apr 14</div>
+                </div>
+                <div class="activity-item" onclick="goToScreen('activity-detail-2')">
+                    <div class="activity-icon">📄</div>
+                    <div class="activity-content">
+                        <div class="activity-title">Document Uploaded</div>
+                        <div class="activity-detail">HO-3 Declaration Page</div>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">Apr 12</div>
+                </div>
+                <div class="activity-item" onclick="goToScreen('activity-detail-3')">
+                    <div class="activity-icon">✓</div>
+                    <div class="activity-content">
+                        <div class="activity-title">Compliance Check</div>
+                        <div class="activity-detail">All policies verified</div>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">Apr 10</div>
+                </div>
+
+                <button class="btn btn-primary" onclick="openAddPolicyModal()">+ Add or Update Policy</button>
+            </div>
+
+            <div class="bottom-nav">
+                <button class="nav-item active" onclick="goToScreen('overview')">
+                    <div class="nav-item-icon">🏠</div>
+                    <div>Dashboard</div>
+                </button>
+                <button class="nav-item" onclick="alert('My Home')">
+                    <div class="nav-item-icon">🏡</div>
+                    <div>My Home</div>
+                </button>
+                <button class="nav-item" onclick="alert('Projects')">
+                    <div class="nav-item-icon">📁</div>
+                    <div>Projects</div>
+                </button>
+                <button class="nav-item" onclick="alert('Contractors')">
+                    <div class="nav-item-icon">👷</div>
+                    <div>Contractors</div>
+                </button>
+                <button class="nav-item" onclick="alert('Scan')">
+                    <div class="nav-item-icon">🔍</div>
+                    <div>Scan</div>
+                </button>
+                <button class="nav-item" onclick="alert('Profile')">
+                    <div class="nav-item-icon">👤</div>
+                    <div>Profile</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: POLICY DETAILS -->
+    <div id="screen-coverage" class="screen">
+        <div class="phone-frame">
+            <div class="status-bar">
+                <div class="status-left">9:41</div>
+                <div class="status-right"><span>📶</span><span>📡</span><span>🔋</span></div>
+            </div>
+
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <button class="back-button" onclick="goToScreen('overview')">←</button>
+                    <div class="nav-header-title">Insurance Details</div>
+                </div>
+                <div class="nav-header-right">
+                    <button class="nav-icon-btn" onclick="openNotifications()">🔔</button>
+                    <button class="nav-icon-btn" onclick="openMenu()">⋯</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- Policy Header -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                        <div style="display: flex; gap: 12px; align-items: flex-start; flex: 1;">
+                            <div style="width: 40px; height: 40px; background: #E8F5E9; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px;">🛡️</div>
+                            <div style="flex: 1;">
+                                <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 2px;">Homeowners Insurance</h3>
+                                <p style="font-size: 12px; color: var(--text-secondary);">State Farm</p>
+                            </div>
+                        </div>
+                        <div style="background: #E8F5E9; color: var(--status-active); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">Active</div>
+                    </div>
+
+                    <!-- Policy Details -->
+                    <div class="policy-detail-row">
+                        <span class="policy-label">Policy Number</span>
+                        <span class="policy-value">SF-782-91X-1234567</span>
+                    </div>
+                    <div class="policy-detail-row">
+                        <span class="policy-label">Policy Type</span>
+                        <span class="policy-value">HO-3</span>
+                    </div>
+                    <div class="policy-detail-row">
+                        <span class="policy-label">Coverage Amount</span>
+                        <span class="policy-value">$500,000</span>
+                    </div>
+                    <div class="policy-detail-row">
+                        <span class="policy-label">Deductible</span>
+                        <span class="policy-value">$1,000</span>
+                    </div>
+                    <div class="policy-detail-row">
+                        <span class="policy-label">Effective Date</span>
+                        <span class="policy-value">May 14, 2024</span>
+                    </div>
+                    <div class="policy-detail-row">
+                        <span class="policy-label">Expiration Date</span>
+                        <span class="policy-value">May 14, 2025</span>
+                    </div>
+                    <div class="policy-detail-row">
+                        <span class="policy-label">Days Until Renewal</span>
+                        <span class="policy-value" style="color: var(--status-active);">47 days</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="openPolicyDocumentModal()">📄 View Policy Document</button>
+                <button class="btn btn-secondary" onclick="openUploadPolicyModal()">📤 Upload New Document</button>
+
+                <!-- Coverage Breakdown -->
+                <div class="card">
+                    <h3 class="card-title">Coverage Breakdown <span class="view-details-link" onclick="alert('All coverage details')">View all</span></h3>
+                    <div class="coverage-breakdown-item" onclick="goToScreen('dwelling')">
+                        <div class="coverage-breakdown-left">
+                            <div class="coverage-breakdown-icon">🏠</div>
+                            <div class="coverage-breakdown-name">Dwelling</div>
+                        </div>
+                        <div class="coverage-breakdown-amount">$500,000</div>
+                    </div>
+                    <div class="coverage-breakdown-item" onclick="alert('Other Structures: $50,000')">
+                        <div class="coverage-breakdown-left">
+                            <div class="coverage-breakdown-icon">🏘️</div>
+                            <div class="coverage-breakdown-name">Other Structures</div>
+                        </div>
+                        <div class="coverage-breakdown-amount">$50,000</div>
+                    </div>
+                    <div class="coverage-breakdown-item" onclick="alert('Personal Property: $150,000')">
+                        <div class="coverage-breakdown-left">
+                            <div class="coverage-breakdown-icon">👜</div>
+                            <div class="coverage-breakdown-name">Personal Property</div>
+                        </div>
+                        <div class="coverage-breakdown-amount">$150,000</div>
+                    </div>
+                    <div class="coverage-breakdown-item" onclick="alert('Loss of Use: $100,000')">
+                        <div class="coverage-breakdown-left">
+                            <div class="coverage-breakdown-icon">🏘️</div>
+                            <div class="coverage-breakdown-name">Loss of Use</div>
+                        </div>
+                        <div class="coverage-breakdown-amount">$100,000</div>
+                    </div>
+                    <div class="coverage-breakdown-item" onclick="alert('Personal Liability: $300,000')">
+                        <div class="coverage-breakdown-left">
+                            <div class="coverage-breakdown-icon">🌳</div>
+                            <div class="coverage-breakdown-name">Personal Liability</div>
+                        </div>
+                        <div class="coverage-breakdown-amount">$300,000</div>
+                    </div>
+                    <div class="coverage-breakdown-item" onclick="alert('Medical Payments: $5,000')">
+                        <div class="coverage-breakdown-left">
+                            <div class="coverage-breakdown-icon">❤️</div>
+                            <div class="coverage-breakdown-name">Medical Payments</div>
+                        </div>
+                        <div class="coverage-breakdown-amount">$5,000</div>
+                    </div>
+                </div>
+
+                <!-- Compliance Check -->
+                <div class="card">
+                    <h3 class="card-title">Compliance Check</h3>
+                    <div class="check-item">
+                        <div class="check-icon">✓</div>
+                        <div class="check-content">
+                            <div class="check-title">Policy is Active</div>
+                            <div class="check-detail">Verified Apr 14, 2025</div>
+                        </div>
+                    </div>
+                    <div class="check-item">
+                        <div class="check-icon">✓</div>
+                        <div class="check-content">
+                            <div class="check-title">Coverage Meets Requirements</div>
+                            <div class="check-detail">Meets lender requirements</div>
+                        </div>
+                    </div>
+                    <div class="check-item">
+                        <div class="check-icon">✓</div>
+                        <div class="check-content">
+                            <div class="check-title">Documents are Current</div>
+                            <div class="check-detail">All required documents uploaded</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-secondary" onclick="openReminderModal()">📅 Set Renewal Reminder</button>
+            </div>
+
+            <div class="bottom-nav">
+                <button class="nav-item" onclick="goToScreen('overview')">
+                    <div class="nav-item-icon">🏠</div>
+                    <div>Dashboard</div>
+                </button>
+                <button class="nav-item" onclick="alert('My Home')">
+                    <div class="nav-item-icon">🏡</div>
+                    <div>My Home</div>
+                </button>
+                <button class="nav-item" onclick="alert('Projects')">
+                    <div class="nav-item-icon">📁</div>
+                    <div>Projects</div>
+                </button>
+                <button class="nav-item" onclick="alert('Contractors')">
+                    <div class="nav-item-icon">👷</div>
+                    <div>Contractors</div>
+                </button>
+                <button class="nav-item" onclick="alert('Scan')">
+                    <div class="nav-item-icon">🔍</div>
+                    <div>Scan</div>
+                </button>
+                <button class="nav-item" onclick="alert('Profile')">
+                    <div class="nav-item-icon">👤</div>
+                    <div>Profile</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTIVITY DETAIL SCREENS -->
+    <div id="screen-activity-detail-1" class="screen">
+        <div class="phone-frame">
+            <div class="status-bar"><div class="status-left">9:41</div><div class="status-right"><span>📶</span><span>📡</span><span>🔋</span></div></div>
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <button class="back-button" onclick="goToScreen('overview')">←</button>
+                    <div class="nav-header-title">Policy Renewed</div>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="card">
+                    <h3 class="card-title">Policy Renewed - Apr 14, 2025</h3>
+                    <div class="policy-detail-row">
+                        <span class="policy-label">Policy Type</span>
+                        <span class="policy-value">Homeowners</span>
+                    </div>
+                    <div class="policy-detail-row">
+                        <span class="policy-label">Provider</span>
+                        <span class="policy-value">State Farm</span>
+                    </div>
+                    <div class="policy-detail-row">
+                        <span class="policy-label">Coverage</span>
+                        <span class="policy-value">$500,000</span>
+                    </div>
+                    <div class="policy-detail-row">
+                        <span class="policy-label">Renewal Date</span>
+                        <span class="policy-value">May 14, 2025</span>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-secondary); margin-top: 12px;">Your homeowners policy was automatically renewed for another year. All coverage remains the same.</p>
+                </div>
+            </div>
+            <div class="bottom-nav">
+                <button class="nav-item" onclick="goToScreen('overview')"><div class="nav-item-icon">🏠</div><div>Dashboard</div></button>
+                <button class="nav-item" onclick="alert('My Home')"><div class="nav-item-icon">🏡</div><div>My Home</div></button>
+                <button class="nav-item" onclick="alert('Projects')"><div class="nav-item-icon">📁</div><div>Projects</div></button>
+                <button class="nav-item" onclick="alert('Contractors')"><div class="nav-item-icon">👷</div><div>Contractors</div></button>
+                <button class="nav-item" onclick="alert('Scan')"><div class="nav-item-icon">🔍</div><div>Scan</div></button>
+                <button class="nav-item" onclick="alert('Profile')"><div class="nav-item-icon">👤</div><div>Profile</div></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-activity-detail-2" class="screen">
+        <div class="phone-frame">
+            <div class="status-bar"><div class="status-left">9:41</div><div class="status-right"><span>📶</span><span>📡</span><span>🔋</span></div></div>
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <button class="back-button" onclick="goToScreen('overview')">←</button>
+                    <div class="nav-header-title">Document Uploaded</div>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="card">
+                    <h3 class="card-title">HO-3 Declaration Page</h3>
+                    <div class="policy-detail-row">
+                        <span class="policy-label">Uploaded</span>
+                        <span class="policy-value">Apr 12, 2025</span>
+                    </div>
+                    <div class="policy-detail-row">
+                        <span class="policy-label">Type</span>
+                        <span class="policy-value">Declaration Page</span>
+                    </div>
+                    <div class="policy-detail-row">
+                        <span class="policy-label">Size</span>
+                        <span class="policy-value">2.3 MB</span>
+                    </div>
+                    <button class="btn btn-primary" style="margin-top: 16px;" onclick="alert('Downloading HO-3_Declaration_Page.pdf')">⬇️ Download</button>
+                    <button class="btn btn-secondary" onclick="alert('Sharing document...')">📤 Share</button>
+                </div>
+            </div>
+            <div class="bottom-nav">
+                <button class="nav-item" onclick="goToScreen('overview')"><div class="nav-item-icon">🏠</div><div>Dashboard</div></button>
+                <button class="nav-item" onclick="alert('My Home')"><div class="nav-item-icon">🏡</div><div>My Home</div></button>
+                <button class="nav-item" onclick="alert('Projects')"><div class="nav-item-icon">📁</div><div>Projects</div></button>
+                <button class="nav-item" onclick="alert('Contractors')"><div class="nav-item-icon">👷</div><div>Contractors</div></button>
+                <button class="nav-item" onclick="alert('Scan')"><div class="nav-item-icon">🔍</div><div>Scan</div></button>
+                <button class="nav-item" onclick="alert('Profile')"><div class="nav-item-icon">👤</div><div>Profile</div></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-activity-detail-3" class="screen">
+        <div class="phone-frame">
+            <div class="status-bar"><div class="status-left">9:41</div><div class="status-right"><span>📶</span><span>📡</span><span>🔋</span></div></div>
+            <div class="nav-header">
+                <div class="nav-header-left">
+                    <button class="back-button" onclick="goToScreen('overview')">←</button>
+                    <div class="nav-header-title">Compliance Check</div>
+                </div>
+            </div>
+            <div class="content-area">
+                <div class="card">
+                    <h3 class="card-title">All Policies Verified</h3>
+                    <div class="check-item">
+                        <div class="check-icon">✓</div>
+                        <div class="check-content">
+                            <div class="check-title">3 of 3 Policies Active</div>
+                            <div class="check-detail">All required coverage is in place</div>
+                        </div>
+                    </div>
+                    <div class="check-item">
+                        <div class="check-icon">✓</div>
+                        <div class="check-content">
+                            <div class="check-title">Documents Complete</div>
+                            <div class="check-detail">100% of required documents uploaded</div>
+                        </div>
+                    </div>
+                    <div class="check-item">
+                        <div class="check-icon">✓</div>
+                        <div class="check-content">
+                            <div class="check-title">Coverage Sufficient</div>
+                            <div class="check-detail">Meets all lender and compliance requirements</div>
+                        </div>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-secondary); margin-top: 16px;">Verification Date: Apr 10, 2025</p>
+                </div>
+            </div>
+            <div class="bottom-nav">
+                <button class="nav-item" onclick="goToScreen('overview')"><div class="nav-item-icon">🏠</div><div>Dashboard</div></button>
+                <button class="nav-item" onclick="alert('My Home')"><div class="nav-item-icon">🏡</div><div>My Home</div></button>
+                <button class="nav-item" onclick="alert('Projects')"><div class="nav-item-icon">📁</div><div>Projects</div></button>
+                <button class="nav-item" onclick="alert('Contractors')"><div class="nav-item-icon">👷</div><div>Contractors</div></button>
+                <button class="nav-item" onclick="alert('Scan')"><div class="nav-item-icon">🔍</div><div>Scan</div></button>
+                <button class="nav-item" onclick="alert('Profile')"><div class="nav-item-icon">👤</div><div>Profile</div></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="addPolicyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add or Update Policy</h2>
+                <button class="modal-close" onclick="closeModal('addPolicyModal')">×</button>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Insurance Provider</label>
+                <select style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
+                    <option>Select insurance provider...</option>
+                    <option>State Farm</option>
+                    <option>Allstate</option>
+                    <option>Geico</option>
+                    <option>Progressive</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Policy Type</label>
+                <select style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
+                    <option>Homeowners (HO-3)</option>
+                    <option>Condo (HO-6)</option>
+                    <option>Umbrella</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; margin-bottom: 8px;" onclick="alert('Policy added!'); closeModal('addPolicyModal');">Save Policy</button>
+            <button class="btn btn-secondary" style="width: 100%;" onclick="closeModal('addPolicyModal')">Cancel</button>
+        </div>
+    </div>
+
+    <div id="uploadPolicyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Upload Policy Document</h2>
+                <button class="modal-close" onclick="closeModal('uploadPolicyModal')">×</button>
+            </div>
+            <div style="border: 2px dashed #ddd; border-radius: 8px; padding: 30px; text-align: center; margin-bottom: 16px; background: #f9f9f9;">
+                <div style="font-size: 32px; margin-bottom: 8px;">📄</div>
+                <div style="font-weight: 600; margin-bottom: 4px;">Drag & Drop Document</div>
+                <div style="font-size: 12px; color: #666;">or click to browse</div>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; margin-bottom: 8px;" onclick="alert('Document uploaded!'); closeModal('uploadPolicyModal');">Upload</button>
+            <button class="btn btn-secondary" style="width: 100%;" onclick="closeModal('uploadPolicyModal')">Cancel</button>
+        </div>
+    </div>
+
+    <div id="policyDocumentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Policy Document</h2>
+                <button class="modal-close" onclick="closeModal('policyDocumentModal')">×</button>
+            </div>
+            <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 16px; min-height: 200px; display: flex; align-items: center; justify-content: center;">
+                <div>
+                    <div style="font-size: 48px; margin-bottom: 12px;">📄</div>
+                    <div style="font-weight: 600;">HO-3_Declaration_Page.pdf</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 4px;">2.3 MB</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; margin-bottom: 8px;" onclick="alert('Downloading...')">⬇️ Download</button>
+            <button class="btn btn-secondary" style="width: 100%;" onclick="closeModal('policyDocumentModal')">Close</button>
+        </div>
+    </div>
+
+    <div id="reminderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Set Renewal Reminder</h2>
+                <button class="modal-close" onclick="closeModal('reminderModal')">×</button>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Remind me on</label>
+                <input type="date" value="2025-05-01" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 8px;">Reminder Method</label>
+                <select style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
+                    <option>Push Notification</option>
+                    <option>Email</option>
+                    <option>SMS</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; margin-bottom: 8px;" onclick="alert('Reminder set!'); closeModal('reminderModal');">Set Reminder</button>
+            <button class="btn btn-secondary" style="width: 100%;" onclick="closeModal('reminderModal')">Cancel</button>
+        </div>
+    </div>
+
+    <!-- NOTIFICATIONS MENU -->
+    <div id="notificationsMenu" style="display: none; position: fixed; top: 0; right: 0; width: 300px; height: 100vh; background: white; box-shadow: -2px 0 10px rgba(0,0,0,0.1); z-index: 999; padding: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 16px; font-weight: 700;">Notifications</h3>
+            <button onclick="document.getElementById('notificationsMenu').style.display='none'" style="background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
+        </div>
+        <div style="font-size: 13px; line-height: 1.6; color: #333;">
+            <div style="padding: 12px; background: #E8F5E9; border-radius: 6px; margin-bottom: 12px;">
+                <div style="font-weight: 600; margin-bottom: 4px;">Policy expires in 47 days</div>
+                <div style="font-size: 12px; color: #666;">Renew by May 14, 2025</div>
+            </div>
+            <div style="padding: 12px; background: #F0F0F0; border-radius: 6px;">
+                <div style="font-weight: 600; margin-bottom: 4px;">Documents uploaded</div>
+                <div style="font-size: 12px; color: #666;">All required documents complete</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MENU OPTIONS -->
+    <div id="menuOptions" style="display: none; position: fixed; top: 40px; right: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 999; min-width: 200px;">
+        <button style="display: block; width: 100%; padding: 12px; text-align: left; border: none; background: none; cursor: pointer; font-size: 13px; border-bottom: 1px solid #eee;" onclick="alert('Settings'); document.getElementById('menuOptions').style.display='none';">⚙️ Settings</button>
+        <button style="display: block; width: 100%; padding: 12px; text-align: left; border: none; background: none; cursor: pointer; font-size: 13px; border-bottom: 1px solid #eee;" onclick="alert('Help & Support'); document.getElementById('menuOptions').style.display='none';">❓ Help & Support</button>
+        <button style="display: block; width: 100%; padding: 12px; text-align: left; border: none; background: none; cursor: pointer; font-size: 13px;" onclick="alert('Signed out'); document.getElementById('menuOptions').style.display='none';">🚪 Sign Out</button>
+    </div>
+
+    <script>
+        function goToScreen(screenName) {
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => screen.classList.remove('active'));
+            const targetScreen = document.getElementById('screen-' + screenName);
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function openNotifications() {
+            const menu = document.getElementById('notificationsMenu');
+            const options = document.getElementById('menuOptions');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            options.style.display = 'none';
+        }
+
+        function openMenu() {
+            const menu = document.getElementById('menuOptions');
+            const notifications = document.getElementById('notificationsMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            notifications.style.display = 'none';
+        }
+
+        function openAddPolicyModal() {
+            document.getElementById('addPolicyModal').classList.add('active');
+        }
+
+        function openUploadPolicyModal() {
+            document.getElementById('uploadPolicyModal').classList.add('active');
+        }
+
+        function openPolicyDocumentModal() {
+            document.getElementById('policyDocumentModal').classList.add('active');
+        }
+
+        function openReminderModal() {
+            document.getElementById('reminderModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        document.addEventListener('click', function(e) {
+            const notifications = document.getElementById('notificationsMenu');
+            const menu = document.getElementById('menuOptions');
+
+            if (!e.target.closest('.nav-icon-btn') && !e.target.closest('#notificationsMenu') && !e.target.closest('#menuOptions')) {
+                notifications.style.display = 'none';
+                menu.style.display = 'none';
+            }
+        });
+
+        // Close modals when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
