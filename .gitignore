@@ -26,3 +26,7 @@ Thumbs.db
 
 # Node (if ever used)
 node_modules/
+
+# Supabase local runtime artifacts
+supabase/.branches/
+supabase/.temp/
