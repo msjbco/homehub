@@ -1,9 +1,13 @@
 -- ============================================================
--- HomeHub Canonical Seed Data
+-- HomeHub Canonical Seed Data — Hampstead, NC Scenario
 -- Primary homeowner: Michael Johnson
+-- Email: michael@example.homehub (placeholder)
+-- Location: Hampstead, North Carolina
 -- All data is placeholder/demo only.
 -- No real phone numbers, policy numbers, account numbers,
 -- or real document contents are included.
+-- Placeholder emails use @example.homehub or @placeholder.example
+-- Placeholder document/media paths use placeholder/ prefix
 -- ============================================================
 
 -- ── Profiles ─────────────────────────────────────────────────
@@ -13,26 +17,38 @@ values
   -- Primary homeowner
   ('00000000-0000-0000-0000-000000000001',
    'homeowner', 'Michael', 'Johnson', 'Michael Johnson',
-   'michael.johnson@placeholder.example', '555-000-0001',
-   'America/Chicago', 'en-US'),
+   'michael@example.homehub', '555-000-0001',
+   'America/New_York', 'en-US'),
 
-  -- Realtor
+  -- Spouse / household co-owner
+  ('00000000-0000-0000-0000-000000000002',
+   'homeowner', 'Jennifer', 'Johnson', 'Jennifer Johnson',
+   'jennifer@example.homehub', '555-000-0002',
+   'America/New_York', 'en-US'),
+
+  -- Caretaker / property helper
+  ('00000000-0000-0000-0000-000000000003',
+   'homeowner', 'Ray', 'Watkins', 'Ray Watkins (Caretaker)',
+   'ray.watkins.caretaker@placeholder.example', '555-000-0003',
+   'America/New_York', 'en-US'),
+
+  -- Real estate agent (NC)
   ('00000000-0000-0000-0000-000000000010',
-   'real_estate_agent', 'Sarah', 'Johnson', 'Sarah Johnson',
-   'sarah.johnson.realtor@placeholder.example', '555-000-0010',
-   'America/Chicago', 'en-US'),
+   'real_estate_agent', 'Dana', 'Hewitt', 'Dana Hewitt',
+   'dana.hewitt.realtor@placeholder.example', '555-000-0010',
+   'America/New_York', 'en-US'),
 
-  -- Inspector
+  -- Home inspector (NC)
   ('00000000-0000-0000-0000-000000000011',
-   'inspector', 'Mike', 'Torres', 'Mike Torres',
-   'mike.torres.inspector@placeholder.example', '555-000-0011',
-   'America/Chicago', 'en-US'),
+   'inspector', 'James', 'Strickland', 'James Strickland',
+   'james.strickland.inspector@placeholder.example', '555-000-0011',
+   'America/New_York', 'en-US'),
 
-  -- Insurance agent
+  -- Insurance agent (NC)
   ('00000000-0000-0000-0000-000000000012',
-   'insurance_agent', 'Linda', 'Park', 'Linda Park',
-   'linda.park.insurance@placeholder.example', '555-000-0012',
-   'America/Chicago', 'en-US');
+   'insurance_agent', 'Carol', 'Beasley', 'Carol Beasley',
+   'carol.beasley.insurance@placeholder.example', '555-000-0012',
+   'America/New_York', 'en-US');
 
 -- ── Households ────────────────────────────────────────────────
 
@@ -44,77 +60,101 @@ values
 
 insert into public.household_members (household_id, profile_id, is_primary)
 values
-  ('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0000-000000000001', true);
+  -- Michael is primary
+  ('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0000-000000000001', true),
+  -- Jennifer is co-owner
+  ('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0000-000000000002', false),
+  -- Ray has limited caretaker access
+  ('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0000-000000000003', false);
 
 -- ── Organizations ─────────────────────────────────────────────
 
 insert into public.organizations (id, name, org_type, phone, email, city, state, zip)
 values
+  -- NC real estate agency
   ('00000000-0000-0000-0002-000000000001',
-   'Austin Realty Partners', 'real_estate_agency',
-   '555-000-0020', 'info@austinrealtypartners.placeholder.example',
-   'Austin', 'TX', '78701'),
+   'Coastal Carolina Realty', 'real_estate_agency',
+   '555-000-0020', 'info@coastalcarolinarealty.placeholder.example',
+   'Hampstead', 'NC', '28443'),
 
+  -- NC insurance agency
   ('00000000-0000-0000-0002-000000000002',
-   'State Farm – Austin Central', 'insurance_agency',
-   '555-000-0021', 'info@statefarm-austincentral.placeholder.example',
-   'Austin', 'TX', '78702'),
+   'Cape Fear Insurance Group', 'insurance_agency',
+   '555-000-0021', 'info@capefearigroup.placeholder.example',
+   'Wilmington', 'NC', '28401'),
 
+  -- NC lender
   ('00000000-0000-0000-0002-000000000003',
-   'Chase Home Lending', 'lender',
-   '555-000-0022', 'homelending@chase.placeholder.example',
-   'Austin', 'TX', '78703'),
+   'First Bank – Coastal NC', 'lender',
+   '555-000-0022', 'homelending@firstbank-coastalnc.placeholder.example',
+   'Hampstead', 'NC', '28443'),
 
+  -- NC title company
   ('00000000-0000-0000-0002-000000000004',
-   'Austin Title Company', 'title_company',
-   '555-000-0023', 'info@austintitle.placeholder.example',
-   'Austin', 'TX', '78704');
+   'Pender County Title & Escrow', 'title_company',
+   '555-000-0023', 'info@pendertitle.placeholder.example',
+   'Burgaw', 'NC', '28425'),
+
+  -- Community / HOA reference
+  ('00000000-0000-0000-0002-000000000005',
+   'Tidewater at Hampstead HOA', 'community_association',
+   '555-000-0024', 'hoa@tidewaterhampstead.placeholder.example',
+   'Hampstead', 'NC', '28443');
 
 -- ── Vendors ───────────────────────────────────────────────────
 
 insert into public.vendors (id, business_name, specialty, rating, review_count, status, phone, email, service_areas)
 values
+  -- Pool service
   ('00000000-0000-0000-0003-000000000001',
-   'AquaPro Pool Service', ARRAY['Pool & Spa', 'Water Chemistry'], 4.8, 47,
-   'active', '555-000-0030', 'service@aquapro.placeholder.example',
-   ARRAY['Austin, TX', '78745', '78748']),
+   'Coastal Pool & Spa', ARRAY['Pool & Spa', 'Water Chemistry', 'Equipment Repair'], 4.8, 34,
+   'active', '555-000-0030', 'service@coastalpoolspa.placeholder.example',
+   ARRAY['Hampstead, NC', 'Surf City, NC', '28443']),
 
+  -- Landscaping
   ('00000000-0000-0000-0003-000000000002',
-   'GreenThumb Landscaping', ARRAY['Landscaping', 'Lawn Care', 'Irrigation'], 4.6, 83,
-   'active', '555-000-0031', 'info@greenthumb.placeholder.example',
-   ARRAY['Austin, TX', '78745', '78749']),
+   'Tidewater Lawn Care', ARRAY['Landscaping', 'Lawn Care', 'Irrigation', 'Pine Straw'], 4.6, 61,
+   'active', '555-000-0031', 'info@tidewaterlawn.placeholder.example',
+   ARRAY['Hampstead, NC', 'Surf City, NC', 'Holly Ridge, NC', '28443']),
 
+  -- HVAC
   ('00000000-0000-0000-0003-000000000003',
-   'CoolBreeze HVAC', ARRAY['HVAC', 'Air Conditioning', 'Heating'], 4.9, 112,
-   'active', '555-000-0032', 'service@coolbreeze.placeholder.example',
-   ARRAY['Austin, TX', '78745', '78704']),
+   'Cape Fear Heating & Air', ARRAY['HVAC', 'Heat Pump', 'Air Conditioning', 'Ductwork'], 4.9, 89,
+   'active', '555-000-0032', 'service@capefearhvac.placeholder.example',
+   ARRAY['Hampstead, NC', 'Wilmington, NC', '28443', '28401']),
 
+  -- Electrical
   ('00000000-0000-0000-0003-000000000004',
-   'Sparks Electric', ARRAY['Electrical', 'Panel Upgrades', 'Wiring'], 4.7, 64,
-   'active', '555-000-0033', 'info@sparkselectric.placeholder.example',
-   ARRAY['Austin, TX', '78745']),
+   'Pender Electric', ARRAY['Electrical', 'Panel Upgrades', 'Generator Install', 'Wiring'], 4.7, 52,
+   'active', '555-000-0033', 'info@penderelectric.placeholder.example',
+   ARRAY['Hampstead, NC', 'Burgaw, NC', '28443']),
 
+  -- Pest control
   ('00000000-0000-0000-0003-000000000005',
-   'ProPaint Austin', ARRAY['Interior Painting', 'Exterior Painting'], 4.5, 38,
-   'active', '555-000-0034', 'jobs@propaint.placeholder.example',
-   ARRAY['Austin, TX', '78745', '78701']),
+   'Coastal Pest Solutions', ARRAY['Pest Control', 'Termite', 'Mosquito', 'Rodent'], 4.6, 47,
+   'active', '555-000-0034', 'info@coastalpest.placeholder.example',
+   ARRAY['Hampstead, NC', 'Surf City, NC', 'Wilmington, NC', '28443']),
 
+  -- General contractor / handyman
   ('00000000-0000-0000-0003-000000000006',
-   'Handy Mike Repairs', ARRAY['General Repair', 'Handyman'], 4.4, 29,
-   'active', '555-000-0035', 'handymike@placeholder.example',
-   ARRAY['Austin, TX', '78745']),
+   'Topsail Handyman Services', ARRAY['General Repair', 'Handyman', 'Carpentry', 'Pressure Washing'], 4.5, 28,
+   'active', '555-000-0035', 'info@topsailhandyman.placeholder.example',
+   ARRAY['Hampstead, NC', 'Topsail Beach, NC', '28443']),
 
+  -- Plumber
   ('00000000-0000-0000-0003-000000000007',
-   'Sparkle Home Services', ARRAY['House Cleaning', 'Deep Clean'], 4.7, 55,
-   'active', '555-000-0036', 'info@sparklehome.placeholder.example',
-   ARRAY['Austin, TX', '78745']),
+   'Sound Plumbing Co.', ARRAY['Plumbing', 'Water Heater', 'Septic Hook-Up', 'Leak Repair'], 4.8, 43,
+   'active', '555-000-0036', 'info@soundplumbing.placeholder.example',
+   ARRAY['Hampstead, NC', 'Holly Ridge, NC', '28443']),
 
+  -- Roofing
   ('00000000-0000-0000-0003-000000000008',
-   'TexPest Control', ARRAY['Pest Control', 'Termite', 'Rodent'], 4.6, 41,
-   'active', '555-000-0037', 'info@texpest.placeholder.example',
-   ARRAY['Austin, TX', '78745']);
+   'Cape Lookout Roofing', ARRAY['Roofing', 'Shingles', 'Gutter Install', 'Storm Repair'], 4.7, 38,
+   'active', '555-000-0037', 'info@capelookoutroofing.placeholder.example',
+   ARRAY['Hampstead, NC', 'Wilmington, NC', '28443', '28401']);
 
 -- ── Property ──────────────────────────────────────────────────
+-- Fictional address in Hampstead, NC 28443
 
 insert into public.properties (
   id, household_id,
@@ -129,13 +169,13 @@ insert into public.properties (
 values (
   '00000000-0000-0000-0004-000000000001',
   '00000000-0000-0000-0001-000000000001',
-  '2847 Willow Creek Drive', 'Austin', 'TX', '78745',
+  '114 Marsh Cove Lane', 'Hampstead', 'NC', '28443',
   'single_family', 'active',
-  2009, 2400, 8200,
-  4, 2.5,
-  425000.00, '2021-06-15', 512000.00,
-  87, 74, 68,
-  'Primary residence. Pool and spa in backyard. Tile roof.'
+  2017, 2650, 18295,
+  4, 3.0,
+  489000.00, '2022-03-18', 541000.00,
+  84, 79, 71,
+  'Primary residence. Single-story with bonus room. Inground pool. Attached 2-car garage. On city sewer. HOA: Tidewater at Hampstead.'
 );
 
 -- ── Rooms ─────────────────────────────────────────────────────
@@ -143,18 +183,22 @@ values (
 insert into public.rooms (id, property_id, name, room_type, floor_level, square_feet)
 values
   ('00000000-0000-0000-0005-000000000001',
-   '00000000-0000-0000-0004-000000000001', 'Kitchen', 'kitchen', 1, 220),
+   '00000000-0000-0000-0004-000000000001', 'Kitchen', 'kitchen', 1, 240),
   ('00000000-0000-0000-0005-000000000002',
-   '00000000-0000-0000-0004-000000000001', 'Living Room', 'living_room', 1, 380),
+   '00000000-0000-0000-0004-000000000001', 'Living Room', 'living_room', 1, 420),
   ('00000000-0000-0000-0005-000000000003',
-   '00000000-0000-0000-0004-000000000001', 'Master Bedroom', 'bedroom', 2, 320),
+   '00000000-0000-0000-0004-000000000001', 'Primary Bedroom', 'bedroom', 1, 340),
   ('00000000-0000-0000-0005-000000000004',
-   '00000000-0000-0000-0004-000000000001', 'Guest Bedroom', 'bedroom', 2, 180),
+   '00000000-0000-0000-0004-000000000001', 'Bedroom 2', 'bedroom', 1, 190),
   ('00000000-0000-0000-0005-000000000005',
-   '00000000-0000-0000-0004-000000000001', 'Master Bathroom', 'bathroom', 2, 120),
+   '00000000-0000-0000-0004-000000000001', 'Bedroom 3', 'bedroom', 1, 175),
   ('00000000-0000-0000-0005-000000000006',
-   '00000000-0000-0000-0004-000000000001', 'Garage', 'garage', 1, 440),
+   '00000000-0000-0000-0004-000000000001', 'Primary Bathroom', 'bathroom', 1, 130),
   ('00000000-0000-0000-0005-000000000007',
+   '00000000-0000-0000-0004-000000000001', 'Bonus Room', 'bonus_room', 2, 320),
+  ('00000000-0000-0000-0005-000000000008',
+   '00000000-0000-0000-0004-000000000001', 'Garage', 'garage', 1, 480),
+  ('00000000-0000-0000-0005-000000000009',
    '00000000-0000-0000-0004-000000000001', 'Backyard / Pool Area', 'outdoor', 1, null);
 
 -- ── Home Systems ──────────────────────────────────────────────
@@ -164,41 +208,61 @@ insert into public.home_systems (
   installed_date, last_service, next_service, warranty_expiry, condition, notes
 )
 values
+  -- HVAC (heat pump — common in coastal NC)
   ('00000000-0000-0000-0006-000000000001',
    '00000000-0000-0000-0004-000000000001',
-   'hvac', 'Central HVAC System', 'Carrier', 'Infinity 24 (placeholder model)',
-   '2019-04-10', '2025-09-15', '2026-03-15', '2027-04-10',
-   'good', 'Dual-zone system. Filter replaced every 90 days.'),
+   'hvac', 'Heat Pump System', 'Lennox', 'XP21 (placeholder model)',
+   '2017-06-01', '2026-03-10', '2026-09-10', '2027-06-01',
+   'good', 'Heat pump — primary heating and cooling. Filter replaced every 60 days due to coastal humidity. Two zones.'),
 
+  -- Water heater
   ('00000000-0000-0000-0006-000000000002',
    '00000000-0000-0000-0004-000000000001',
-   'plumbing', 'Water Heater', 'Rheem', 'Performance Platinum (placeholder)',
-   '2020-07-22', '2024-07-22', '2026-07-22', '2028-07-22',
-   'good', '50-gallon gas water heater.'),
+   'plumbing', 'Water Heater', 'Rheem', 'Performance Plus (placeholder)',
+   '2021-04-15', '2025-04-15', '2026-04-15', '2029-04-15',
+   'good', '50-gallon electric water heater. Garage utility closet.'),
 
+  -- Electrical panel
   ('00000000-0000-0000-0006-000000000003',
    '00000000-0000-0000-0004-000000000001',
-   'electrical', 'Main Electrical Panel', 'Square D', '200A (placeholder)',
-   '2009-01-01', '2023-11-01', null, null,
-   'good', '200-amp service. No issues noted at last inspection.'),
+   'electrical', 'Main Electrical Panel', 'Square D', 'QO130L200PG (placeholder)',
+   '2017-06-01', '2024-11-12', null, null,
+   'good', '200-amp underground service. Whole-house surge protector installed 2024.'),
 
+  -- Plumbing shutoff
   ('00000000-0000-0000-0006-000000000004',
    '00000000-0000-0000-0004-000000000001',
-   'roof', 'Tile Roof', 'Boral', 'Saxony 900 (placeholder)',
-   '2009-01-01', '2024-04-10', '2027-04-10', null,
-   'good', 'Concrete tile. Last inspected April 2024 — no cracked tiles found.'),
+   'plumbing', 'Main Water Shutoff', null, null,
+   '2017-06-01', null, null, null,
+   'good', 'Ball valve shutoff located in garage utility closet, right of water heater. City water — no well.'),
 
+  -- Roof
   ('00000000-0000-0000-0006-000000000005',
    '00000000-0000-0000-0004-000000000001',
-   'security', 'Security System', 'Ring', 'Alarm Pro (placeholder)',
-   '2022-03-01', '2025-03-01', '2026-03-01', '2025-03-01',
-   'good', 'Cameras at front door, garage, and backyard.'),
+   'roof', 'Architectural Shingle Roof', 'GAF', 'Timberline HDZ (placeholder)',
+   '2017-06-01', '2025-05-20', '2028-05-20', '2032-06-01',
+   'good', '30-year architectural shingles. Last inspected May 2025 — no damage. Gutters cleaned spring 2025.'),
 
+  -- Sewer connection (city sewer — no septic)
   ('00000000-0000-0000-0006-000000000006',
    '00000000-0000-0000-0004-000000000001',
-   'pool', 'Pool & Spa System', 'Pentair', 'IntelliFlo (placeholder)',
-   '2015-06-01', '2025-12-01', '2026-03-01', null,
-   'good', 'Saltwater pool. Pump and filter serviced annually.');
+   'plumbing', 'Sewer Connection', null, null,
+   '2017-06-01', null, null, null,
+   'good', 'Connected to Pender County public sewer. No septic system on property. Clean-out access on north side of house.'),
+
+  -- Pool system
+  ('00000000-0000-0000-0006-000000000007',
+   '00000000-0000-0000-0004-000000000001',
+   'pool', 'Inground Pool System', 'Pentair', 'IntelliFlo3 (placeholder)',
+   '2019-08-01', '2026-04-10', '2026-10-15', null,
+   'good', 'Salt chlorine generator. Variable-speed pump. Pool opened April 2026. Equipment pad on south side of house.'),
+
+  -- Fence
+  ('00000000-0000-0000-0006-000000000008',
+   '00000000-0000-0000-0004-000000000001',
+   'structure', 'Privacy Fence', null, null,
+   '2020-03-01', null, null, null,
+   'good', '6-ft wood privacy fence enclosing backyard and pool area. Two gates. Minor board replacement in spring 2025.');
 
 -- ── Home Services ─────────────────────────────────────────────
 
@@ -208,33 +272,37 @@ insert into public.home_services (
   price_per_visit, price_unit, monthly_cost, is_active, notes
 )
 values
+  -- Lawn care
   ('00000000-0000-0000-0007-000000000001',
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0003-000000000002',
-   'landscaping', 'GreenThumb Landscaping', '555-000-0031',
-   'Weekly (Tuesday morning)', 85.00, 'visit', 340.00, true,
-   'Mowing, edging, and blowing. Seasonal pruning included.'),
+   'landscaping', 'Tidewater Lawn Care', '555-000-0031',
+   'Weekly (Wednesday morning)', 75.00, 'visit', 300.00, true,
+   'Mow, edge, blow. Pine straw refresh twice yearly. Irrigation check included.'),
 
+  -- Pest control
   ('00000000-0000-0000-0007-000000000002',
    '00000000-0000-0000-0004-000000000001',
-   '00000000-0000-0000-0003-000000000007',
-   'cleaning', 'Sparkle Home Services', '555-000-0036',
-   'Weekly (Thursday 10am-2pm)', 150.00, 'visit', 600.00, true,
-   'Full house cleaning. Supplies provided by service.'),
+   '00000000-0000-0000-0003-000000000005',
+   'pest_control', 'Coastal Pest Solutions', '555-000-0034',
+   'Quarterly', 130.00, 'visit', 43.00, true,
+   'General pest and termite prevention. Mosquito treatment added spring/summer. Annual subterranean termite bond.'),
 
+  -- Pool service
   ('00000000-0000-0000-0007-000000000003',
    '00000000-0000-0000-0004-000000000001',
-   '00000000-0000-0000-0003-000000000008',
-   'pest_control', 'TexPest Control', '555-000-0037',
-   'Quarterly', 120.00, 'visit', 40.00, true,
-   'General pest prevention. Annual termite inspection included.'),
+   '00000000-0000-0000-0003-000000000001',
+   'pool', 'Coastal Pool & Spa', '555-000-0030',
+   'Weekly (Friday)', 95.00, 'visit', 380.00, true,
+   'Weekly chemical balance, brushing, skimming. Salt cell inspection monthly. Chemicals billed separately. Seasonal open/close included in annual contract.'),
 
+  -- HVAC maintenance agreement
   ('00000000-0000-0000-0007-000000000004',
    '00000000-0000-0000-0004-000000000001',
-   '00000000-0000-0000-0003-000000000001',
-   'pool', 'AquaPro Pool Service', '555-000-0030',
-   'Weekly (Friday)', 85.00, 'visit', 340.00, true,
-   'Weekly chemical balance, brushing, and skimming. Chemicals billed separately.');
+   '00000000-0000-0000-0003-000000000003',
+   'other', 'Cape Fear Heating & Air', '555-000-0032',
+   'Bi-annual (March and September)', 149.00, 'visit', 25.00, true,
+   'Spring and fall tune-up. Priority service call included. Filter replacement at each visit.');
 
 -- ── Maintenance Tasks ─────────────────────────────────────────
 
@@ -243,35 +311,61 @@ insert into public.maintenance_tasks (
   due_date, is_recurring, recurrence_rule, priority, estimated_cost
 )
 values
+  -- HVAC filter
   ('00000000-0000-0000-0008-000000000001',
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0006-000000000001',
-   'Change HVAC Filter', 'Replace 20x25x1 MERV-11 filter.',
-   '2026-09-15', true, 'FREQ=MONTHLY;INTERVAL=3', 'normal', 25.00),
+   'Change HVAC Filter', 'Replace 20x20x1 MERV-11 filter. Coastal humidity — replace every 60 days.',
+   '2026-09-10', true, 'FREQ=MONTHLY;INTERVAL=2', 'normal', 20.00),
 
+  -- Gutter cleaning
   ('00000000-0000-0000-0008-000000000002',
    '00000000-0000-0000-0004-000000000001',
-   '00000000-0000-0000-0006-000000000004',
-   'Clean Gutters', 'Clear debris from gutters and downspouts.',
-   '2026-10-01', true, 'FREQ=YEARLY;BYMONTH=4,10', 'normal', 150.00),
+   '00000000-0000-0000-0006-000000000005',
+   'Clean Gutters', 'Clear pine needles and debris from gutters and flush downspouts.',
+   '2026-10-15', true, 'FREQ=YEARLY;BYMONTH=4,10', 'normal', 175.00),
 
+  -- Water heater flush
   ('00000000-0000-0000-0008-000000000003',
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0006-000000000002',
-   'Service Water Heater', 'Flush sediment and inspect anode rod.',
-   '2026-07-22', true, 'FREQ=YEARLY', 'normal', 120.00),
+   'Flush Water Heater', 'Flush sediment from electric water heater tank.',
+   '2026-04-15', true, 'FREQ=YEARLY', 'normal', 100.00),
 
+  -- Smoke / CO detectors
   ('00000000-0000-0000-0008-000000000004',
    '00000000-0000-0000-0004-000000000001',
    null,
-   'Check Smoke & CO Detectors', 'Test all units and replace batteries.',
+   'Check Smoke & CO Detectors', 'Test all units, replace batteries, note any units over 10 years old.',
    '2026-08-01', true, 'FREQ=YEARLY;BYMONTH=8', 'high', 30.00),
 
+  -- Pool chemical check
   ('00000000-0000-0000-0008-000000000005',
    '00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0006-000000000007',
+   'Pool Chemical Check', 'Test pH, alkalinity, salinity, and free chlorine.',
+   '2026-07-18', true, 'FREQ=WEEKLY', 'normal', null),
+
+  -- Roof inspection
+  ('00000000-0000-0000-0008-000000000006',
+   '00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0006-000000000005',
+   'Annual Roof Inspection', 'Inspect shingles, flashing, ridge cap, and gutters post-hurricane season.',
+   '2026-11-01', true, 'FREQ=YEARLY;BYMONTH=11', 'high', 250.00),
+
+  -- Electrical panel check
+  ('00000000-0000-0000-0008-000000000007',
+   '00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0006-000000000003',
+   'Electrical Panel Inspection', 'Visual inspection of breakers, surge protector, and main disconnect.',
+   '2027-11-01', true, 'FREQ=YEARLY;INTERVAL=3', 'normal', 180.00),
+
+  -- Sewer line flush
+  ('00000000-0000-0000-0008-000000000008',
+   '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0006-000000000006',
-   'Pool Chemical Check', 'Test pH, alkalinity, and chlorine levels.',
-   '2026-07-18', true, 'FREQ=WEEKLY', 'normal', null);
+   'Sewer Line Inspection', 'Camera inspect main sewer lateral to county connection.',
+   '2027-03-18', true, 'FREQ=YEARLY;INTERVAL=5', 'normal', 350.00);
 
 -- ── Projects ──────────────────────────────────────────────────
 
@@ -281,43 +375,56 @@ insert into public.projects (
   estimated_cost, actual_cost, vendor_id, is_diy, room_id, notes
 )
 values
+  -- Pool opening (annual, completed)
   ('00000000-0000-0000-0009-000000000001',
    '00000000-0000-0000-0004-000000000001',
-   'Kitchen Remodel', 'Full kitchen renovation including cabinets, countertops, and appliances.',
-   'renovation', 'completed', '2023-03-01', '2023-06-15',
-   38000.00, 41200.00, null, false,
-   '00000000-0000-0000-0005-000000000001',
-   'Completed on time. Final cost over budget due to added backsplash.'),
+   'Pool Opening – Spring 2026',
+   'Remove cover, re-attach equipment, prime pump, balance chemicals, inspect salt cell.',
+   'maintenance', 'completed', '2026-04-08', '2026-04-10',
+   275.00, 275.00,
+   '00000000-0000-0000-0003-000000000001', false,
+   '00000000-0000-0000-0005-000000000009',
+   'Completed April 10, 2026. Salt cell cleaned. Water balanced. Ready for season.'),
 
+  -- Roof inspection (completed)
   ('00000000-0000-0000-0009-000000000002',
    '00000000-0000-0000-0004-000000000001',
-   'Bathroom Tile Refresh', 'Retile master shower and replace fixtures.',
-   'renovation', 'completed', '2024-01-10', '2024-02-05',
-   6500.00, 6200.00, null, false,
-   '00000000-0000-0000-0005-000000000005',
-   'Under budget. Used leftover tile for accent wall.'),
+   'Roof Inspection – Spring 2025',
+   'Post-winter shingle inspection and gutter cleaning.',
+   'inspection', 'completed', '2025-05-19', '2025-05-20',
+   250.00, 250.00,
+   '00000000-0000-0000-0003-000000000008', false, null,
+   'No damage found. 2 gutter spikes re-nailed. Downspout cleared.'),
 
+  -- HVAC service (completed)
   ('00000000-0000-0000-0009-000000000003',
    '00000000-0000-0000-0004-000000000001',
-   'Roof Inspection & Repair', 'Annual tile inspection and re-seal of ridge caps.',
-   'inspection', 'completed', '2024-04-08', '2024-04-10',
-   450.00, 425.00,
-   null, false, null,
-   'No cracked tiles. Ridge cap re-sealed.'),
+   'HVAC Spring Tune-Up 2026',
+   'Heat pump spring service: coil clean, refrigerant check, capacitor test, filter swap.',
+   'maintenance', 'completed', '2026-03-10', '2026-03-10',
+   149.00, 149.00,
+   '00000000-0000-0000-0003-000000000003', false, null,
+   'All clear. Refrigerant level nominal. New filter installed.'),
 
+  -- Fence repair (in progress)
   ('00000000-0000-0000-0009-000000000004',
    '00000000-0000-0000-0004-000000000001',
-   'Deck Staining', 'Sand and re-stain rear deck boards.',
-   'maintenance', 'in_progress', '2026-07-01', '2026-07-20',
-   800.00, null, null, true, null,
-   'DIY project. Semi-transparent cedar stain.'),
+   'Fence Board Replacement',
+   'Replace 14 weathered fence boards on south run. Re-seal all boards.',
+   'repair', 'in_progress', '2026-07-05', '2026-07-19',
+   620.00, null,
+   '00000000-0000-0000-0003-000000000006', false, null,
+   'Materials purchased. Topsail Handyman scheduled week of July 14.'),
 
+  -- Generator install (planned)
   ('00000000-0000-0000-0009-000000000005',
    '00000000-0000-0000-0004-000000000001',
-   'Garage Door Replacement', 'Replace aging single-panel garage door with insulated roll-up.',
-   'installation', 'planned', '2026-09-01', null,
-   3200.00, null, null, false, null,
-   'Getting three quotes. Prefer Wayne Dalton or Clopay.');
+   'Whole-House Generator Installation',
+   'Install 22kW standby generator. Automatic transfer switch. Natural gas connection.',
+   'installation', 'planned', '2026-10-01', null,
+   12500.00, null,
+   '00000000-0000-0000-0003-000000000004', false, null,
+   'Quotes received from Pender Electric and one other. Decision pending. Coastal NC hurricane prep.');
 
 -- ── Professional Contacts ─────────────────────────────────────
 
@@ -326,45 +433,50 @@ insert into public.professional_contacts (
   name, company, phone, email, city, state, extra_fields
 )
 values
+  -- Realtor (NC)
   ('00000000-0000-0000-0010-000000000001',
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0000-000000000010',
-   'realtor', 'Sarah Johnson', 'Austin Realty Partners',
-   '555-000-0010', 'sarah.johnson.realtor@placeholder.example',
-   'Austin', 'TX',
-   '{"license_number": "TX-PLACEHOLDER-0001", "years_active": 12, "specialties": "Residential, First-Time Buyers"}'::jsonb),
+   'realtor', 'Dana Hewitt', 'Coastal Carolina Realty',
+   '555-000-0010', 'dana.hewitt.realtor@placeholder.example',
+   'Hampstead', 'NC',
+   '{"license_number": "NC-PLACEHOLDER-0001", "years_active": 9, "specialties": "Coastal Residential, Pender County"}'::jsonb),
 
+  -- Insurance agent (NC)
   ('00000000-0000-0000-0010-000000000002',
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0000-000000000012',
-   'insurance', 'Linda Park', 'State Farm – Austin Central',
-   '555-000-0012', 'linda.park.insurance@placeholder.example',
-   'Austin', 'TX',
-   '{"policy_number": "SF-PLACEHOLDER-0001", "coverage": "$350,000 dwelling", "renewal_date": "2027-01-15"}'::jsonb),
+   'insurance', 'Carol Beasley', 'Cape Fear Insurance Group',
+   '555-000-0012', 'carol.beasley.insurance@placeholder.example',
+   'Wilmington', 'NC',
+   '{"policy_number": "CFI-PLACEHOLDER-0001", "coverage": "$480,000 dwelling", "renewal_date": "2027-03-18"}'::jsonb),
 
+  -- Lender (NC)
   ('00000000-0000-0000-0010-000000000003',
    '00000000-0000-0000-0004-000000000001',
    null,
-   'lender', 'Tom Bradley', 'Chase Home Lending',
-   '555-000-0022', 'tom.bradley@chase.placeholder.example',
-   'Austin', 'TX',
-   '{"loan_number": "CHASE-PLACEHOLDER-0001", "rate": "3.25% fixed 30-yr", "payoff_date": "2051-06-15"}'::jsonb),
+   'lender', 'Marcus Webb', 'First Bank – Coastal NC',
+   '555-000-0022', 'marcus.webb@firstbank-coastalnc.placeholder.example',
+   'Hampstead', 'NC',
+   '{"loan_number": "FB-PLACEHOLDER-0001", "rate": "4.875% fixed 30-yr", "payoff_date": "2052-03-18"}'::jsonb),
 
+  -- Closing attorney (NC)
   ('00000000-0000-0000-0010-000000000004',
    '00000000-0000-0000-0004-000000000001',
    null,
-   'closing', 'Jennifer Walsh', 'Austin Title Company',
-   '555-000-0023', 'jennifer.walsh@austintitle.placeholder.example',
-   'Austin', 'TX',
-   '{"closing_date": "2021-06-15", "title_insurance": "Placeholder policy", "escrow_balance": "0.00"}'::jsonb),
+   'closing', 'Patricia Norris', 'Pender County Title & Escrow',
+   '555-000-0023', 'patricia.norris@pendertitle.placeholder.example',
+   'Burgaw', 'NC',
+   '{"closing_date": "2022-03-18", "title_insurance": "Placeholder policy", "escrow_balance": "0.00"}'::jsonb),
 
+  -- Home inspector (NC)
   ('00000000-0000-0000-0010-000000000005',
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0000-000000000011',
-   'inspector', 'Mike Torres', 'Torres Home Inspections',
-   '555-000-0011', 'mike.torres.inspector@placeholder.example',
-   'Austin', 'TX',
-   '{"license_number": "TX-INSP-PLACEHOLDER-0001", "inspection_date": "2021-05-28", "report_reference": "THI-2021-PLACEHOLDER"}'::jsonb);
+   'inspector', 'James Strickland', 'Strickland Home Inspections LLC',
+   '555-000-0011', 'james.strickland.inspector@placeholder.example',
+   'Hampstead', 'NC',
+   '{"license_number": "NC-INSP-PLACEHOLDER-0001", "inspection_date": "2022-02-28", "report_reference": "SHI-2022-PLACEHOLDER"}'::jsonb);
 
 -- ── Phonebook Entries ─────────────────────────────────────────
 
@@ -376,105 +488,308 @@ values
   ('00000000-0000-0000-0011-000000000001',
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0003-000000000001',
-   'AquaPro Pool Service', 'Pool & Spa',
-   '555-000-0030', 'service@aquapro.placeholder.example', 5, true,
-   'Carlos is great. Always on time. 5 stars.'),
+   'Coastal Pool & Spa', 'Pool & Spa',
+   '555-000-0030', 'service@coastalpoolspa.placeholder.example', 5, true,
+   'Tony opens and closes the pool every year. Always on time. Very thorough.'),
 
   ('00000000-0000-0000-0011-000000000002',
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0003-000000000002',
-   'GreenThumb Landscaping', 'Lawn & Garden',
-   '555-000-0031', 'info@greenthumb.placeholder.example', 4, true,
-   'Reliable crew. Good seasonal pruning.'),
+   'Tidewater Lawn Care', 'Landscaping',
+   '555-000-0031', 'info@tidewaterlawn.placeholder.example', 4, true,
+   'Reliable. Pine straw looks great. Sometimes runs 30 min late.'),
 
   ('00000000-0000-0000-0011-000000000003',
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0003-000000000003',
-   'CoolBreeze HVAC', 'HVAC',
-   '555-000-0032', 'service@coolbreeze.placeholder.example', 5, true,
-   'Best HVAC tech in Austin. Fast response.'),
+   'Cape Fear Heating & Air', 'HVAC',
+   '555-000-0032', 'service@capefearhvac.placeholder.example', 5, true,
+   'Best HVAC team on the coast. Priority response. Ask for Dave.'),
 
   ('00000000-0000-0000-0011-000000000004',
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0003-000000000004',
-   'Sparks Electric', 'Electrical',
-   '555-000-0033', 'info@sparkselectric.placeholder.example', 5, true,
-   'Did panel inspection and outlet install. Very professional.'),
+   'Pender Electric', 'Electrical',
+   '555-000-0033', 'info@penderelectric.placeholder.example', 5, true,
+   'Installed surge protector and exterior outlets. Clean work, reasonable price.'),
 
   ('00000000-0000-0000-0011-000000000005',
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0003-000000000005',
-   'ProPaint Austin', 'Painting',
-   '555-000-0034', 'jobs@propaint.placeholder.example', 4, false,
-   'Good work on living room. Slightly over schedule.'),
+   'Coastal Pest Solutions', 'Pest Control',
+   '555-000-0034', 'info@coastalpest.placeholder.example', 4, true,
+   'Quarterly service keeping termites and mosquitoes in check.'),
 
   ('00000000-0000-0000-0011-000000000006',
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0003-000000000006',
-   'Handy Mike Repairs', 'Handyman',
-   '555-000-0035', 'handymike@placeholder.example', 4, true,
-   'Great for small repairs. Books up fast.');
+   'Topsail Handyman Services', 'Handyman',
+   '555-000-0035', 'info@topsailhandyman.placeholder.example', 4, true,
+   'Good for smaller jobs. Fair pricing. Books 2-3 weeks out.'),
 
--- ── Documents ─────────────────────────────────────────────────
+  ('00000000-0000-0000-0011-000000000007',
+   '00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0003-000000000007',
+   'Sound Plumbing Co.', 'Plumbing',
+   '555-000-0036', 'info@soundplumbing.placeholder.example', 5, true,
+   'Fixed slow drain and replaced supply lines under kitchen sink. Fast and clean.'),
+
+  ('00000000-0000-0000-0011-000000000008',
+   '00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0003-000000000008',
+   'Cape Lookout Roofing', 'Roofing',
+   '555-000-0037', 'info@capelookoutroofing.placeholder.example', 5, true,
+   'Inspected roof after Hurricane Helene. No damage. Very professional report.');
+
+-- ── Documents (metadata only) ─────────────────────────────────
 
 insert into public.documents (
   id, property_id, uploaded_by, category,
   title, storage_path, file_name, mime_type, expiry_date, tags
 )
 values
+  -- Homeowner insurance declaration
   ('00000000-0000-0000-0012-000000000001',
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0000-000000000001',
-   'inspection',
-   'Home Inspection Report – Pre-Purchase 2021',
-   'placeholder/properties/willow-creek/docs/inspection-2021.pdf',
-   'inspection-report-2021.pdf', 'application/pdf', null,
-   ARRAY['inspection', '2021', 'pre-purchase']),
+   'insurance',
+   'Homeowner''s Insurance Declaration – Cape Fear Insurance Group',
+   'placeholder/properties/marsh-cove/docs/insurance-declaration-2026.pdf',
+   'insurance-declaration-2026.pdf', 'application/pdf', '2027-03-18',
+   ARRAY['insurance', 'declaration', 'cape-fear', '2026']),
 
+  -- Property survey
   ('00000000-0000-0000-0012-000000000002',
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0000-000000000001',
-   'warranty',
-   'HVAC System Warranty',
-   'placeholder/properties/willow-creek/docs/hvac-warranty.pdf',
-   'hvac-warranty.pdf', 'application/pdf', '2027-04-10',
-   ARRAY['hvac', 'warranty', 'carrier']),
+   'other',
+   'Property Survey – 114 Marsh Cove Lane 2022',
+   'placeholder/properties/marsh-cove/docs/survey-2022.pdf',
+   'survey-2022.pdf', 'application/pdf', null,
+   ARRAY['survey', 'plat', '2022', 'closing']),
 
+  -- Roof warranty
   ('00000000-0000-0000-0012-000000000003',
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0000-000000000001',
-   'insurance',
-   'Homeowner''s Insurance Policy – State Farm',
-   'placeholder/properties/willow-creek/docs/insurance-policy-statefarm.pdf',
-   'insurance-policy-statefarm.pdf', 'application/pdf', '2027-01-15',
-   ARRAY['insurance', 'state-farm', 'policy']),
+   'warranty',
+   'GAF Roof Warranty – 30-Year Timberline HDZ',
+   'placeholder/properties/marsh-cove/docs/roof-warranty-gaf.pdf',
+   'roof-warranty-gaf.pdf', 'application/pdf', '2047-06-01',
+   ARRAY['roof', 'warranty', 'gaf', '30-year']),
 
+  -- HVAC service invoice
   ('00000000-0000-0000-0012-000000000004',
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0000-000000000001',
-   'deed',
-   'Property Deed – 2847 Willow Creek Drive',
-   'placeholder/properties/willow-creek/docs/deed-2021.pdf',
-   'deed-2021.pdf', 'application/pdf', null,
-   ARRAY['deed', 'closing', '2021']),
+   'invoice',
+   'HVAC Spring Tune-Up Invoice – March 2026',
+   'placeholder/properties/marsh-cove/docs/hvac-invoice-2026-03.pdf',
+   'hvac-invoice-2026-03.pdf', 'application/pdf', null,
+   ARRAY['hvac', 'invoice', '2026', 'cape-fear-hvac']),
 
+  -- Pool opening receipt
   ('00000000-0000-0000-0012-000000000005',
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0000-000000000001',
-   'permit',
-   'Pool Construction Permit – 2015',
-   'placeholder/properties/willow-creek/docs/pool-permit-2015.pdf',
-   'pool-permit-2015.pdf', 'application/pdf', null,
-   ARRAY['pool', 'permit', '2015']),
+   'invoice',
+   'Pool Opening Receipt – April 2026',
+   'placeholder/properties/marsh-cove/docs/pool-opening-receipt-2026-04.pdf',
+   'pool-opening-receipt-2026-04.pdf', 'application/pdf', null,
+   ARRAY['pool', 'opening', 'receipt', '2026']),
 
+  -- Sewer / utility record
   ('00000000-0000-0000-0012-000000000006',
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0000-000000000001',
-   'inspection',
-   'Roof Inspection Report – April 2024',
-   'placeholder/properties/willow-creek/docs/roof-inspection-2024.pdf',
-   'roof-inspection-2024.pdf', 'application/pdf', null,
-   ARRAY['roof', 'inspection', '2024']);
+   'other',
+   'Pender County Sewer Connection Record',
+   'placeholder/properties/marsh-cove/docs/sewer-connection-record.pdf',
+   'sewer-connection-record.pdf', 'application/pdf', null,
+   ARRAY['sewer', 'utility', 'pender-county', '2017']);
+
+-- ── Media (metadata only) ─────────────────────────────────────
+
+insert into public.media (
+  id, property_id, uploaded_by, media_type,
+  title, storage_path, file_name, mime_type,
+  home_system_id, room_id, tags, taken_at
+)
+values
+  -- Front elevation photo
+  ('00000000-0000-0000-0016-000000000001',
+   '00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0000-000000000001',
+   'image', 'Front Elevation – 114 Marsh Cove Lane',
+   'placeholder/properties/marsh-cove/media/front-elevation.jpg',
+   'front-elevation.jpg', 'image/jpeg',
+   null, null, ARRAY['exterior', 'front', 'hero'], '2022-03-19 10:00:00+00'),
+
+  -- HVAC unit
+  ('00000000-0000-0000-0016-000000000002',
+   '00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0000-000000000001',
+   'image', 'HVAC Heat Pump Unit – Exterior',
+   'placeholder/properties/marsh-cove/media/hvac-unit-exterior.jpg',
+   'hvac-unit-exterior.jpg', 'image/jpeg',
+   '00000000-0000-0000-0006-000000000001', null,
+   ARRAY['hvac', 'heat-pump', 'equipment'], '2026-03-10 09:30:00+00'),
+
+  -- Electrical panel
+  ('00000000-0000-0000-0016-000000000003',
+   '00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0000-000000000001',
+   'image', 'Main Electrical Panel – Garage',
+   'placeholder/properties/marsh-cove/media/electrical-panel.jpg',
+   'electrical-panel.jpg', 'image/jpeg',
+   '00000000-0000-0000-0006-000000000003', '00000000-0000-0000-0005-000000000008',
+   ARRAY['electrical', 'panel', 'garage'], '2024-11-12 14:00:00+00'),
+
+  -- Water heater label
+  ('00000000-0000-0000-0016-000000000004',
+   '00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0000-000000000001',
+   'image', 'Water Heater Data Label – Garage',
+   'placeholder/properties/marsh-cove/media/water-heater-label.jpg',
+   'water-heater-label.jpg', 'image/jpeg',
+   '00000000-0000-0000-0006-000000000002', '00000000-0000-0000-0005-000000000008',
+   ARRAY['water-heater', 'label', 'rheem'], '2021-04-15 11:00:00+00'),
+
+  -- Pool equipment pad
+  ('00000000-0000-0000-0016-000000000005',
+   '00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0000-000000000001',
+   'image', 'Pool Equipment Pad – Pentair Pump & Salt Cell',
+   'placeholder/properties/marsh-cove/media/pool-equipment-pad.jpg',
+   'pool-equipment-pad.jpg', 'image/jpeg',
+   '00000000-0000-0000-0006-000000000007', '00000000-0000-0000-0005-000000000009',
+   ARRAY['pool', 'equipment', 'pentair', 'salt-cell'], '2026-04-10 10:00:00+00');
+
+-- ── Tags ──────────────────────────────────────────────────────
+
+insert into public.tags (id, property_id, name, color)
+values
+  ('00000000-0000-0000-0017-000000000001', '00000000-0000-0000-0004-000000000001', 'hurricane-prep', '#C86F1A'),
+  ('00000000-0000-0000-0017-000000000002', '00000000-0000-0000-0004-000000000001', 'warranty-active', '#27A570'),
+  ('00000000-0000-0000-0017-000000000003', '00000000-0000-0000-0004-000000000001', 'seasonal', '#1F5AE0'),
+  ('00000000-0000-0000-0017-000000000004', '00000000-0000-0000-0004-000000000001', 'needs-quote', '#C94949');
+
+-- Tag: generator project is hurricane-prep
+insert into public.entity_tags (tag_id, entity_type, entity_id)
+values
+  ('00000000-0000-0000-0017-000000000001', 'project',       '00000000-0000-0000-0009-000000000005'),
+  ('00000000-0000-0000-0017-000000000001', 'maintenance_task', '00000000-0000-0000-0008-000000000006'),
+  ('00000000-0000-0000-0017-000000000002', 'home_system',   '00000000-0000-0000-0006-000000000005'),
+  ('00000000-0000-0000-0017-000000000002', 'home_system',   '00000000-0000-0000-0006-000000000001'),
+  ('00000000-0000-0000-0017-000000000003', 'home_service',  '00000000-0000-0000-0007-000000000003'),
+  ('00000000-0000-0000-0017-000000000004', 'project',       '00000000-0000-0000-0009-000000000005');
+
+-- ── Notes ────────────────────────────────────────────────────
+
+insert into public.notes (id, author_id, entity_type, entity_id, body, is_pinned)
+values
+  ('00000000-0000-0000-0018-000000000001',
+   '00000000-0000-0000-0000-000000000001',
+   'property', '00000000-0000-0000-0004-000000000001',
+   'Main water shutoff is in the garage utility closet, right of the water heater. Show Ray where it is.',
+   true),
+
+  ('00000000-0000-0000-0018-000000000002',
+   '00000000-0000-0000-0000-000000000001',
+   'home_system', '00000000-0000-0000-0006-000000000007',
+   'Pool salt cell should be cleaned every 3 months during season. Tony at Coastal Pool handles this.',
+   false),
+
+  ('00000000-0000-0000-0018-000000000003',
+   '00000000-0000-0000-0000-000000000001',
+   'project', '00000000-0000-0000-0009-000000000005',
+   'Get permit from Pender County before generator install. Pender Electric handles permit pull.',
+   true);
+
+-- ── Status History ────────────────────────────────────────────
+
+insert into public.status_history (id, changed_by, entity_type, entity_id, from_status, to_status, reason, changed_at)
+values
+  ('00000000-0000-0000-0019-000000000001',
+   '00000000-0000-0000-0000-000000000001',
+   'project', '00000000-0000-0000-0009-000000000001',
+   'in_progress', 'completed', 'Pool opened and balanced for 2026 season.',
+   '2026-04-10 16:00:00+00'),
+
+  ('00000000-0000-0000-0019-000000000002',
+   '00000000-0000-0000-0000-000000000001',
+   'project', '00000000-0000-0000-0009-000000000002',
+   'in_progress', 'completed', 'Roof inspection clear. No repairs needed.',
+   '2025-05-20 14:00:00+00'),
+
+  ('00000000-0000-0000-0019-000000000003',
+   '00000000-0000-0000-0000-000000000001',
+   'project', '00000000-0000-0000-0009-000000000003',
+   'in_progress', 'completed', 'HVAC spring tune-up completed.',
+   '2026-03-10 12:00:00+00');
+
+-- ── Audit Log ────────────────────────────────────────────────
+
+insert into public.audit_log (id, actor_id, action, entity_type, entity_id, description, occurred_at)
+values
+  -- Home purchase
+  ('00000000-0000-0000-0020-000000000001',
+   '00000000-0000-0000-0000-000000000001',
+   'insert', 'property', '00000000-0000-0000-0004-000000000001',
+   'Property 114 Marsh Cove Lane added to HomeHub after purchase.',
+   '2022-03-18 17:00:00+00'),
+
+  -- Insurance declaration uploaded
+  ('00000000-0000-0000-0020-000000000002',
+   '00000000-0000-0000-0000-000000000001',
+   'document_uploaded', 'document', '00000000-0000-0000-0012-000000000001',
+   'Homeowner''s insurance declaration uploaded by Michael Johnson.',
+   '2022-03-20 10:30:00+00'),
+
+  -- HVAC service logged
+  ('00000000-0000-0000-0020-000000000003',
+   '00000000-0000-0000-0000-000000000001',
+   'insert', 'project', '00000000-0000-0000-0009-000000000003',
+   'HVAC spring tune-up project logged and marked complete.',
+   '2026-03-10 12:00:00+00'),
+
+  -- Pool opening logged
+  ('00000000-0000-0000-0020-000000000004',
+   '00000000-0000-0000-0000-000000000001',
+   'insert', 'project', '00000000-0000-0000-0009-000000000001',
+   'Pool opening project logged and marked complete.',
+   '2026-04-10 16:00:00+00'),
+
+  -- Roof inspection logged
+  ('00000000-0000-0000-0020-000000000005',
+   '00000000-0000-0000-0000-000000000001',
+   'insert', 'project', '00000000-0000-0000-0009-000000000002',
+   'Roof inspection project logged and marked complete.',
+   '2025-05-20 14:00:00+00'),
+
+  -- Document shared with insurance agent
+  ('00000000-0000-0000-0020-000000000006',
+   '00000000-0000-0000-0000-000000000001',
+   'document_uploaded', 'document', '00000000-0000-0000-0012-000000000001',
+   'Insurance declaration shared with Carol Beasley at Cape Fear Insurance Group.',
+   '2026-04-01 09:00:00+00');
+
+-- ── Access Grant (Ray the caretaker, QR) ─────────────────────
+
+insert into public.access_grants (
+  id, property_id, granted_by, granted_to,
+  grant_type, token, label, expires_at
+)
+values (
+  '00000000-0000-0000-0021-000000000001',
+  '00000000-0000-0000-0004-000000000001',
+  '00000000-0000-0000-0000-000000000001',
+  '00000000-0000-0000-0000-000000000003',
+  'qr_code',
+  'placeholder-qr-token-ray-caretaker-0001',
+  'Ray Watkins – Caretaker Access',
+  '2027-01-01 00:00:00+00'
+);
 
 -- ── Subscriptions ─────────────────────────────────────────────
 
@@ -489,7 +804,7 @@ values (
   '2026-06-01', '2026-07-01'
 );
 
--- ── Insurance Policies ────────────────────────────────────────
+-- ── Insurance Policy ──────────────────────────────────────────
 
 insert into public.insurance_policies (
   id, property_id, insurer_name, policy_type, status,
@@ -500,12 +815,12 @@ insert into public.insurance_policies (
 values (
   '00000000-0000-0000-0014-000000000001',
   '00000000-0000-0000-0004-000000000001',
-  'State Farm', 'homeowners', 'active',
-  'SF-PLACEHOLDER-0001',
-  'Linda Park', '555-000-0012', 'linda.park.insurance@placeholder.example',
-  2100.00, 350000.00, 2500.00,
-  '2026-01-15', '2027-01-15', 30,
-  '00000000-0000-0000-0012-000000000003'
+  'Cape Fear Insurance Group', 'homeowners', 'active',
+  'CFI-PLACEHOLDER-0001',
+  'Carol Beasley', '555-000-0012', 'carol.beasley.insurance@placeholder.example',
+  2640.00, 480000.00, 3000.00,
+  '2026-03-18', '2027-03-18', 30,
+  '00000000-0000-0000-0012-000000000001'
 );
 
 -- ── Notifications ─────────────────────────────────────────────
@@ -518,20 +833,34 @@ values
   ('00000000-0000-0000-0015-000000000001',
    '00000000-0000-0000-0000-000000000001',
    'maintenance_reminder', 'unread',
-   'HVAC Filter Due', 'Your HVAC filter is due for replacement by September 15.',
+   'HVAC Filter Due', 'Your heat pump filter is due for replacement. Coastal humidity — replace every 60 days.',
    '00000000-0000-0000-0004-000000000001',
    'maintenance_task', '00000000-0000-0000-0008-000000000001'),
 
   ('00000000-0000-0000-0015-000000000002',
    '00000000-0000-0000-0000-000000000001',
-   'document_expiry', 'unread',
-   'HVAC Warranty Expiring', 'Your HVAC warranty expires April 10, 2027. Consider an extended plan.',
+   'maintenance_reminder', 'unread',
+   'Annual Roof Inspection Due November', 'Schedule post-hurricane-season roof inspection by November 1.',
    '00000000-0000-0000-0004-000000000001',
-   'document', '00000000-0000-0000-0012-000000000002'),
+   'maintenance_task', '00000000-0000-0000-0008-000000000006'),
 
   ('00000000-0000-0000-0015-000000000003',
    '00000000-0000-0000-0000-000000000001',
    'compliance_reminder', 'unread',
    'Check Smoke Detectors', 'Annual smoke and CO detector check is due August 1.',
    '00000000-0000-0000-0004-000000000001',
-   'maintenance_task', '00000000-0000-0000-0008-000000000004');
+   'maintenance_task', '00000000-0000-0000-0008-000000000004'),
+
+  ('00000000-0000-0000-0015-000000000004',
+   '00000000-0000-0000-0000-000000000001',
+   'project_update', 'unread',
+   'Generator Quote Ready', 'You have an open quote for whole-house generator installation. Review and decide before hurricane season.',
+   '00000000-0000-0000-0004-000000000001',
+   'project', '00000000-0000-0000-0009-000000000005'),
+
+  ('00000000-0000-0000-0015-000000000005',
+   '00000000-0000-0000-0000-000000000001',
+   'document_expiry', 'unread',
+   'Insurance Renewal in 9 Months', 'Your Cape Fear Insurance Group policy renews March 18, 2027.',
+   '00000000-0000-0000-0004-000000000001',
+   'document', '00000000-0000-0000-0012-000000000001');
