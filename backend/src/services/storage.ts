@@ -25,13 +25,13 @@
  * Canonical bucket identifiers. Values must match the `id` column in
  * storage.buckets (created by migration 0009_storage_foundation.sql).
  *
- * Populated from environment variables so the same TypeScript source
- * works across local, staging, and production without code changes.
+ * These names are fixed because the database metadata tables do not carry
+ * bucket names; each table maps to exactly one bucket.
  */
 export const STORAGE_BUCKETS = {
-  documents: process.env.STORAGE_BUCKET_DOCUMENTS ?? 'documents',
-  media:     process.env.STORAGE_BUCKET_MEDIA     ?? 'media',
-  avatars:   process.env.STORAGE_BUCKET_AVATARS   ?? 'avatars',
+  documents: 'documents',
+  media:     'media',
+  avatars:   'avatars',
 } as const;
 
 export type StorageBucket = keyof typeof STORAGE_BUCKETS;
@@ -90,6 +90,9 @@ export const SIGNED_URL_TTL_SECONDS: Record<StorageBucket, number> = {
   avatars:   86400,    // 24 hours
 };
 
+/** No signed URL may outlive one day, including per-request overrides. */
+export const MAX_SIGNED_URL_TTL_SECONDS = 86_400;
+
 // ── Entity types (used in media paths) ───────────────────────────────────────
 
 export type MediaEntityType = 'property' | 'room' | 'project' | 'home_system';
@@ -97,24 +100,54 @@ export type MediaEntityType = 'property' | 'room' | 'project' | 'home_system';
 // ── Path helpers ─────────────────────────────────────────────────────────────
 
 /**
- * Sanitise a user-supplied filename: strip directory traversal, replace
- * spaces and special characters with hyphens, lowercase the result.
+ * Normalise a user-supplied filename without allowing it to affect path scope.
  *
  * This must be applied to all filenames before including them in storage paths.
  */
 export function sanitiseFilename(raw: string): string {
-  return raw
-    .replace(/[/\\]/g, '')           // strip path separators (traversal guard)
-    .replace(/[^a-zA-Z0-9._-]/g, '-') // replace unsafe chars
-    .replace(/-{2,}/g, '-')           // collapse multiple hyphens
-    .toLowerCase()
-    .slice(0, 200);                   // cap length
+  const trimmed = raw.trim();
+  if (trimmed.split(/[/\\]/).some((segment) => segment === '..')) {
+    throw new Error('Filename must not contain directory traversal semantics ("..").');
+  }
+
+  const withoutControls = Array.from(trimmed, (character) => {
+    const codePoint = character.codePointAt(0) ?? 0;
+    return codePoint <= 31 || (codePoint >= 127 && codePoint <= 159) ? '-' : character;
+  }).join('');
+
+  const normalised = withoutControls
+    .replace(/[/\\]/g, '-')
+    .replace(/[^a-zA-Z0-9._-]/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+
+  if (!normalised || /^[.-]+$/.test(normalised)) {
+    throw new Error('Filename must contain at least one letter or number.');
+  }
+
+  const lastDot = normalised.lastIndexOf('.');
+  const hasExtension = lastDot > 0 && lastDot < normalised.length - 1;
+  if (!hasExtension || normalised.length <= 200) return normalised.slice(0, 200);
+
+  const extension = normalised.slice(lastDot, lastDot + 33);
+  const basenameLength = 200 - extension.length;
+  return `${normalised.slice(0, basenameLength)}${extension}`;
+}
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Reject identifiers that cannot be UUID-backed database entity IDs. */
+export function assertUuid(value: string, fieldName: string): void {
+  if (!UUID_PATTERN.test(value)) {
+    throw new Error(`${fieldName} must be a valid UUID.`);
+  }
 }
 
 /**
  * Build the storage object path for a document.
  *
- * Pattern: {property_id}/{document_id}/{sanitised_filename}
+ * Pattern: properties/{property_id}/documents/{document_id}/{sanitised_filename}
  *
  * @param propertyId   UUID of the owning property
  * @param documentId   UUID of the document row in public.documents
@@ -125,32 +158,34 @@ export function documentPath(
   documentId: string,
   filename: string,
 ): string {
-  return `${propertyId}/${documentId}/${sanitiseFilename(filename)}`;
+  assertUuid(propertyId, 'propertyId');
+  assertUuid(documentId, 'documentId');
+  return `properties/${propertyId}/documents/${documentId}/${sanitiseFilename(filename)}`;
 }
 
 /**
  * Build the storage object path for a media item.
  *
- * Pattern: {property_id}/{entity_type}/{entity_id}/{sanitised_filename}
+ * Pattern: properties/{property_id}/media/{media_id}/{sanitised_filename}
  *
  * @param propertyId   UUID of the owning property
- * @param entityType   Entity this media is attached to
- * @param entityId     UUID of the entity (room, project, etc.)
+ * @param mediaId      UUID of the media row in public.media
  * @param filename     Original filename (will be sanitised)
  */
 export function mediaPath(
   propertyId: string,
-  entityType: MediaEntityType,
-  entityId: string,
+  mediaId: string,
   filename: string,
 ): string {
-  return `${propertyId}/${entityType}/${entityId}/${sanitiseFilename(filename)}`;
+  assertUuid(propertyId, 'propertyId');
+  assertUuid(mediaId, 'mediaId');
+  return `properties/${propertyId}/media/${mediaId}/${sanitiseFilename(filename)}`;
 }
 
 /**
  * Build the storage object path for a profile avatar.
  *
- * Pattern: {profile_id}/avatar.{ext}
+ * Pattern: profiles/{profile_id}/avatars/avatar.{ext}
  *
  * Only one avatar is kept per profile — uploading always overwrites.
  *
@@ -158,8 +193,15 @@ export function mediaPath(
  * @param mimeType   MIME type of the uploaded image (used to derive extension)
  */
 export function avatarPath(profileId: string, mimeType: string): string {
-  const ext = mimeType.split('/')[1] ?? 'jpg';
-  return `${profileId}/avatar.${ext}`;
+  assertUuid(profileId, 'profileId');
+  const extensions: Readonly<Record<string, string>> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+  };
+  const extension = extensions[mimeType];
+  if (!extension) throw new Error(`Unsupported avatar MIME type "${mimeType}".`);
+  return `profiles/${profileId}/avatars/avatar.${extension}`;
 }
 
 // ── Validation helpers ────────────────────────────────────────────────────────
@@ -201,11 +243,13 @@ export function validateFileSize(
   fileSizeBytes: number,
 ): ValidationResult {
   const max = MAX_FILE_SIZE_BYTES[bucket];
-  if (fileSizeBytes <= max) {
+  if (Number.isInteger(fileSizeBytes) && fileSizeBytes >= 0 && fileSizeBytes <= max) {
     return { valid: true };
   }
   const maxMiB = (max / 1_048_576).toFixed(0);
-  const actualMiB = (fileSizeBytes / 1_048_576).toFixed(2);
+  const actualMiB = Number.isFinite(fileSizeBytes)
+    ? (fileSizeBytes / 1_048_576).toFixed(2)
+    : String(fileSizeBytes);
   return {
     valid: false,
     reason: `File size ${actualMiB} MiB exceeds the ${maxMiB} MiB limit for the "${bucket}" bucket.`,
@@ -319,14 +363,10 @@ export function prepareMediaUpload(
 ): UploadTarget {
   const result = validateUpload('media', params.mimeType, params.fileSizeBytes);
   if (!result.valid) throw new Error(result.reason);
+  assertUuid(params.entityId, 'entityId');
   return {
     bucket: 'media',
-    storagePath: mediaPath(
-      params.propertyId,
-      params.entityType,
-      params.entityId,
-      params.filename,
-    ),
+    storagePath: mediaPath(params.propertyId, params.mediaId, params.filename),
   };
 }
 
@@ -364,7 +404,13 @@ export function resolveSignedUrlTtl(
   bucket: StorageBucket,
   overrideTtlSeconds?: number,
 ): number {
-  return overrideTtlSeconds ?? SIGNED_URL_TTL_SECONDS[bucket];
+  const ttl = overrideTtlSeconds ?? SIGNED_URL_TTL_SECONDS[bucket];
+  if (!Number.isInteger(ttl) || ttl <= 0 || ttl > MAX_SIGNED_URL_TTL_SECONDS) {
+    throw new Error(
+      `Signed URL TTL must be an integer from 1 to ${MAX_SIGNED_URL_TTL_SECONDS} seconds.`,
+    );
+  }
+  return ttl;
 }
 
 /**

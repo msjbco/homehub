@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "lint": "eslint .",
+    "test": "tsx --test src/services/storage.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "keywords": [],

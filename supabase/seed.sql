@@ -602,7 +602,7 @@ values
    '00000000-0000-0000-0000-000000000001',
    'insurance',
    'Homeowner''s Insurance Declaration – Cape Fear Insurance Group',
-   'placeholder/properties/marsh-cove/docs/insurance-declaration-2026.pdf',
+   'properties/00000000-0000-0000-0004-000000000001/documents/00000000-0000-0000-0012-000000000001/insurance-declaration-2026.pdf',
    'insurance-declaration-2026.pdf', 'application/pdf', '2027-03-18',
    ARRAY['insurance', 'declaration', 'cape-fear', '2026']),
 
@@ -612,7 +612,7 @@ values
    '00000000-0000-0000-0000-000000000001',
    'other',
    'Property Survey – 114 Marsh Cove Lane 2022',
-   'placeholder/properties/marsh-cove/docs/survey-2022.pdf',
+   'properties/00000000-0000-0000-0004-000000000001/documents/00000000-0000-0000-0012-000000000002/survey-2022.pdf',
    'survey-2022.pdf', 'application/pdf', null,
    ARRAY['survey', 'plat', '2022', 'closing']),
 
@@ -622,7 +622,7 @@ values
    '00000000-0000-0000-0000-000000000001',
    'warranty',
    'GAF Roof Warranty – 30-Year Timberline HDZ',
-   'placeholder/properties/marsh-cove/docs/roof-warranty-gaf.pdf',
+   'properties/00000000-0000-0000-0004-000000000001/documents/00000000-0000-0000-0012-000000000003/roof-warranty-gaf.pdf',
    'roof-warranty-gaf.pdf', 'application/pdf', '2047-06-01',
    ARRAY['roof', 'warranty', 'gaf', '30-year']),
 
@@ -632,7 +632,7 @@ values
    '00000000-0000-0000-0000-000000000001',
    'invoice',
    'HVAC Spring Tune-Up Invoice – March 2026',
-   'placeholder/properties/marsh-cove/docs/hvac-invoice-2026-03.pdf',
+   'properties/00000000-0000-0000-0004-000000000001/documents/00000000-0000-0000-0012-000000000004/hvac-invoice-2026-03.pdf',
    'hvac-invoice-2026-03.pdf', 'application/pdf', null,
    ARRAY['hvac', 'invoice', '2026', 'cape-fear-hvac']),
 
@@ -642,7 +642,7 @@ values
    '00000000-0000-0000-0000-000000000001',
    'invoice',
    'Pool Opening Receipt – April 2026',
-   'placeholder/properties/marsh-cove/docs/pool-opening-receipt-2026-04.pdf',
+   'properties/00000000-0000-0000-0004-000000000001/documents/00000000-0000-0000-0012-000000000005/pool-opening-receipt-2026-04.pdf',
    'pool-opening-receipt-2026-04.pdf', 'application/pdf', null,
    ARRAY['pool', 'opening', 'receipt', '2026']),
 
@@ -652,7 +652,7 @@ values
    '00000000-0000-0000-0000-000000000001',
    'other',
    'Pender County Sewer Connection Record',
-   'placeholder/properties/marsh-cove/docs/sewer-connection-record.pdf',
+   'properties/00000000-0000-0000-0004-000000000001/documents/00000000-0000-0000-0012-000000000006/sewer-connection-record.pdf',
    'sewer-connection-record.pdf', 'application/pdf', null,
    ARRAY['sewer', 'utility', 'pender-county', '2017']);
 
@@ -669,7 +669,7 @@ values
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0000-000000000001',
    'image', 'Front Elevation – 114 Marsh Cove Lane',
-   'placeholder/properties/marsh-cove/media/front-elevation.jpg',
+   'properties/00000000-0000-0000-0004-000000000001/media/00000000-0000-0000-0016-000000000001/front-elevation.jpg',
    'front-elevation.jpg', 'image/jpeg',
    null, null, ARRAY['exterior', 'front', 'hero'], '2022-03-19 10:00:00+00'),
 
@@ -678,7 +678,7 @@ values
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0000-000000000001',
    'image', 'HVAC Heat Pump Unit – Exterior',
-   'placeholder/properties/marsh-cove/media/hvac-unit-exterior.jpg',
+   'properties/00000000-0000-0000-0004-000000000001/media/00000000-0000-0000-0016-000000000002/hvac-unit-exterior.jpg',
    'hvac-unit-exterior.jpg', 'image/jpeg',
    '00000000-0000-0000-0006-000000000001', null,
    ARRAY['hvac', 'heat-pump', 'equipment'], '2026-03-10 09:30:00+00'),
@@ -688,7 +688,7 @@ values
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0000-000000000001',
    'image', 'Main Electrical Panel – Garage',
-   'placeholder/properties/marsh-cove/media/electrical-panel.jpg',
+   'properties/00000000-0000-0000-0004-000000000001/media/00000000-0000-0000-0016-000000000003/electrical-panel.jpg',
    'electrical-panel.jpg', 'image/jpeg',
    '00000000-0000-0000-0006-000000000003', '00000000-0000-0000-0005-000000000008',
    ARRAY['electrical', 'panel', 'garage'], '2024-11-12 14:00:00+00'),
@@ -698,7 +698,7 @@ values
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0000-000000000001',
    'image', 'Water Heater Data Label – Garage',
-   'placeholder/properties/marsh-cove/media/water-heater-label.jpg',
+   'properties/00000000-0000-0000-0004-000000000001/media/00000000-0000-0000-0016-000000000004/water-heater-label.jpg',
    'water-heater-label.jpg', 'image/jpeg',
    '00000000-0000-0000-0006-000000000002', '00000000-0000-0000-0005-000000000008',
    ARRAY['water-heater', 'label', 'rheem'], '2021-04-15 11:00:00+00'),
@@ -708,7 +708,7 @@ values
    '00000000-0000-0000-0004-000000000001',
    '00000000-0000-0000-0000-000000000001',
    'image', 'Pool Equipment Pad – Pentair Pump & Salt Cell',
-   'placeholder/properties/marsh-cove/media/pool-equipment-pad.jpg',
+   'properties/00000000-0000-0000-0004-000000000001/media/00000000-0000-0000-0016-000000000005/pool-equipment-pad.jpg',
    'pool-equipment-pad.jpg', 'image/jpeg',
    '00000000-0000-0000-0006-000000000007', '00000000-0000-0000-0005-000000000009',
    ARRAY['pool', 'equipment', 'pentair', 'salt-cell'], '2026-04-10 10:00:00+00');

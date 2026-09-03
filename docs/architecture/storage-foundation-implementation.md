@@ -2,7 +2,7 @@
 
 > **Status:** Implemented (foundation step)  
 > **Branch:** feature/storage-foundation  
-> **Migration:** `supabase/migrations/202606260009_storage_foundation.sql`  
+> **Migrations:** `supabase/migrations/202606260009_storage_foundation.sql`, `supabase/migrations/202606260016_storage_metadata_integrity.sql`
 > **Backend scaffold:** `backend/src/services/storage.ts`  
 > **Last updated:** 2026-06-26
 
@@ -38,17 +38,17 @@ Three private Supabase Storage buckets are created by migration 0009. All bucket
 
 ## 3. Path Conventions
 
-Paths are enforced by the backend (not by the migration itself). The conventions below are codified in `backend/src/services/storage.ts` via the `documentPath()`, `mediaPath()`, and `avatarPath()` helpers.
+The backend generates deterministic UUID-scoped paths. The database rejects blank, absolute, backslash-containing, repeated-separator, and traversal paths; uniqueness is enforced independently within `documents` and `media`, matching their separate fixed buckets.
 
 ### 3.1 documents bucket
 
 ```
-{property_id}/{document_id}/{sanitised_filename}
+properties/{property_id}/documents/{document_id}/{sanitised_filename}
 ```
 
 Example:
 ```
-00000000-0000-0000-0003-000000000001/00000000-0000-0000-0013-000000000001/insurance-declaration.pdf
+properties/00000000-0000-0000-0003-000000000001/documents/00000000-0000-0000-0013-000000000001/insurance-declaration.pdf
 ```
 
 - `property_id` is the first path segment so a future storage policy can restrict access by property membership using a simple `(storage.foldername(name))[1] = property_id` predicate.
@@ -57,37 +57,38 @@ Example:
 ### 3.2 media bucket
 
 ```
-{property_id}/{entity_type}/{entity_id}/{sanitised_filename}
+properties/{property_id}/media/{media_id}/{sanitised_filename}
 ```
-
-`entity_type` is one of: `property`, `room`, `project`, `home_system`
 
 Example:
 ```
-00000000-0000-0000-0003-000000000001/project/00000000-0000-0000-0010-000000000005/before.jpg
+properties/00000000-0000-0000-0003-000000000001/media/00000000-0000-0000-0016-000000000001/before.jpg
 ```
+
+Including the media row UUID prevents collisions even when multiple related entities upload the same filename. The entity relationship remains authoritative in the row's foreign keys, not in the object path.
 
 ### 3.3 avatars bucket
 
 ```
-{profile_id}/avatar.{ext}
+profiles/{profile_id}/avatars/avatar.{ext}
 ```
 
 Example:
 ```
-00000000-0000-0000-0001-000000000001/avatar.jpg
+profiles/00000000-0000-0000-0001-000000000001/avatars/avatar.jpg
 ```
 
 Only one avatar object is kept per profile. Uploading a new avatar overwrites the previous one (same path).
 
 ### 3.4 Filename sanitisation
 
-The `sanitiseFilename()` helper in `storage.ts` applies the following transforms before including a user-supplied name in a path:
-- Strip `/` and `\` (directory traversal guard)
-- Replace characters outside `[a-zA-Z0-9._-]` with hyphens
+All IDs passed to path builders must be syntactically valid UUID strings. The `sanitiseFilename()` helper applies the following rules:
+- Reject `..` when it is a complete `/`- or `\\`-delimited path segment; harmless repeated periods inside a filename are preserved
+- Replace `/`, `\`, control characters, whitespace, and other characters outside `[a-zA-Z0-9._-]` with hyphens
 - Collapse consecutive hyphens
 - Lowercase the result
-- Cap at 200 characters
+- Reject empty results and names containing no letter or number
+- Cap at 200 characters while preserving a sensible final extension (up to 32 characters)
 
 ---
 
@@ -118,6 +119,8 @@ MIME type validation is performed server-side in the backend before any storage 
 
 Limits are set both in the bucket definition (`file_size_limit` column in `storage.buckets`) and mirrored in `MAX_FILE_SIZE_BYTES` in `storage.ts`. The backend validates size before initiating a storage write; the bucket limit serves as a hard server-side backstop.
 
+Sizes must be nonnegative integer bytes. Zero-byte objects and the exact maximum are allowed; maximum plus one byte is rejected.
+
 ---
 
 ## 6. Metadata Relationship to Database Tables
@@ -130,7 +133,7 @@ Every object in the `documents` bucket corresponds to exactly one row in `public
 
 | Column | Value |
 |---|---|
-| `storage_path` | Full object path within the bucket (e.g., `{property_id}/{document_id}/{filename}`) |
+| `storage_path` | Unique object path within the fixed bucket (e.g., `properties/{property_id}/documents/{document_id}/{filename}`) |
 | `file_name` | Sanitised filename |
 | `file_size_bytes` | Integer byte count |
 | `mime_type` | Detected MIME type |
@@ -151,6 +154,8 @@ Every object in the `media` bucket corresponds to one row in `public.media`. Add
 | `taken_at` | Timestamp of when the photo/video was captured |
 | `is_before_photo` / `is_after_photo` | Boolean flags for project progress tracking |
 | `width_px` / `height_px` / `duration_secs` | Dimensions/duration populated server-side after upload |
+
+Migration 0016 enforces nonnegative optional numeric metadata, nonblank required paths and filenames, nonblank optional MIME values, exact bucket MIME allowlists when MIME is supplied, safe relative path syntax, and per-table path uniqueness. No page-count or storage-bucket column exists in the current schema, so this phase does not invent either. `profiles.avatar_url`, when supplied, must be nonblank.
 
 ### Deletion contract
 
@@ -198,7 +203,7 @@ Client → GET /api/files/{document_id}/url
 | `media` | 1 hour | Displayed inline; longer TTL avoids frequent re-requests |
 | `avatars` | 24 hours | Low sensitivity; frequently fetched across the UI |
 
-TTLs are defined in `SIGNED_URL_TTL_SECONDS` in `storage.ts` and can be overridden per-request via `resolveSignedUrlTtl()`.
+TTLs are defined in `SIGNED_URL_TTL_SECONDS` in `storage.ts` and can be overridden per-request via `resolveSignedUrlTtl()`. Defaults remain 300, 3,600, and 86,400 seconds. Every effective TTL must be an integer from 1 through 86,400 seconds.
 
 ---
 
@@ -208,7 +213,7 @@ TTLs are defined in `SIGNED_URL_TTL_SECONDS` in `storage.ts` and can be overridd
 
 | Export | Kind | Purpose |
 |---|---|---|
-| `STORAGE_BUCKETS` | const | Bucket name map (reads from env vars) |
+| `STORAGE_BUCKETS` | const | Fixed bucket name map matching migration 0009 |
 | `MAX_FILE_SIZE_BYTES` | const | Per-bucket size limits |
 | `ALLOWED_MIME_TYPES` | const | Per-bucket MIME allowlists |
 | `SIGNED_URL_TTL_SECONDS` | const | Per-bucket default signed URL TTLs |
@@ -225,7 +230,7 @@ TTLs are defined in `SIGNED_URL_TTL_SECONDS` in `storage.ts` and can be overridd
 | `resolveSignedUrlTtl()` | function | Resolve effective TTL for a signed URL request |
 | `createSignedDownloadUrl()` | function | Signed URL stub (throws — not yet implemented) |
 
-The file compiles cleanly under `tsc --noEmit` without `@supabase/supabase-js` installed, because no Supabase types are imported directly — all Supabase interaction is isolated behind TODO stubs.
+The file compiles without `@supabase/supabase-js` installed. It contains pure validation/path helpers and an explicit signed-URL stub only: no client is instantiated and no upload, download, delete, signing, or bucket mutation can occur. Later Auth/RLS and storage-policy work must authorize access before any provider integration is added.
 
 ---
 
@@ -237,9 +242,6 @@ The following environment variables are used by the storage service. All are pla
 |---|---|---|
 | `SUPABASE_URL` | `backend/.env.example` | Supabase project URL (already present) |
 | `SUPABASE_SERVICE_ROLE_KEY` | `backend/.env.example` | Service-role key for all storage operations (already present) |
-| `STORAGE_BUCKET_DOCUMENTS` | `backend/.env.example` | Bucket name override (default: `documents`) |
-| `STORAGE_BUCKET_MEDIA` | `backend/.env.example` | Bucket name override (default: `media`) |
-| `STORAGE_BUCKET_AVATARS` | `backend/.env.example` | Bucket name override (default: `avatars`) |
 
 `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `frontend/.env.example` are unchanged — the frontend never calls storage directly.
 
