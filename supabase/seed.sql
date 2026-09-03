@@ -825,18 +825,29 @@ values
 -- ── Access Grant (Ray the caretaker, QR) ─────────────────────
 
 insert into public.access_grants (
-  id, property_id, granted_by, granted_to,
-  grant_type, token, label, expires_at
+  id, property_id, granted_by, grantee_profile_id,
+  target_type, purpose, grant_type, token_hash, label, expires_at
 )
 values (
   '00000000-0000-0000-0021-000000000001',
   '00000000-0000-0000-0004-000000000001',
   '00000000-0000-0000-0000-000000000001',
   '00000000-0000-0000-0000-000000000003',
+  'profile',
+  'professional',
   'qr_code',
-  'placeholder-qr-token-ray-caretaker-0001',
+  'd20a62eb644ca7170921389ce919a0726b57a005814240a3fb36f4d9e4da40cc',
   'Ray Watkins – Caretaker Access',
   '2027-01-01 00:00:00+00'
+);
+
+insert into public.access_grant_capabilities (
+  access_grant_id, grant_purpose, capability
+)
+values (
+  '00000000-0000-0000-0021-000000000001',
+  'professional',
+  'log_work'
 );
 
 -- ── Subscriptions ─────────────────────────────────────────────
