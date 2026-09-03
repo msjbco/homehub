@@ -183,6 +183,49 @@ values (
   'Primary residence. Single-story with bonus room. Inground pool. Attached 2-car garage. On city sewer. HOA: Tidewater at Hampstead.'
 );
 
+-- ── Property Memberships ──────────────────────────────────────
+-- Durable property access is explicit and separate from household membership.
+
+insert into public.property_memberships (
+  id, property_id, profile_id, role, granted_by, starts_at, accepted_at
+)
+values
+  ('00000000-0000-0000-0022-000000000001',
+   '00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0000-000000000001',
+   'owner', '00000000-0000-0000-0000-000000000001',
+   '2022-03-18 00:00:00+00', '2022-03-18 00:00:00+00'),
+  ('00000000-0000-0000-0022-000000000002',
+   '00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0000-000000000002',
+   'owner', '00000000-0000-0000-0000-000000000001',
+   '2022-03-18 00:00:00+00', '2022-03-18 00:00:00+00'),
+  ('00000000-0000-0000-0022-000000000003',
+   '00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0000-000000000003',
+   'caretaker', '00000000-0000-0000-0000-000000000001',
+   '2026-06-01 00:00:00+00', '2026-06-01 00:00:00+00');
+
+-- ── HomeHub-Recorded Ownership Periods ────────────────────────
+-- These reflect the canonical scenario known to HomeHub and are not an
+-- authoritative statement of legal title. Percentages are intentionally null.
+
+insert into public.property_ownership_periods (
+  id, property_id, owner_profile_id, ownership_type,
+  ownership_percentage, starts_on, recorded_by
+)
+values
+  ('00000000-0000-0000-0023-000000000001',
+   '00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0000-000000000001',
+   'owner', null, '2022-03-18',
+   '00000000-0000-0000-0000-000000000001'),
+  ('00000000-0000-0000-0023-000000000002',
+   '00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0000-000000000002',
+   'co_owner', null, '2022-03-18',
+   '00000000-0000-0000-0000-000000000001');
+
 -- ── Rooms ─────────────────────────────────────────────────────
 
 insert into public.rooms (id, property_id, name, room_type, floor_level, square_feet)
