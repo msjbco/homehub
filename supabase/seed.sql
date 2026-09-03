@@ -854,13 +854,13 @@ values (
 
 insert into public.subscriptions (
   id, household_id, plan, is_gifted, is_active,
-  current_period_start, current_period_end
+  starts_at, current_period_start, current_period_end
 )
 values (
   '00000000-0000-0000-0013-000000000001',
   '00000000-0000-0000-0001-000000000001',
   'pro', false, true,
-  '2026-06-01', '2026-07-01'
+  '2026-06-01', '2026-06-01', '2026-07-01'
 );
 
 -- ── Insurance Policy ──────────────────────────────────────────
@@ -869,7 +869,8 @@ insert into public.insurance_policies (
   id, property_id, insurer_name, policy_type, status,
   policy_number, agent_name, agent_phone, agent_email,
   annual_premium, coverage_amount, deductible,
-  effective_date, expiry_date, renewal_reminder_days, document_id
+  effective_date, expiry_date, renewal_reminder_days, document_id,
+  insurer_organization_id, agent_profile_id
 )
 values (
   '00000000-0000-0000-0014-000000000001',
@@ -879,7 +880,9 @@ values (
   'Carol Beasley', '555-000-0012', 'carol.beasley.insurance@placeholder.example',
   2640.00, 480000.00, 3000.00,
   '2026-03-18', '2027-03-18', 30,
-  '00000000-0000-0000-0012-000000000001'
+  '00000000-0000-0000-0012-000000000001',
+  '00000000-0000-0000-0002-000000000002',
+  '00000000-0000-0000-0000-000000000012'
 );
 
 -- ── Notifications ─────────────────────────────────────────────
