@@ -7,7 +7,7 @@
 -- No real phone numbers, policy numbers, account numbers,
 -- or real document contents are included.
 -- Placeholder emails use @example.homehub or @placeholder.example
--- Placeholder document/media paths use placeholder/ prefix
+-- Storage metadata uses deterministic UUID-scoped object paths; no files exist.
 -- ============================================================
 
 -- ── Profiles ─────────────────────────────────────────────────
@@ -59,18 +59,22 @@ values
 -- ── Household Members ─────────────────────────────────────────
 
 insert into public.household_members (
-  household_id, profile_id, is_primary, role, starts_at, accepted_at
+  id, household_id, profile_id, is_primary, role, starts_at, accepted_at,
+  created_at, updated_at
 )
 values
   -- Michael is primary
-  ('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0000-000000000001', true,
-   'member', '2022-03-18 00:00:00+00', '2022-03-18 00:00:00+00'),
+  ('00000000-0000-0000-0024-000000000001', '00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0000-000000000001', true,
+   'member', '2022-03-18 00:00:00+00', '2022-03-18 00:00:00+00',
+   '2022-03-18 00:00:00+00', '2022-03-18 00:00:00+00'),
   -- Jennifer is co-owner
-  ('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0000-000000000002', false,
-   'member', '2022-03-18 00:00:00+00', '2022-03-18 00:00:00+00'),
+  ('00000000-0000-0000-0024-000000000002', '00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0000-000000000002', false,
+   'member', '2022-03-18 00:00:00+00', '2022-03-18 00:00:00+00',
+   '2022-03-18 00:00:00+00', '2022-03-18 00:00:00+00'),
   -- Ray has limited caretaker access
-  ('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0000-000000000003', false,
-   'caretaker', '2026-06-01 00:00:00+00', '2026-06-01 00:00:00+00');
+  ('00000000-0000-0000-0024-000000000003', '00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0000-000000000003', false,
+   'caretaker', '2026-06-01 00:00:00+00', '2026-06-01 00:00:00+00',
+   '2026-06-01 00:00:00+00', '2026-06-01 00:00:00+00');
 
 -- ── Organizations ─────────────────────────────────────────────
 
@@ -723,14 +727,14 @@ values
   ('00000000-0000-0000-0017-000000000004', '00000000-0000-0000-0004-000000000001', 'needs-quote', '#C94949');
 
 -- Tag: generator project is hurricane-prep
-insert into public.entity_tags (tag_id, entity_type, entity_id)
+insert into public.entity_tags (id, tag_id, entity_type, entity_id)
 values
-  ('00000000-0000-0000-0017-000000000001', 'project',       '00000000-0000-0000-0009-000000000005'),
-  ('00000000-0000-0000-0017-000000000001', 'maintenance_task', '00000000-0000-0000-0008-000000000006'),
-  ('00000000-0000-0000-0017-000000000002', 'home_system',   '00000000-0000-0000-0006-000000000005'),
-  ('00000000-0000-0000-0017-000000000002', 'home_system',   '00000000-0000-0000-0006-000000000001'),
-  ('00000000-0000-0000-0017-000000000003', 'home_service',  '00000000-0000-0000-0007-000000000003'),
-  ('00000000-0000-0000-0017-000000000004', 'project',       '00000000-0000-0000-0009-000000000005');
+  ('00000000-0000-0000-0025-000000000001', '00000000-0000-0000-0017-000000000001', 'project',       '00000000-0000-0000-0009-000000000005'),
+  ('00000000-0000-0000-0025-000000000002', '00000000-0000-0000-0017-000000000001', 'maintenance_task', '00000000-0000-0000-0008-000000000006'),
+  ('00000000-0000-0000-0025-000000000003', '00000000-0000-0000-0017-000000000002', 'home_system',   '00000000-0000-0000-0006-000000000005'),
+  ('00000000-0000-0000-0025-000000000004', '00000000-0000-0000-0017-000000000002', 'home_system',   '00000000-0000-0000-0006-000000000001'),
+  ('00000000-0000-0000-0025-000000000005', '00000000-0000-0000-0017-000000000003', 'home_service',  '00000000-0000-0000-0007-000000000003'),
+  ('00000000-0000-0000-0025-000000000006', '00000000-0000-0000-0017-000000000004', 'project',       '00000000-0000-0000-0009-000000000005');
 
 -- ── Notes ────────────────────────────────────────────────────
 
@@ -826,7 +830,8 @@ values
 
 insert into public.access_grants (
   id, property_id, granted_by, grantee_profile_id,
-  target_type, purpose, grant_type, token_hash, label, expires_at
+  target_type, purpose, grant_type, token_hash, label,
+  starts_at, expires_at, created_at, updated_at
 )
 values (
   '00000000-0000-0000-0021-000000000001',
@@ -838,16 +843,18 @@ values (
   'qr_code',
   'd20a62eb644ca7170921389ce919a0726b57a005814240a3fb36f4d9e4da40cc',
   'Ray Watkins – Caretaker Access',
-  '2027-01-01 00:00:00+00'
+  '2026-06-01 00:00:00+00', '2027-01-01 00:00:00+00',
+  '2026-06-01 00:00:00+00', '2026-06-01 00:00:00+00'
 );
 
 insert into public.access_grant_capabilities (
-  access_grant_id, grant_purpose, capability
+  access_grant_id, grant_purpose, capability, created_at
 )
 values (
   '00000000-0000-0000-0021-000000000001',
   'professional',
-  'log_work'
+  'log_work',
+  '2026-06-01 00:00:00+00'
 );
 
 -- ── Subscriptions ─────────────────────────────────────────────
@@ -926,3 +933,231 @@ values
    'Insurance Renewal in 9 Months', 'Your Cape Fear Insurance Group policy renews March 18, 2027.',
    '00000000-0000-0000-0004-000000000001',
    'document', '00000000-0000-0000-0012-000000000001');
+
+-- ============================================================
+-- Canonical multi-property and lifecycle scenarios (Phase 9)
+-- ============================================================
+
+-- Olivia currently owns the second property known to HomeHub. Samuel is the
+-- recorded former owner; these rows do not represent authoritative legal title.
+insert into public.profiles (
+  id, role, first_name, last_name, display_name, email, phone,
+  timezone, locale, created_at, updated_at
+)
+values
+  ('00000000-0000-0000-0000-000000000020', 'homeowner',
+   'Olivia', 'Carter', 'Olivia Carter', 'olivia.carter@example.homehub',
+   '555-000-0020', 'America/New_York', 'en-US',
+   '2024-02-15 14:00:00+00', '2024-02-15 14:00:00+00'),
+  ('00000000-0000-0000-0000-000000000021', 'homeowner',
+   'Samuel', 'Reed', 'Samuel Reed (Former Owner)',
+   'samuel.reed.former-owner@placeholder.example', '555-000-0021',
+   'America/New_York', 'en-US',
+   '2018-05-01 14:00:00+00', '2024-02-15 14:00:00+00');
+
+insert into public.households (id, name, created_at, updated_at)
+values ('00000000-0000-0000-0001-000000000002', 'Carter Household',
+        '2024-02-15 14:00:00+00', '2024-02-15 14:00:00+00');
+
+insert into public.household_members (
+  id, household_id, profile_id, is_primary, role,
+  starts_at, accepted_at, created_at, updated_at
+)
+values ('00000000-0000-0000-0024-000000000004',
+        '00000000-0000-0000-0001-000000000002',
+        '00000000-0000-0000-0000-000000000020', true, 'member',
+        '2024-02-15 14:00:00+00', '2024-02-15 14:00:00+00',
+        '2024-02-15 14:00:00+00', '2024-02-15 14:00:00+00');
+
+insert into public.properties (
+  id, household_id, address_line1, city, state, zip, property_type, status,
+  year_built, square_feet, bedrooms, bathrooms, purchase_price, purchase_date,
+  current_value, notes, created_at, updated_at
+)
+values ('00000000-0000-0000-0004-000000000002',
+        '00000000-0000-0000-0001-000000000002',
+        '28 Sound View Drive', 'Surf City', 'NC', '28445',
+        'townhouse', 'active', 2020, 1680, 3, 2.5, 365000.00, '2024-02-15',
+        389000.00, 'Secondary canonical property used to verify household and property isolation.',
+        '2024-02-15 14:00:00+00', '2024-02-15 14:00:00+00');
+
+insert into public.property_memberships (
+  id, property_id, profile_id, role, granted_by, accepted_at,
+  starts_at, ends_at, ended_by, end_reason, created_at, updated_at
+)
+values
+  ('00000000-0000-0000-0022-000000000004',
+   '00000000-0000-0000-0004-000000000002',
+   '00000000-0000-0000-0000-000000000020', 'owner',
+   '00000000-0000-0000-0000-000000000020', '2024-02-15 14:00:00+00',
+   '2024-02-15 14:00:00+00', null, null, null,
+   '2024-02-15 14:00:00+00', '2024-02-15 14:00:00+00'),
+  ('00000000-0000-0000-0022-000000000005',
+   '00000000-0000-0000-0004-000000000002',
+   '00000000-0000-0000-0000-000000000021', 'owner',
+   '00000000-0000-0000-0000-000000000021', '2018-05-01 14:00:00+00',
+   '2018-05-01 14:00:00+00', '2024-02-15 13:59:59+00',
+   '00000000-0000-0000-0000-000000000021', 'Property association ended after transfer.',
+   '2018-05-01 14:00:00+00', '2024-02-15 14:00:00+00');
+
+insert into public.property_ownership_periods (
+  id, property_id, owner_profile_id, ownership_type, starts_on, ends_on,
+  recorded_by, created_at, updated_at
+)
+values
+  ('00000000-0000-0000-0023-000000000003',
+   '00000000-0000-0000-0004-000000000002',
+   '00000000-0000-0000-0000-000000000021', 'owner',
+   '2018-05-01', '2024-02-14', '00000000-0000-0000-0000-000000000020',
+   '2024-02-15 14:00:00+00', '2024-02-15 14:00:00+00'),
+  ('00000000-0000-0000-0023-000000000004',
+   '00000000-0000-0000-0004-000000000002',
+   '00000000-0000-0000-0000-000000000020', 'owner',
+   '2024-02-15', null, '00000000-0000-0000-0000-000000000020',
+   '2024-02-15 14:00:00+00', '2024-02-15 14:00:00+00');
+
+-- Organization roles remain organization-local and confer no platform role.
+insert into public.organization_members (
+  id, organization_id, profile_id, member_role, starts_at, accepted_at,
+  created_at, updated_at
+)
+values
+  ('00000000-0000-0000-0026-000000000001',
+   '00000000-0000-0000-0002-000000000001',
+   '00000000-0000-0000-0000-000000000010', 'owner',
+   '2020-01-15 14:00:00+00', '2020-01-15 14:00:00+00',
+   '2020-01-15 14:00:00+00', '2020-01-15 14:00:00+00'),
+  ('00000000-0000-0000-0026-000000000002',
+   '00000000-0000-0000-0002-000000000002',
+   '00000000-0000-0000-0000-000000000012', 'agent',
+   '2021-03-01 14:00:00+00', '2021-03-01 14:00:00+00',
+   '2021-03-01 14:00:00+00', '2021-03-01 14:00:00+00'),
+  ('00000000-0000-0000-0026-000000000003',
+   '00000000-0000-0000-0002-000000000005',
+   '00000000-0000-0000-0000-000000000001', 'member',
+   '2022-03-18 14:00:00+00', '2022-03-18 14:00:00+00',
+   '2022-03-18 14:00:00+00', '2022-03-18 14:00:00+00'),
+  ('00000000-0000-0000-0026-000000000004',
+   '00000000-0000-0000-0002-000000000005',
+   '00000000-0000-0000-0000-000000000020', 'admin',
+   '2024-02-15 14:00:00+00', '2024-02-15 14:00:00+00',
+   '2024-02-15 14:00:00+00', '2024-02-15 14:00:00+00');
+
+-- One lightweight metadata row proves that storage paths remain property-scoped.
+insert into public.documents (
+  id, property_id, uploaded_by, category, title, storage_path, file_name,
+  file_size_bytes, mime_type, created_at, updated_at
+)
+values ('00000000-0000-0000-0012-000000000007',
+        '00000000-0000-0000-0004-000000000002',
+        '00000000-0000-0000-0000-000000000020', 'other',
+        'Sound View Home Overview',
+        'properties/00000000-0000-0000-0004-000000000002/documents/00000000-0000-0000-0012-000000000007/sound-view-overview.pdf',
+        'sound-view-overview.pdf', 24576, 'application/pdf',
+        '2024-02-15 15:00:00+00', '2024-02-15 15:00:00+00');
+
+-- Governed access examples. All hashes are deterministic SHA-256 fixtures;
+-- no raw credential capable of authenticating exists in this seed.
+insert into public.access_grants (
+  id, property_id, granted_by, target_type, purpose, grant_type, token_hash,
+  grantee_vendor_id, grantee_organization_id, label, business_reason,
+  starts_at, expires_at, revoked_at, revoked_by, revoke_reason,
+  use_count, max_uses, created_at, updated_at
+)
+values
+  ('00000000-0000-0000-0021-000000000002',
+   '00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0000-000000000001', 'vendor', 'vendor', 'invite_link',
+   '66e20b4fe6bd74dae33d401981f8a0ce1be37eed1381d6f18da72f7c1e7edaa1',
+   '00000000-0000-0000-0003-000000000001', null,
+   'Coastal Pool seasonal access', 'Pool opening and maintenance coordination.',
+   '2026-04-01 12:00:00+00', '2026-10-31 23:59:59+00', null, null, null,
+   1, 12, '2026-04-01 12:00:00+00', '2026-04-01 12:00:00+00'),
+  ('00000000-0000-0000-0021-000000000003',
+   '00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0000-000000000001', 'organization', 'professional', 'manual',
+   '777b48dcf62444f4542ed1f2020fc9273ff565d2026dae6d81d9c63dfc7af10b',
+   null, '00000000-0000-0000-0002-000000000002',
+   'Insurance renewal review', 'Review current insurance documentation.',
+   '2026-03-18 12:00:00+00', '2027-03-18 12:00:00+00', null, null, null,
+   0, null, '2026-03-18 12:00:00+00', '2026-03-18 12:00:00+00'),
+  ('00000000-0000-0000-0021-000000000004',
+   '00000000-0000-0000-0004-000000000002',
+   '00000000-0000-0000-0000-000000000020', 'anonymous', 'guest', 'qr_code',
+   '6e72bf315f380c4ecdb3acd13414d52f97480defced420c0336a1f57f33e7860',
+   null, null, 'Sound View inspection access', 'Time-limited guest inspection access.',
+   '2026-08-01 12:00:00+00', '2026-08-08 12:00:00+00', null, null, null,
+   0, 1, '2026-08-01 12:00:00+00', '2026-08-01 12:00:00+00'),
+  ('00000000-0000-0000-0021-000000000005',
+   '00000000-0000-0000-0004-000000000001',
+   '00000000-0000-0000-0000-000000000001', 'anonymous', 'guest', 'invite_link',
+   '5d4e064eeb0aefdb87189b547b884927d464cfed42a64f6f065a66769b2fda96',
+   null, null, 'Completed one-time contractor visit', 'Historical one-time access.',
+   '2026-02-01 12:00:00+00', '2026-02-02 12:00:00+00',
+   '2026-02-02 13:00:00+00', '00000000-0000-0000-0000-000000000001',
+   'Visit completed.', 1, 1,
+   '2026-02-01 12:00:00+00', '2026-02-02 13:00:00+00');
+
+insert into public.access_grant_capabilities (
+  access_grant_id, grant_purpose, capability, created_at
+)
+values
+  ('00000000-0000-0000-0021-000000000002', 'vendor', 'upload', '2026-04-01 12:00:00+00'),
+  ('00000000-0000-0000-0021-000000000002', 'vendor', 'log_work', '2026-04-01 12:00:00+00'),
+  ('00000000-0000-0000-0021-000000000003', 'professional', 'read', '2026-03-18 12:00:00+00'),
+  ('00000000-0000-0000-0021-000000000004', 'guest', 'read', '2026-08-01 12:00:00+00'),
+  ('00000000-0000-0000-0021-000000000005', 'guest', 'log_work', '2026-02-01 12:00:00+00');
+
+insert into public.access_grant_log (id, grant_id, used_by, used_at, user_agent)
+values ('00000000-0000-0000-0027-000000000001',
+        '00000000-0000-0000-0021-000000000005', null,
+        '2026-02-02 12:30:00+00', 'canonical-seed-fixture');
+
+-- The Carter household receives a sponsored gifted plan with a claimed invite.
+insert into public.subscriptions (
+  id, household_id, plan, is_gifted, gifted_by_profile_id,
+  sponsor_organization_id, gifted_reason, gifted_at, gifted_expires_at,
+  is_active, starts_at, current_period_start, current_period_end,
+  created_at, updated_at
+)
+values ('00000000-0000-0000-0013-000000000002',
+        '00000000-0000-0000-0001-000000000002', 'gifted', true,
+        '00000000-0000-0000-0000-000000000001',
+        '00000000-0000-0000-0002-000000000005',
+        'Community preparedness program', '2026-01-15 14:00:00+00',
+        '2027-01-15 14:00:00+00', true, '2026-01-15 14:00:00+00',
+        '2026-01-15 14:00:00+00', '2027-01-15 14:00:00+00',
+        '2026-01-15 14:00:00+00', '2026-01-15 14:00:00+00');
+
+insert into public.subscription_gift_claims (
+  id, subscription_id, subscription_is_gifted, token_hash,
+  intended_recipient_email, created_at, expires_at, claimed_at,
+  claimed_by_profile_id
+)
+values ('00000000-0000-0000-0028-000000000001',
+        '00000000-0000-0000-0013-000000000002', true,
+        'a2d0eb1f2156e4931b5cd3eb654103b2ad42417ef7d920db9a21cdab414d1bff',
+        'olivia.carter@example.homehub', '2026-01-15 14:05:00+00',
+        '2026-02-15 14:05:00+00', '2026-01-16 16:00:00+00',
+        '00000000-0000-0000-0000-000000000020');
+
+insert into public.promo_codes (
+  id, code, description, discount_pct, max_redemptions, redemption_count,
+  expires_at, is_active, created_at, updated_at
+)
+values ('00000000-0000-0000-0029-000000000001', 'COASTAL10',
+        'Canonical coastal-home onboarding promotion.', 10, 100, 7,
+        '2027-12-31 23:59:59+00', true,
+        '2026-01-01 00:00:00+00', '2026-01-01 00:00:00+00');
+
+insert into public.notifications (
+  id, recipient_id, type, status, title, body, property_id,
+  entity_type, entity_id, scheduled_for, created_at, updated_at
+)
+values ('00000000-0000-0000-0015-000000000006',
+        '00000000-0000-0000-0000-000000000020', 'document_expiry', 'unread',
+        'Sound View document review', 'Review the Sound View overview document.',
+        '00000000-0000-0000-0004-000000000002', 'document',
+        '00000000-0000-0000-0012-000000000007',
+        '2026-10-01 13:00:00+00', '2026-09-01 13:00:00+00',
+        '2026-09-01 13:00:00+00');
