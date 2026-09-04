@@ -8,7 +8,7 @@
 
 This document describes the Supabase Storage foundation as implemented in this branch. It covers buckets, the privacy model, path conventions, MIME and size limits, the metadata relationship to database tables, the planned upload/download strategy, audit expectations, and what remains blocked until authentication and RLS are wired.
 
-For the high-level design rationale and planned auth flows, see [`authentication-and-storage-plan.md`](./authentication-and-storage-plan.md).
+For the current identity and future-authorization boundary, see [`identity-and-authorization-model.md`](./identity-and-authorization-model.md). The older combined authentication/storage plan is superseded historical material.
 
 ---
 
@@ -20,7 +20,7 @@ Three private Supabase Storage buckets are created by migration 0009. All bucket
 |---|---|---|---|---|
 | Documents | `documents` | No | 25 MiB | PDFs, warranties, contracts, permits, invoices, inspection reports |
 | Media | `media` | No | 15 MiB | Property and room photos, project before/after images, short progress videos |
-| Avatars | `avatars` | No | 5 MiB | Profile photos for homeowners, contractors, caretakers, and admins |
+| Avatars | `avatars` | No | 5 MiB | Profile photos |
 
 ---
 
@@ -29,7 +29,7 @@ Three private Supabase Storage buckets are created by migration 0009. All bucket
 **All three buckets are private.** `public = false` is set on every bucket. This means:
 
 - Supabase will never serve objects via a public CDN URL, regardless of the object path.
-- All object access requires a signed URL generated server-side using the service-role key.
+- Foundation creates no public bucket access. Actual authorized object access and signed-URL generation are deferred.
 - There are no permissive storage policies defined in this foundation step (see section 7).
 
 **Why private?** Property documents (insurance declarations, legal contracts, purchase deeds) and photos are sensitive homeowner data. A guessable or leaked object path should never expose real data. Backend-mediated signed URLs allow the server to enforce authorization on every access event.
@@ -78,7 +78,7 @@ Example:
 profiles/00000000-0000-0000-0001-000000000001/avatars/avatar.jpg
 ```
 
-Only one avatar object is kept per profile. Uploading a new avatar overwrites the previous one (same path).
+The generated path is stable per profile and MIME-derived extension. Overwrite and cleanup behavior is deferred to the live storage implementation.
 
 ### 3.4 Filename sanitisation
 
@@ -159,11 +159,7 @@ Migration 0016 enforces nonnegative optional numeric metadata, nonblank required
 
 ### Deletion contract
 
-Deleting a file requires two steps in this order:
-1. Delete the database row (authoritative — this immediately hides the file from all UI)
-2. Delete the storage object (cleanup — storage is a cache of what the DB says exists)
-
-If step 2 fails, the orphaned storage object is inaccessible (no valid DB row to generate a signed URL from) and can be cleaned up by a background maintenance job.
+Foundation uses `documents.deleted_at` and `media.deleted_at` for logical deletion while retaining metadata and references. This does not delete any storage object. Future authorized queries must filter logically deleted rows, and future service code must define retryable object cleanup without assuming that metadata deletion alone makes an object inaccessible.
 
 ---
 
@@ -236,7 +232,7 @@ The file compiles without `@supabase/supabase-js` installed. It contains pure va
 
 ## 9. Environment Variables
 
-The following environment variables are used by the storage service. All are placeholders in `.env.example` — no real values committed.
+The following placeholders are reserved for the future live storage service. The current pure helper module does not read them or instantiate a Supabase client.
 
 | Variable | File | Purpose |
 |---|---|---|
@@ -266,13 +262,13 @@ Audit log writes are the responsibility of the route handler, not the storage se
 
 ## 11. Storage Quotas
 
-Plan-level quotas are enforced by the backend before accepting an upload (not by bucket-level configuration):
+The following quotas are historical planning targets only; Foundation does not enforce plan-level aggregate quotas:
 
 | Plan | Documents | Media | Enforcement |
 |---|---|---|---|
-| `free` | 500 MiB | 1 GiB | Backend queries `SUM(file_size_bytes)` from `public.documents`/`public.media` |
-| `pro` | 5 GiB | 10 GiB | Same |
-| `enterprise` | Unlimited | Unlimited | No quota check |
+| `free` | 500 MiB | 1 GiB | Not implemented |
+| `pro` | 5 GiB | 10 GiB | Not implemented |
+| `enterprise` | Unlimited | Unlimited | Not implemented |
 
 Quota enforcement middleware is not yet implemented — it will be added as part of the upload API endpoint.
 
@@ -284,7 +280,7 @@ The following items cannot be implemented without authentication and RLS:
 
 | Item | Blocked by | Migration / Step |
 |---|---|---|
-| Storage access policies (upload/download RLS) | Auth trigger + DB RLS | Migration 0011 |
+| Storage access policies (upload/download RLS) | Auth workflow + DB RLS | Future migration after Foundation 0018 |
 | Upload API endpoint (`POST /api/upload`) | JWT validation middleware | Auth wiring |
 | Signed URL endpoint (`GET /api/files/{id}/url`) | JWT validation + membership check | Auth wiring |
 | Delete endpoint (`DELETE /api/files/{id}`) | JWT validation + ownership check | Auth wiring |
@@ -300,8 +296,8 @@ The following items cannot be implemented without authentication and RLS:
 
 In priority order:
 
-1. **Migration 0010 — Auth trigger:** `handle_new_auth_user()` function + trigger on `auth.users` to auto-create `public.profiles` rows.
+1. **Auth/RLS design and migration:** define reviewed profile-provisioning and authorization behavior in a new forward migration after Foundation 0018.
 2. **Install `@supabase/supabase-js`** in the backend (`npm install @supabase/supabase-js`) and replace the service stubs in `storage.ts`.
 3. **Upload API endpoint** (`POST /api/upload`) — MIME detection, validation, service-role storage write, DB insert, audit log entry.
 4. **Signed URL API endpoint** (`GET /api/files/:id/url`) — JWT check, membership check, `createSignedUrl`, audit log entry.
-5. **Migration 0011 — Storage RLS** — add storage policies for documents, media, and avatars buckets once auth identities are established.
+5. **Future storage RLS migration** — add reviewed storage policies only after auth identities and database RLS are established.

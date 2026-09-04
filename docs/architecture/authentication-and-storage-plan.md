@@ -1,5 +1,9 @@
 # Authentication and Storage Plan — HomeHub
 
+> **Superseded historical design — do not use as current implementation guidance.**
+>
+> This pre-Foundation plan contains obsolete roles, columns, paths, migration numbers, and proposed flows. Current implemented truth is documented in [`foundation-schema-and-invariants.md`](./foundation-schema-and-invariants.md), [`identity-and-authorization-model.md`](./identity-and-authorization-model.md), and [`storage-foundation-implementation.md`](./storage-foundation-implementation.md). It is retained only to preserve design history.
+
 > **Status:** Draft — foundation step (not yet implemented)  
 > **Last updated:** 2026-06-26  
 > **Scope:** Supabase Auth + Supabase Storage integration design
